@@ -247,14 +247,27 @@ function repairSearchConfigValidation_(sheet) {
   maxRange.setValues(maxVals);
 }
 
+function debugSearchConfigHeaders() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(APP.SHEETS.SEARCH_CONFIG);
+  if (!sheet) throw new Error("Search Config sheet not found");
+
+  const rawHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  Logger.log(JSON.stringify(rawHeaders));
+}
+
 function debugForceSearchConfigCheckboxes() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(APP.SHEETS.SEARCH_CONFIG);
   if (!sheet) throw new Error("Search Config sheet not found");
 
-  const headers = getHeaders_(sheet);
+  const rawHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const headers = rawHeaders.map(h => String(h).trim().toLowerCase());
   const activeCol = headers.indexOf("active") + 1;
-  if (!activeCol) throw new Error('"active" header not found');
+
+  if (!activeCol) {
+    throw new Error('Normalized "active" header not found. Raw headers: ' + JSON.stringify(rawHeaders));
+  }
 
   const testRange = sheet.getRange(2, activeCol, 10, 1);
   testRange.clearContent();
