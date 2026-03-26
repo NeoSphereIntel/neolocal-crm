@@ -18,9 +18,27 @@ function onOpen() {
     .addItem("Generate Shadow Job for Selected Lead", "generateShadowJobForSelectedLead")
     .addItem("Generate Shadow Jobs for Empty Leads", "generateShadowJobsForLeadsWithoutOne")
     .addSeparator()
+    .addSubMenu(
+      SpreadsheetApp.getUi()
+        .createMenu("CRM")
+        .addItem("Refresh CRM Views", "refreshCRMExecutionLayer")
+        .addSeparator()
+        .addItem("Mark Selected Lead as Contacted", "markSelectedLeadAsContacted")
+        .addItem("Mark Selected Lead as Replied", "markSelectedLeadAsReplied")
+        .addItem("Mark Selected Lead as Qualified", "markSelectedLeadAsQualified")
+        .addItem("Mark Selected Lead as Call Booked", "markSelectedLeadAsCallBooked")
+        .addItem("Mark Selected Lead as Snapshot Sent", "markSelectedLeadAsSnapshotSent")
+        .addSeparator()
+        .addItem("Mark Selected Lead as Closed Won", "markSelectedLeadAsClosedWon")
+        .addItem("Mark Selected Lead as Closed Lost", "markSelectedLeadAsClosedLost")
+        .addSeparator()
+        .addItem("Snooze Selected Lead by 2 Days", "snoozeSelectedLead2Days")
+        .addItem("Snooze Selected Lead by 3 Days", "snoozeSelectedLead3Days")
+        .addItem("Snooze Selected Lead by 5 Days", "snoozeSelectedLead5Days")
+    )
+    .addSeparator()
     .addItem("Format All Sheets", "formatAllSheets")
     .addItem("Reset Search Config Validation", "resetSearchConfigValidation")
-    .addItem("Auto-size All Sheets", "autoSizeAllSheets")
     .addToUi();
 }
 

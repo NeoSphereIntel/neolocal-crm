@@ -1,85 +1,278 @@
 /**
- * NeoLocal — CRM Execution Layer v1
+ * NeoLocal — CRM Execution Layer v2
  * File: 10_crm_workflow.js
  *
- * Scope:
- * - Append CRM fields to Leads Master
- * - Compute CRM execution state
- * - Build rep-facing views:
- *    - Sales Workspace
- *    - Follow-Ups
- *    - Pipeline
- *
- * IMPORTANT:
- * - Leads Master = source of truth
- * - Views are derived only
- * - No restructuring of existing architecture
+ * Adds:
+ * - CRM menu actions
+ * - follow-up cadence
+ * - activity logging
+ * - derived views refresh
  */
 
 function refreshCRMExecutionLayer() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const leadsSheet = ss.getSheetByName(APP.SHEETS.LEADS);
-
   if (!leadsSheet) throw new Error("Leads Master not found");
 
   ensureCRMColumns_(leadsSheet);
+  const activitiesSheet = ensureActivitiesSheet_(ss);
 
-  const data = leadsSheet.getDataRange().getValues();
-  if (data.length < 2) return;
-
-  const headers = data[0];
-  const rows = data.slice(1);
-
+  const headers = getHeaders_(leadsSheet);
+  const rows = getSheetDataObjects_(leadsSheet);
   const now = new Date();
-  const updatedRows = [];
+  const rowUpdates = [];
 
   rows.forEach(row => {
-    const obj = rowToObject_(row, headers);
-
-    if (!obj.pipeline_stage) {
-      obj.pipeline_stage = "New";
-      obj.next_action = "Initial outreach";
-      obj.next_action_due_at = now;
-      obj.follow_up_count = 0;
-      obj.is_overdue = "NO";
+    const updates = computeCRMStateForRow_(row, now);
+    if (Object.keys(updates).length) {
+      rowUpdates.push({
+        rowNumber: row.__rowNumber,
+        updates: updates
+      });
     }
-
-    if (obj.next_action_due_at) {
-      const due = stripTime_(new Date(obj.next_action_due_at));
-      obj.is_overdue = (due.getTime() < stripTime_(now).getTime() && !isClosed_(obj.pipeline_stage)) ? "YES" : "NO";
-    } else {
-      obj.is_overdue = "NO";
-    }
-
-    obj.last_contact_at = obj.last_reply_at || obj.last_outreach_at || obj.last_contact_at || "";
-
-    const replyType = normalizeReply_(obj.reply_type);
-
-    if (replyType === "POSITIVE") {
-      obj.pipeline_stage = "Replied";
-      obj.next_action = "Engage lead";
-    }
-
-    if (replyType === "MEETING") {
-      obj.pipeline_stage = "Call Booked";
-      obj.next_action = "Prepare call";
-    }
-
-    if (replyType === "NEGATIVE") {
-      obj.pipeline_stage = "Closed Lost";
-      obj.closed_at = obj.closed_at || now;
-      obj.next_action = "";
-    }
-
-    updatedRows.push(objectToRow_(obj, headers));
   });
 
-  leadsSheet.getRange(2, 1, updatedRows.length, headers.length).setValues(updatedRows);
+  if (rowUpdates.length) {
+    writeRowUpdates_(leadsSheet, headers, rowUpdates);
+  }
 
-  buildSalesWorkspace_(ss, headers, updatedRows);
-  buildFollowUps_(ss, headers, updatedRows);
-  buildPipeline_(ss, headers, updatedRows);
+  const refreshedRows = getSheetDataObjects_(leadsSheet);
+  buildSalesWorkspace_(ss, refreshedRows);
+  buildFollowUps_(ss, refreshedRows);
+  buildPipeline_(ss, refreshedRows);
+
+  void activitiesSheet; // kept for future use and ensured now
 }
+
+function computeCRMStateForRow_(row, now) {
+  const out = {};
+
+  if (!row.pipeline_stage) out.pipeline_stage = "New";
+  if (!row.follow_up_count && row.follow_up_count !== 0) out.follow_up_count = 0;
+  if (!row.next_action && !isClosed_(row.pipeline_stage || out.pipeline_stage)) {
+    out.next_action = "Initial outreach";
+  }
+  if (!row.next_action_due_at && !isClosed_(row.pipeline_stage || out.pipeline_stage)) {
+    out.next_action_due_at = stripTime_(now);
+  }
+
+  const effectiveReply = normalizeReply_(row.reply_type);
+
+  if (effectiveReply === "POSITIVE" && !isClosed_(row.pipeline_stage)) {
+    out.pipeline_stage = "Replied";
+    out.last_reply_at = row.last_reply_at || now;
+    out.last_contact_at = now;
+    out.next_action = "Engage / qualify";
+    out.next_action_due_at = stripTime_(now);
+    out.pipeline_updated_at = now;
+  }
+
+  if (effectiveReply === "MEETING" && !isClosed_(row.pipeline_stage)) {
+    out.pipeline_stage = "Call Booked";
+    out.last_reply_at = row.last_reply_at || now;
+    out.last_contact_at = now;
+    out.next_action = "Prepare call";
+    out.next_action_due_at = stripTime_(now);
+    out.pipeline_updated_at = now;
+  }
+
+  if (effectiveReply === "NEGATIVE" && !isClosed_(row.pipeline_stage)) {
+    out.pipeline_stage = "Closed Lost";
+    out.closed_at = row.closed_at || now;
+    out.next_action = "";
+    out.next_action_due_at = "";
+    out.is_overdue = "NO";
+    out.pipeline_updated_at = now;
+  }
+
+  const due = out.next_action_due_at || row.next_action_due_at;
+  const effectiveStage = out.pipeline_stage || row.pipeline_stage || "New";
+
+  if (!isClosed_(effectiveStage)) {
+    if (due) {
+      const dueDate = stripTime_(new Date(due));
+      out.is_overdue = dueDate.getTime() < stripTime_(now).getTime() ? "YES" : "NO";
+    } else {
+      out.is_overdue = "NO";
+    }
+  } else {
+    out.is_overdue = "NO";
+  }
+
+  if (!row.last_contact_at && (row.last_reply_at || row.last_outreach_at)) {
+    out.last_contact_at = row.last_reply_at || row.last_outreach_at;
+  }
+
+  return out;
+}
+
+/* ============================================================================
+   REP ACTIONS
+============================================================================ */
+
+function markSelectedLeadAsContacted() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    const count = toInt_(row.follow_up_count) + 1;
+    const delayDays = getNextFollowUpDelayDays_(count);
+
+    return {
+      pipeline_stage: "Contacted",
+      pipeline_updated_at: now,
+      last_outreach_at: now,
+      last_contact_at: now,
+      follow_up_count: count,
+      next_action: "Follow-up",
+      next_action_due_at: addDays_(stripTime_(now), delayDays),
+      is_overdue: "NO"
+    };
+  }, "contacted");
+}
+
+function markSelectedLeadAsReplied() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      pipeline_stage: "Replied",
+      pipeline_updated_at: now,
+      last_reply_at: now,
+      last_contact_at: now,
+      next_action: "Engage / qualify",
+      next_action_due_at: stripTime_(now),
+      is_overdue: "NO",
+      reply_type: row.reply_type || "positive"
+    };
+  }, "replied");
+}
+
+function markSelectedLeadAsQualified() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      pipeline_stage: "Qualified",
+      pipeline_updated_at: now,
+      last_contact_at: now,
+      next_action: "Book call",
+      next_action_due_at: addDays_(stripTime_(now), 1),
+      is_overdue: "NO"
+    };
+  }, "qualified");
+}
+
+function markSelectedLeadAsCallBooked() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      pipeline_stage: "Call Booked",
+      pipeline_updated_at: now,
+      last_contact_at: now,
+      next_action: "Prepare call",
+      next_action_due_at: stripTime_(now),
+      is_overdue: "NO"
+    };
+  }, "call_booked");
+}
+
+function markSelectedLeadAsSnapshotSent() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      pipeline_stage: "Snapshot Sent",
+      pipeline_updated_at: now,
+      last_contact_at: now,
+      next_action: "Follow up on snapshot",
+      next_action_due_at: addDays_(stripTime_(now), 2),
+      is_overdue: "NO"
+    };
+  }, "snapshot_sent");
+}
+
+function markSelectedLeadAsClosedWon() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      pipeline_stage: "Closed Won",
+      pipeline_updated_at: now,
+      closed_at: now,
+      next_action: "",
+      next_action_due_at: "",
+      is_overdue: "NO"
+    };
+  }, "closed_won");
+}
+
+function markSelectedLeadAsClosedLost() {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      pipeline_stage: "Closed Lost",
+      pipeline_updated_at: now,
+      closed_at: now,
+      next_action: "",
+      next_action_due_at: "",
+      is_overdue: "NO"
+    };
+  }, "closed_lost");
+}
+
+function snoozeSelectedLead2Days() {
+  snoozeSelectedLeadByDays_(2);
+}
+
+function snoozeSelectedLead3Days() {
+  snoozeSelectedLeadByDays_(3);
+}
+
+function snoozeSelectedLead5Days() {
+  snoozeSelectedLeadByDays_(5);
+}
+
+function snoozeSelectedLeadByDays_(days) {
+  applyCRMActionToSelectedLead_(function(row, now) {
+    return {
+      next_action_due_at: addDays_(stripTime_(now), days),
+      is_overdue: "NO"
+    };
+  }, "snoozed_" + days + "_days");
+}
+
+function applyCRMActionToSelectedLead_(buildUpdatesFn, activityType) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+
+  if (!sheet || sheet.getName() !== APP.SHEETS.LEADS) {
+    SpreadsheetApp.getUi().alert("Please select a row in Leads Master.");
+    return;
+  }
+
+  const rowNumber = sheet.getActiveCell().getRow();
+  if (rowNumber < 2) {
+    SpreadsheetApp.getUi().alert("Please select a lead row, not the header.");
+    return;
+  }
+
+  ensureCRMColumns_(sheet);
+  const headers = getHeaders_(sheet);
+  const row = getRowObject_(sheet, rowNumber);
+  const now = new Date();
+
+  const oldStage = row.pipeline_stage || "";
+  const updates = buildUpdatesFn(row, now) || {};
+  writeRowUpdates_(sheet, headers, [{
+    rowNumber: rowNumber,
+    updates: updates
+  }]);
+
+  const updatedRow = getRowObject_(sheet, rowNumber);
+  logActivity_(ss, {
+    lead_id: updatedRow.lead_id,
+    business_name: updatedRow.business_name,
+    activity_type: activityType,
+    old_value: oldStage,
+    new_value: updatedRow.pipeline_stage || "",
+    note: "",
+    actor: Session.getActiveUser().getEmail() || "unknown"
+  });
+
+  refreshCRMExecutionLayer();
+}
+
+/* ============================================================================
+   SHEET / COLUMN SETUP
+============================================================================ */
 
 function ensureCRMColumns_(sheet) {
   const required = [
@@ -92,14 +285,12 @@ function ensureCRMColumns_(sheet) {
     "next_action_due_at",
     "follow_up_count",
     "is_overdue",
-    "owner",
     "crm_notes",
     "estimated_value",
     "closed_at"
   ];
 
-  let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
+  let headers = getHeaders_(sheet);
   required.forEach(col => {
     if (!headers.includes(col)) {
       sheet.getRange(1, sheet.getLastColumn() + 1).setValue(col);
@@ -108,8 +299,59 @@ function ensureCRMColumns_(sheet) {
   });
 }
 
-function buildSalesWorkspace_(ss, headers, rows) {
-  const sheet = getOrCreateViewSheet_(ss, "Sales Workspace", [
+function ensureActivitiesSheet_(ss) {
+  const name = "Activities";
+  let sheet = ss.getSheetByName(name);
+
+  const headers = [
+    "activity_id",
+    "lead_id",
+    "business_name",
+    "activity_at",
+    "activity_type",
+    "old_value",
+    "new_value",
+    "note",
+    "actor"
+  ];
+
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  } else {
+    const existing = getHeaders_(sheet);
+    if (!existing.length) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    }
+  }
+
+  return sheet;
+}
+
+function logActivity_(ss, payload) {
+  const sheet = ensureActivitiesSheet_(ss);
+  const nextRow = sheet.getLastRow() + 1;
+  const now = new Date();
+
+  sheet.getRange(nextRow, 1, 1, 9).setValues([[
+    "ACT-" + Utilities.getUuid().slice(0, 8).toUpperCase(),
+    payload.lead_id || "",
+    payload.business_name || "",
+    now,
+    payload.activity_type || "",
+    payload.old_value || "",
+    payload.new_value || "",
+    payload.note || "",
+    payload.actor || ""
+  ]]);
+}
+
+/* ============================================================================
+   VIEWS
+============================================================================ */
+
+function buildSalesWorkspace_(ss, leads) {
+  const headers = [
     "business_name",
     "category",
     "city",
@@ -120,60 +362,80 @@ function buildSalesWorkspace_(ss, headers, rows) {
     "reply_type",
     "next_action",
     "next_action_due_at",
+    "follow_up_count",
     "is_overdue",
     "owner",
     "crm_notes"
-  ]);
+  ];
 
-  const data = rows.map(r => rowToObject_(r, headers)).map(o => [
-    o.business_name || "",
-    o.category || "",
-    o.city || "",
-    o.priority_score || "",
-    o.pipeline_stage || "",
-    o.outreach_message || "",
-    o.inbound_reply || "",
-    o.reply_type || "",
-    o.next_action || "",
-    o.next_action_due_at || "",
-    o.is_overdue || "",
-    o.owner || "",
-    o.crm_notes || ""
-  ]);
+  const sheet = getOrCreateViewSheet_(ss, "Sales Workspace", headers);
 
-  writeView_(sheet, data);
-}
-
-function buildFollowUps_(ss, headers, rows) {
-  const sheet = getOrCreateViewSheet_(ss, "Follow-Ups", [
-    "business_name",
-    "city",
-    "pipeline_stage",
-    "next_action",
-    "next_action_due_at",
-    "is_overdue",
-    "outreach_message",
-    "inbound_reply"
-  ]);
-
-  const data = rows
-    .map(r => rowToObject_(r, headers))
-    .filter(o => o.is_overdue === "YES" || isToday_(o.next_action_due_at))
-    .map(o => [
-      o.business_name || "",
-      o.city || "",
-      o.pipeline_stage || "",
-      o.next_action || "",
-      o.next_action_due_at || "",
-      o.is_overdue || "",
-      o.outreach_message || "",
-      o.inbound_reply || ""
+  const data = leads
+    .slice()
+    .sort(compareLeadsForWorkspace_)
+    .map(row => [
+      row.business_name || "",
+      row.category || "",
+      row.city || "",
+      row.priority_score || "",
+      row.pipeline_stage || "",
+      row.outreach_message || "",
+      row.inbound_reply || "",
+      row.reply_type || "",
+      row.next_action || "",
+      row.next_action_due_at || "",
+      row.follow_up_count || 0,
+      row.is_overdue || "NO",
+      row.owner || "",
+      row.crm_notes || ""
     ]);
 
   writeView_(sheet, data);
+  freezeAndFilterView_(sheet, headers.length);
 }
 
-function buildPipeline_(ss, headers, rows) {
+function buildFollowUps_(ss, leads) {
+  const headers = [
+    "business_name",
+    "city",
+    "priority_score",
+    "pipeline_stage",
+    "next_action",
+    "next_action_due_at",
+    "follow_up_count",
+    "is_overdue",
+    "outreach_message",
+    "inbound_reply",
+    "owner",
+    "crm_notes"
+  ];
+
+  const sheet = getOrCreateViewSheet_(ss, "Follow-Ups", headers);
+
+  const data = leads
+    .filter(row => !isClosed_(row.pipeline_stage))
+    .filter(row => row.is_overdue === "YES" || isToday_(row.next_action_due_at) || isPast_(row.next_action_due_at))
+    .sort(compareLeadsForWorkspace_)
+    .map(row => [
+      row.business_name || "",
+      row.city || "",
+      row.priority_score || "",
+      row.pipeline_stage || "",
+      row.next_action || "",
+      row.next_action_due_at || "",
+      row.follow_up_count || 0,
+      row.is_overdue || "NO",
+      row.outreach_message || "",
+      row.inbound_reply || "",
+      row.owner || "",
+      row.crm_notes || ""
+    ]);
+
+  writeView_(sheet, data);
+  freezeAndFilterView_(sheet, headers.length);
+}
+
+function buildPipeline_(ss, leads) {
   const stages = [
     "New",
     "Contacted",
@@ -187,16 +449,16 @@ function buildPipeline_(ss, headers, rows) {
 
   const sheet = getOrCreateViewSheet_(ss, "Pipeline", stages);
   const grouped = {};
-
   stages.forEach(s => grouped[s] = []);
 
-  rows.map(r => rowToObject_(r, headers)).forEach(o => {
-    if (grouped[o.pipeline_stage]) {
-      grouped[o.pipeline_stage].push(o.business_name || "");
+  leads.forEach(row => {
+    const stage = row.pipeline_stage || "New";
+    if (grouped[stage]) {
+      grouped[stage].push(row.business_name || "");
     }
   });
 
-  const maxRows = Math.max(1, ...Object.values(grouped).map(a => a.length));
+  const maxRows = Math.max(1, ...stages.map(s => grouped[s].length));
   const output = [];
 
   for (let i = 0; i < maxRows; i++) {
@@ -204,7 +466,12 @@ function buildPipeline_(ss, headers, rows) {
   }
 
   writeView_(sheet, output);
+  sheet.setFrozenRows(1);
 }
+
+/* ============================================================================
+   VIEW HELPERS
+============================================================================ */
 
 function getOrCreateViewSheet_(ss, name, headers) {
   let sheet = ss.getSheetByName(name);
@@ -213,9 +480,8 @@ function getOrCreateViewSheet_(ss, name, headers) {
     sheet = ss.insertSheet(name);
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   } else {
-    const existingHeaders = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
-    const isBlankHeader = existingHeaders.every(v => !v);
-    if (isBlankHeader) {
+    const existing = getHeaders_(sheet);
+    if (!existing.length) {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     }
   }
@@ -233,14 +499,24 @@ function writeView_(sheet, data) {
   }
 }
 
-function rowToObject_(row, headers) {
-  const obj = {};
-  headers.forEach((h, i) => obj[h] = row[i]);
-  return obj;
+function freezeAndFilterView_(sheet, headerCount) {
+  sheet.setFrozenRows(1);
+  if (sheet.getFilter()) {
+    sheet.getFilter().remove();
+  }
+  const lastRow = Math.max(sheet.getLastRow(), 1);
+  sheet.getRange(1, 1, lastRow, headerCount).createFilter();
 }
 
-function objectToRow_(obj, headers) {
-  return headers.map(h => obj[h] !== undefined ? obj[h] : "");
+/* ============================================================================
+   LOGIC HELPERS
+============================================================================ */
+
+function getNextFollowUpDelayDays_(followUpCount) {
+  if (followUpCount <= 1) return 2;
+  if (followUpCount === 2) return 3;
+  if (followUpCount === 3) return 5;
+  return 7;
 }
 
 function normalizeReply_(val) {
@@ -254,17 +530,50 @@ function normalizeReply_(val) {
   return "";
 }
 
-function stripTime_(d) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+function compareLeadsForWorkspace_(a, b) {
+  const overdueA = a.is_overdue === "YES" ? 0 : 1;
+  const overdueB = b.is_overdue === "YES" ? 0 : 1;
+  if (overdueA !== overdueB) return overdueA - overdueB;
+
+  const dueA = sortDateValue_(a.next_action_due_at);
+  const dueB = sortDateValue_(b.next_action_due_at);
+  if (dueA !== dueB) return dueA - dueB;
+
+  const priA = Number(a.priority_score || 0);
+  const priB = Number(b.priority_score || 0);
+  return priB - priA;
+}
+
+function sortDateValue_(value) {
+  if (!value) return Number.MAX_SAFE_INTEGER;
+  return new Date(value).getTime();
 }
 
 function isToday_(date) {
   if (!date) return false;
-  const d = stripTime_(new Date(date));
-  const t = stripTime_(new Date());
-  return d.getTime() === t.getTime();
+  return stripTime_(new Date(date)).getTime() === stripTime_(new Date()).getTime();
+}
+
+function isPast_(date) {
+  if (!date) return false;
+  return stripTime_(new Date(date)).getTime() < stripTime_(new Date()).getTime();
 }
 
 function isClosed_(stage) {
   return stage === "Closed Won" || stage === "Closed Lost";
+}
+
+function stripTime_(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function addDays_(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function toInt_(value) {
+  const n = parseInt(value, 10);
+  return isNaN(n) ? 0 : n;
 }
