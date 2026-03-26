@@ -171,14 +171,16 @@ function setupSearchConfigSheet_(sheet) {
 }
 
 function repairSearchConfigValidation_(sheet) {
-  const lastRow = Math.max(sheet.getLastRow(), 2);
+  const targetRows = Math.max(sheet.getMaxRows(), 200);
+  const totalRowsToFormat = targetRows - 1; // exclude header
   const lastCol = Math.max(sheet.getLastColumn(), 13);
 
-  sheet.getRange(2, 1, lastRow - 1, lastCol).clearDataValidations();
-  sheet.getRange(2, 1, lastRow - 1, 13).setNumberFormat("@");
+  sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
+  sheet.getRange(2, 1, totalRowsToFormat, 13).setNumberFormat("@");
 
-  const activeRange = sheet.getRange(2, 2, lastRow - 1, 1);
+  const activeRange = sheet.getRange(2, 2, totalRowsToFormat, 1);
   activeRange.insertCheckboxes();
+
   const activeValues = activeRange.getValues().map(r => [isTruthy_(r[0])]);
   activeRange.setValues(activeValues);
 
@@ -186,29 +188,32 @@ function repairSearchConfigValidation_(sheet) {
     .requireValueInList(APP.COUNTRIES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 5, lastRow - 1, 1).setDataValidation(countryRule);
+
+  sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(countryRule);
 
   const provinceRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.PROVINCES_STATES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 6, lastRow - 1, 1).setDataValidation(provinceRule);
+
+  sheet.getRange(2, 6, totalRowsToFormat, 1).setDataValidation(provinceRule);
 
   const langRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["en", "fr"], true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 9, lastRow - 1, 1).setDataValidation(langRule);
 
-  sheet.getRange(2, 4, lastRow - 1, 1).setNumberFormat("@");
-  sheet.getRange(2, 5, lastRow - 1, 1).setNumberFormat("@");
-  sheet.getRange(2, 6, lastRow - 1, 1).setNumberFormat("@");
-  sheet.getRange(2, 7, lastRow - 1, 1).setNumberFormat("@");
-  sheet.getRange(2, 8, lastRow - 1, 1).setNumberFormat("0");
-  sheet.getRange(2, 9, lastRow - 1, 1).setNumberFormat("@");
-  sheet.getRange(2, 10, lastRow - 1, 4).setNumberFormat("@");
+  sheet.getRange(2, 9, totalRowsToFormat, 1).setDataValidation(langRule);
 
-  const maxRange = sheet.getRange(2, 8, lastRow - 1, 1);
+  sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, 5, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, 6, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, 7, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, 8, totalRowsToFormat, 1).setNumberFormat("0");
+  sheet.getRange(2, 9, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, 10, totalRowsToFormat, 4).setNumberFormat("@");
+
+  const maxRange = sheet.getRange(2, 8, totalRowsToFormat, 1);
   const maxVals = maxRange.getValues().map(r => {
     const v = r[0];
     if (Object.prototype.toString.call(v) === "[object Date]") {
