@@ -178,31 +178,36 @@ function repairSearchConfigValidation_(sheet) {
   sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
   sheet.getRange(2, 1, totalRowsToFormat, 13).setNumberFormat("@");
 
+  // Column B = active
   const activeRange = sheet.getRange(2, 2, totalRowsToFormat, 1);
-  activeRange.insertCheckboxes();
 
-  const activeValues = activeRange.getValues().map(r => [isTruthy_(r[0])]);
-  activeRange.setValues(activeValues);
+  // Normalize existing values to real booleans BEFORE re-inserting checkboxes
+  const existingActiveValues = activeRange.getValues().map(r => {
+    const v = r[0];
+    return [v === true || String(v).toUpperCase() === "TRUE"];
+  });
+
+  // Clear content first so old invalid values do not survive
+  activeRange.clearContent();
+  activeRange.insertCheckboxes();
+  activeRange.setValues(existingActiveValues);
 
   const countryRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.COUNTRIES, true)
     .setAllowInvalid(true)
     .build();
-
   sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(countryRule);
 
   const provinceRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.PROVINCES_STATES, true)
     .setAllowInvalid(true)
     .build();
-
   sheet.getRange(2, 6, totalRowsToFormat, 1).setDataValidation(provinceRule);
 
   const langRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["en", "fr"], true)
     .setAllowInvalid(true)
     .build();
-
   sheet.getRange(2, 9, totalRowsToFormat, 1).setDataValidation(langRule);
 
   sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@");
