@@ -175,56 +175,53 @@ function repairSearchConfigValidation_(sheet) {
   const totalRowsToFormat = targetRows - 1; // exclude header
   const lastCol = Math.max(sheet.getLastColumn(), 13);
 
+  // Clear validations across working area
   sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
-  sheet.getRange(2, 1, totalRowsToFormat, 13).setNumberFormat("@");
 
-  // Column B = active
+  // Text formatting for text fields only
+  sheet.getRange(2, 1, totalRowsToFormat, 1).setNumberFormat("@");   // search_config_id
+  sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@");   // country
+  sheet.getRange(2, 5, totalRowsToFormat, 1).setNumberFormat("@");   // province/state
+  sheet.getRange(2, 6, totalRowsToFormat, 1).setNumberFormat("@");   // city
+  sheet.getRange(2, 7, totalRowsToFormat, 1).setNumberFormat("0");   // max_results
+  sheet.getRange(2, 8, totalRowsToFormat, 1).setNumberFormat("@");   // lang
+  sheet.getRange(2, 9, totalRowsToFormat, 4).setNumberFormat("@");   // query + extras if used
+
+  // HARD RESET ACTIVE COLUMN (B)
   const activeRange = sheet.getRange(2, 2, totalRowsToFormat, 1);
-
-  // Normalize existing values to real booleans BEFORE re-inserting checkboxes
-  const existingActiveValues = activeRange.getValues().map(r => {
-    const v = r[0];
-    return [v === true || String(v).toUpperCase() === "TRUE"];
-  });
-
-  // Clear content first so old invalid values do not survive
   activeRange.clearContent();
+  activeRange.clearDataValidations();
   activeRange.insertCheckboxes();
-  activeRange.setValues(existingActiveValues);
 
+  // Default blanks to unchecked FALSE
+  const falseValues = Array.from({ length: totalRowsToFormat }, () => [false]);
+  activeRange.setValues(falseValues);
+
+  // Country dropdown
   const countryRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.COUNTRIES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(countryRule);
+  sheet.getRange(2, 4, totalRowsToFormat, 1).setDataValidation(countryRule);
 
+  // Province/state dropdown
   const provinceRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.PROVINCES_STATES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 6, totalRowsToFormat, 1).setDataValidation(provinceRule);
+  sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(provinceRule);
 
+  // Language dropdown
   const langRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["en", "fr"], true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 9, totalRowsToFormat, 1).setDataValidation(langRule);
+  sheet.getRange(2, 8, totalRowsToFormat, 1).setDataValidation(langRule);
 
-  sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@");
-  sheet.getRange(2, 5, totalRowsToFormat, 1).setNumberFormat("@");
-  sheet.getRange(2, 6, totalRowsToFormat, 1).setNumberFormat("@");
-  sheet.getRange(2, 7, totalRowsToFormat, 1).setNumberFormat("@");
-  sheet.getRange(2, 8, totalRowsToFormat, 1).setNumberFormat("0");
-  sheet.getRange(2, 9, totalRowsToFormat, 1).setNumberFormat("@");
-  sheet.getRange(2, 10, totalRowsToFormat, 4).setNumberFormat("@");
-
-  const maxRange = sheet.getRange(2, 8, totalRowsToFormat, 1);
+  // Max results defaults
+  const maxRange = sheet.getRange(2, 7, totalRowsToFormat, 1);
   const maxVals = maxRange.getValues().map(r => {
-    const v = r[0];
-    if (Object.prototype.toString.call(v) === "[object Date]") {
-      return [APP.MAX_RESULTS_PER_SEARCH];
-    }
-    const n = parseInt(v, 10);
+    const n = parseInt(r[0], 10);
     return [n > 0 ? n : APP.MAX_RESULTS_PER_SEARCH];
   });
   maxRange.setValues(maxVals);
