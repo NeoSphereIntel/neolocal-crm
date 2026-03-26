@@ -171,61 +171,105 @@ function setupSearchConfigSheet_(sheet) {
 }
 
 function repairSearchConfigValidation_(sheet) {
-  const targetRows = Math.max(sheet.getMaxRows(), 200);
-  const totalRowsToFormat = targetRows - 1; // exclude header row
-  const lastCol = 13; // A:M based on actual ledger
+  const headers = getHeaders_(sheet);
+  const totalRowsToFormat = Math.max(sheet.getMaxRows() - 1, 1);
 
-  // Clear existing validations in working range
+  const col = {
+    config_id: headers.indexOf("config_id") + 1,
+    active: headers.indexOf("active") + 1,
+    niche: headers.indexOf("niche") + 1,
+    city: headers.indexOf("city") + 1,
+    country: headers.indexOf("country") + 1,
+    province_state: headers.indexOf("province_state") + 1,
+    query_override: headers.indexOf("query_override") + 1,
+    max_results: headers.indexOf("max_results") + 1,
+    language: headers.indexOf("language") + 1,
+    notes: headers.indexOf("notes") + 1,
+    last_run_at: headers.indexOf("last_run_at") + 1,
+    last_search_id: headers.indexOf("last_search_id") + 1,
+    last_results_count: headers.indexOf("last_results_count") + 1
+  };
+
+  if (!col.active || !col.country || !col.province_state || !col.language || !col.max_results) {
+    throw new Error("Search Config headers missing or mismatched.");
+  }
+
+  const lastCol = headers.length;
+
   sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
 
-  // Formats by actual column map
-  sheet.getRange(2, 1, totalRowsToFormat, 1).setNumberFormat("@"); // A config_id
-  sheet.getRange(2, 3, totalRowsToFormat, 1).setNumberFormat("@"); // C niche
-  sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@"); // D city
-  sheet.getRange(2, 5, totalRowsToFormat, 1).setNumberFormat("@"); // E country
-  sheet.getRange(2, 6, totalRowsToFormat, 1).setNumberFormat("@"); // F province_state
-  sheet.getRange(2, 7, totalRowsToFormat, 1).setNumberFormat("@"); // G query_override
-  sheet.getRange(2, 8, totalRowsToFormat, 1).setNumberFormat("0"); // H max_results
-  sheet.getRange(2, 9, totalRowsToFormat, 1).setNumberFormat("@"); // I language
-  sheet.getRange(2, 10, totalRowsToFormat, 4).setNumberFormat("@"); // J:M notes + run fields
+  sheet.getRange(2, col.config_id, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.niche, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.city, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.country, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.province_state, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.query_override, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.max_results, totalRowsToFormat, 1).setNumberFormat("0");
+  sheet.getRange(2, col.language, totalRowsToFormat, 1).setNumberFormat("@");
+  sheet.getRange(2, col.notes, totalRowsToFormat, lastCol - col.notes + 1).setNumberFormat("@");
 
-  // B = active checkbox
-  const activeRange = sheet.getRange(2, 2, totalRowsToFormat, 1);
+  // HARD FORCE CHECKBOXES ON THE REAL "active" COLUMN
+  const activeRange = sheet.getRange(2, col.active, totalRowsToFormat, 1);
   activeRange.clearContent();
   activeRange.clearDataValidations();
-  activeRange.insertCheckboxes();
 
-  const activeValues = Array.from({ length: totalRowsToFormat }, () => [false]);
-  activeRange.setValues(activeValues);
+  const checkboxRule = SpreadsheetApp.newDataValidation()
+    .requireCheckbox()
+    .setAllowInvalid(false)
+    .build();
 
-  // E = country dropdown
+  activeRange.setDataValidation(checkboxRule);
+  activeRange.setValues(Array.from({ length: totalRowsToFormat }, () => [false]));
+
   const countryRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.COUNTRIES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(countryRule);
+  sheet.getRange(2, col.country, totalRowsToFormat, 1).setDataValidation(countryRule);
 
-  // F = province/state dropdown
   const provinceRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.PROVINCES_STATES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 6, totalRowsToFormat, 1).setDataValidation(provinceRule);
+  sheet.getRange(2, col.province_state, totalRowsToFormat, 1).setDataValidation(provinceRule);
 
-  // I = language dropdown
   const languageRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["en", "fr"], true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 9, totalRowsToFormat, 1).setDataValidation(languageRule);
+  sheet.getRange(2, col.language, totalRowsToFormat, 1).setDataValidation(languageRule);
 
-  // H = max_results defaults
-  const maxRange = sheet.getRange(2, 8, totalRowsToFormat, 1);
+  const maxRange = sheet.getRange(2, col.max_results, totalRowsToFormat, 1);
   const maxVals = maxRange.getValues().map(r => {
     const n = parseInt(r[0], 10);
     return [n > 0 ? n : APP.MAX_RESULTS_PER_SEARCH];
   });
   maxRange.setValues(maxVals);
+}
+
+function debugForceSearchConfigCheckboxes() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(APP.SHEETS.SEARCH_CONFIG);
+  if (!sheet) throw new Error("Search Config sheet not found");
+
+  const headers = getHeaders_(sheet);
+  const activeCol = headers.indexOf("active") + 1;
+  if (!activeCol) throw new Error('"active" header not found');
+
+  const testRange = sheet.getRange(2, activeCol, 10, 1);
+  testRange.clearContent();
+  testRange.clearDataValidations();
+
+  const checkboxRule = SpreadsheetApp.newDataValidation()
+    .requireCheckbox()
+    .setAllowInvalid(false)
+    .build();
+
+  testRange.setDataValidation(checkboxRule);
+  testRange.setValues([
+    [false],[false],[false],[false],[false],
+    [false],[false],[false],[false],[false]
+  ]);
 }
 
 function setupLeadsMasterSheet_(sheet) {
