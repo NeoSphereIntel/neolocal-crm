@@ -500,13 +500,22 @@ function getOrCreateViewSheet_(ss, name, headers) {
 
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  } else {
-    const existing = getHeaders_(sheet);
-    if (!existing.length) {
-      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    }
   }
+
+  if (sheet.getFilter()) {
+    sheet.getFilter().remove();
+  }
+
+  const maxRows = Math.max(sheet.getMaxRows(), 2);
+  const maxCols = Math.max(sheet.getMaxColumns(), headers.length);
+
+  sheet.getRange(1, 1, maxRows, maxCols).clearContent();
+
+  if (sheet.getMaxColumns() < headers.length) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
+  }
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
   return sheet;
 }
