@@ -110,8 +110,24 @@ function computeCRMStateForRow_(row, now) {
    REP ACTIONS
 ============================================================================ */
 
-function markSelectedLeadAsContacted() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+/* ============================================================================
+ REP ACTIONS
+============================================================================ */
+
+/**
+ * Backend-first action layer.
+ * Public action handlers work by lead_id so future UI/buttons can call them
+ * without depending on the active row in Leads Master.
+ *
+ * Current menu functions remain as thin wrappers.
+ */
+
+/* ------------------------------
+ * PUBLIC BACKEND ACTIONS
+ * ------------------------------ */
+
+function markAsContacted(leadId) {
+  return applyCRMActionByLeadId_(leadId, function(row, now) {
     const count = toInt_(row.follow_up_count) + 1;
     const delayDays = getNextFollowUpDelayDays_(count);
 
@@ -128,8 +144,8 @@ function markSelectedLeadAsContacted() {
   }, "contacted");
 }
 
-function markSelectedLeadAsReplied() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+function markAsReplied(leadId) {
+  return applyCRMActionByLeadId_(leadId, function(row, now) {
     return {
       pipeline_stage: "Replied",
       pipeline_updated_at: now,
@@ -143,8 +159,8 @@ function markSelectedLeadAsReplied() {
   }, "replied");
 }
 
-function markSelectedLeadAsQualified() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+function markAsQualified(leadId) {
+  return applyCRMActionByLeadId_(leadId, function(row, now) {
     return {
       pipeline_stage: "Qualified",
       pipeline_updated_at: now,
@@ -156,8 +172,8 @@ function markSelectedLeadAsQualified() {
   }, "qualified");
 }
 
-function markSelectedLeadAsCallBooked() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+function markCallBooked(leadId) {
+  return applyCRMActionByLeadId_(leadId, function(row, now) {
     return {
       pipeline_stage: "Call Booked",
       pipeline_updated_at: now,
@@ -169,12 +185,16 @@ function markSelectedLeadAsCallBooked() {
   }, "call_booked");
 }
 
-function markSelectedLeadAsSnapshotSent() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+function markSnapshotSent(leadId) {
+  return applyCRMActionByLeadId_(leadId, function(row, now) {
+    const count = toInt_(row.follow_up_count) + 1;
+
     return {
       pipeline_stage: "Snapshot Sent",
       pipeline_updated_at: now,
+      last_outreach_at: now,
       last_contact_at: now,
+      follow_up_count: count,
       next_action: "Follow up on snapshot",
       next_action_due_at: addDays_(stripTime_(now), 2),
       is_overdue: "NO"
@@ -182,8 +202,32 @@ function markSelectedLeadAsSnapshotSent() {
   }, "snapshot_sent");
 }
 
+/* ------------------------------
+ * MENU WRAPPERS
+ * ------------------------------ */
+
+function markSelectedLeadAsContacted() {
+  markAsContacted(getSelectedLeadIdForCRMAction_());
+}
+
+function markSelectedLeadAsReplied() {
+  markAsReplied(getSelectedLeadIdForCRMAction_());
+}
+
+function markSelectedLeadAsQualified() {
+  markAsQualified(getSelectedLeadIdForCRMAction_());
+}
+
+function markSelectedLeadAsCallBooked() {
+  markCallBooked(getSelectedLeadIdForCRMAction_());
+}
+
+function markSelectedLeadAsSnapshotSent() {
+  markSnapshotSent(getSelectedLeadIdForCRMAction_());
+}
+
 function markSelectedLeadAsClosedWon() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+  applyCRMActionByLeadId_(getSelectedLeadIdForCRMAction_(), function(row, now) {
     return {
       pipeline_stage: "Closed Won",
       pipeline_updated_at: now,
@@ -196,7 +240,7 @@ function markSelectedLeadAsClosedWon() {
 }
 
 function markSelectedLeadAsClosedLost() {
-  applyCRMActionToSelectedLead_(function(row, now) {
+  applyCRMActionByLeadId_(getSelectedLeadIdForCRMAction_(), function(row, now) {
     return {
       pipeline_stage: "Closed Lost",
       pipeline_updated_at: now,
@@ -221,7 +265,7 @@ function snoozeSelectedLead5Days() {
 }
 
 function snoozeSelectedLeadByDays_(days) {
-  applyCRMActionToSelectedLead_(function(row, now) {
+  applyCRMActionByLeadId_(getSelectedLeadIdForCRMAction_(), function(row, now) {
     return {
       next_action_due_at: addDays_(stripTime_(now), days),
       is_overdue: "NO"
@@ -229,45 +273,141 @@ function snoozeSelectedLeadByDays_(days) {
   }, "snoozed_" + days + "_days");
 }
 
-function applyCRMActionToSelectedLead_(buildUpdatesFn, activityType) {
+/* ------------------------------
+ * CORE ACTION ENGINE
+ * ------------------------------ */
+
+function applyCRMActionByLeadId_(leadId, buildUpdatesFn, activityType) {
+  if (!leadId) {
+    throw new Error("Missing lead_id for CRM action.");
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getActiveSheet();
+  const leadsSheet = ss.getSheetByName(APP.SHEETS.LEADS);
 
-  if (!sheet || sheet.getName() !== APP.SHEETS.LEADS) {
-    SpreadsheetApp.getUi().alert("Please select a row in Leads Master.");
-    return;
+  if (!leadsSheet) {
+    throw new Error("Leads Master not found.");
   }
 
-  const rowNumber = sheet.getActiveCell().getRow();
-  if (rowNumber < 2) {
-    SpreadsheetApp.getUi().alert("Please select a lead row, not the header.");
-    return;
+  ensureCRMColumns_(leadsSheet);
+
+  const headers = getHeaders_(leadsSheet);
+  const rowNumber = findLeadRowNumberByLeadId_(leadsSheet, headers, leadId);
+
+  if (!rowNumber) {
+    throw new Error('Lead not found for lead_id: ' + leadId);
   }
 
-  ensureCRMColumns_(sheet);
-  const headers = getHeaders_(sheet);
-  const row = getRowObject_(sheet, rowNumber);
+  const row = getRowObject_(leadsSheet, rowNumber);
   const now = new Date();
-
   const oldStage = row.pipeline_stage || "";
   const updates = buildUpdatesFn(row, now) || {};
-  writeRowUpdates_(sheet, headers, [{
+
+  writeRowUpdates_(leadsSheet, headers, [{
     rowNumber: rowNumber,
     updates: updates
   }]);
 
-  const updatedRow = getRowObject_(sheet, rowNumber);
+  const updatedRow = getRowObject_(leadsSheet, rowNumber);
+
   logActivity_(ss, {
     lead_id: updatedRow.lead_id,
     business_name: updatedRow.business_name,
     activity_type: activityType,
     old_value: oldStage,
     new_value: updatedRow.pipeline_stage || "",
-    note: "",
+    note: buildCRMActivityNote_(row, updatedRow),
     actor: Session.getActiveUser().getEmail() || "unknown"
   });
 
   refreshCRMExecutionLayer();
+
+  return updatedRow;
+}
+
+/* ------------------------------
+ * SELECTION / LOOKUP HELPERS
+ * ------------------------------ */
+
+function getSelectedLeadIdForCRMAction_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+
+  if (!sheet) {
+    throw new Error("No active sheet selected.");
+  }
+
+  const rowNumber = sheet.getActiveCell().getRow();
+  if (rowNumber < 2) {
+    throw new Error("Please select a lead row, not the header.");
+  }
+
+  const headers = getHeaders_(sheet);
+  const leadIdCol = headers.indexOf("lead_id") + 1;
+
+  if (!leadIdCol) {
+    throw new Error(
+      'Active sheet "' + sheet.getName() + '" does not expose a lead_id column.'
+    );
+  }
+
+  const leadId = String(sheet.getRange(rowNumber, leadIdCol).getValue() || "").trim();
+
+  if (!leadId) {
+    throw new Error("Selected row does not contain a lead_id.");
+  }
+
+  return leadId;
+}
+
+function findLeadRowNumberByLeadId_(sheet, headers, leadId) {
+  const leadIdCol = headers.indexOf("lead_id") + 1;
+  if (!leadIdCol) {
+    throw new Error('Leads Master is missing required "lead_id" column.');
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+
+  const values = sheet.getRange(2, leadIdCol, lastRow - 1, 1).getValues();
+
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0] || "").trim() === String(leadId).trim()) {
+      return i + 2;
+    }
+  }
+
+  return null;
+}
+
+function buildCRMActivityNote_(beforeRow, afterRow) {
+  const parts = [];
+
+  if ((beforeRow.pipeline_stage || "") !== (afterRow.pipeline_stage || "")) {
+    parts.push(
+      'stage: "' + (beforeRow.pipeline_stage || "") + '" → "' + (afterRow.pipeline_stage || "") + '"'
+    );
+  }
+
+  if ((beforeRow.next_action || "") !== (afterRow.next_action || "")) {
+    parts.push(
+      'next_action: "' + (afterRow.next_action || "") + '"'
+    );
+  }
+
+  if (String(beforeRow.next_action_due_at || "") !== String(afterRow.next_action_due_at || "")) {
+    parts.push(
+      'due_at: "' + (afterRow.next_action_due_at || "") + '"'
+    );
+  }
+
+  if (String(beforeRow.follow_up_count || 0) !== String(afterRow.follow_up_count || 0)) {
+    parts.push(
+      'follow_up_count: ' + (beforeRow.follow_up_count || 0) + ' → ' + (afterRow.follow_up_count || 0)
+    );
+  }
+
+  return parts.join(" | ");
 }
 
 /* ============================================================================
