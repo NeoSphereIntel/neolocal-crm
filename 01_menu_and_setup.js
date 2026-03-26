@@ -171,8 +171,17 @@ function setupSearchConfigSheet_(sheet) {
 }
 
 function repairSearchConfigValidation_(sheet) {
-  const headers = getHeaders_(sheet);
+  const rawHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  // Force missing header if B1 is blank
+  if (!rawHeaders[1]) {
+    sheet.getRange(1, 2).setValue("active");
+  }
+
+  const refreshedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const headers = refreshedHeaders.map(h => String(h).trim().toLowerCase());
   const totalRowsToFormat = Math.max(sheet.getMaxRows() - 1, 1);
+  const lastCol = refreshedHeaders.length;
 
   const col = {
     config_id: headers.indexOf("config_id") + 1,
@@ -191,10 +200,8 @@ function repairSearchConfigValidation_(sheet) {
   };
 
   if (!col.active || !col.country || !col.province_state || !col.language || !col.max_results) {
-    throw new Error("Search Config headers missing or mismatched.");
+    throw new Error("Search Config headers missing or mismatched after normalization.");
   }
-
-  const lastCol = headers.length;
 
   sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
 
@@ -208,7 +215,6 @@ function repairSearchConfigValidation_(sheet) {
   sheet.getRange(2, col.language, totalRowsToFormat, 1).setNumberFormat("@");
   sheet.getRange(2, col.notes, totalRowsToFormat, lastCol - col.notes + 1).setNumberFormat("@");
 
-  // HARD FORCE CHECKBOXES ON THE REAL "active" COLUMN
   const activeRange = sheet.getRange(2, col.active, totalRowsToFormat, 1);
   activeRange.clearContent();
   activeRange.clearDataValidations();
