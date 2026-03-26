@@ -173,7 +173,7 @@ function setupSearchConfigSheet_(sheet) {
 function repairSearchConfigValidation_(sheet) {
   const rawHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-  // Force missing header if B1 is blank
+  // Auto-repair missing B1 header if blank
   if (!rawHeaders[1]) {
     sheet.getRange(1, 2).setValue("active");
   }
@@ -203,8 +203,10 @@ function repairSearchConfigValidation_(sheet) {
     throw new Error("Search Config headers missing or mismatched after normalization.");
   }
 
+  // Clear existing validations across the working area
   sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
 
+  // Reapply formats using real header map
   sheet.getRange(2, col.config_id, totalRowsToFormat, 1).setNumberFormat("@");
   sheet.getRange(2, col.niche, totalRowsToFormat, 1).setNumberFormat("@");
   sheet.getRange(2, col.city, totalRowsToFormat, 1).setNumberFormat("@");
@@ -215,36 +217,35 @@ function repairSearchConfigValidation_(sheet) {
   sheet.getRange(2, col.language, totalRowsToFormat, 1).setNumberFormat("@");
   sheet.getRange(2, col.notes, totalRowsToFormat, lastCol - col.notes + 1).setNumberFormat("@");
 
+  // Active column: hard reset and reinsert checkboxes
   const activeRange = sheet.getRange(2, col.active, totalRowsToFormat, 1);
-  activeRange.clearContent();
   activeRange.clearDataValidations();
+  activeRange.clearContent();
+  SpreadsheetApp.flush();
+  activeRange.insertCheckboxes();
 
-  const checkboxRule = SpreadsheetApp.newDataValidation()
-    .requireCheckbox()
-    .setAllowInvalid(false)
-    .build();
-
-  activeRange.setDataValidation(checkboxRule);
-  activeRange.setValues(Array.from({ length: totalRowsToFormat }, () => [false]));
-
+  // Country dropdown
   const countryRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.COUNTRIES, true)
     .setAllowInvalid(true)
     .build();
   sheet.getRange(2, col.country, totalRowsToFormat, 1).setDataValidation(countryRule);
 
+  // Province/state dropdown
   const provinceRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.PROVINCES_STATES, true)
     .setAllowInvalid(true)
     .build();
   sheet.getRange(2, col.province_state, totalRowsToFormat, 1).setDataValidation(provinceRule);
 
+  // Language dropdown
   const languageRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["en", "fr"], true)
     .setAllowInvalid(true)
     .build();
   sheet.getRange(2, col.language, totalRowsToFormat, 1).setDataValidation(languageRule);
 
+  // Max results defaults
   const maxRange = sheet.getRange(2, col.max_results, totalRowsToFormat, 1);
   const maxVals = maxRange.getValues().map(r => {
     const n = parseInt(r[0], 10);
