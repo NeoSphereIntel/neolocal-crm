@@ -352,18 +352,20 @@ function logActivity_(ss, payload) {
 
 function buildSalesWorkspace_(ss, leads) {
   const headers = [
+    "lead_id",
     "business_name",
     "category",
     "city",
     "priority_score",
     "pipeline_stage",
+    "status_flag",
+    "next_action",
+    "next_action_due_at",
+    "last_contact_at",
+    "follow_up_count",
     "outreach_message",
     "inbound_reply",
     "reply_type",
-    "next_action",
-    "next_action_due_at",
-    "follow_up_count",
-    "is_overdue",
     "owner",
     "crm_notes"
   ];
@@ -373,22 +375,42 @@ function buildSalesWorkspace_(ss, leads) {
   const data = leads
     .slice()
     .sort(compareLeadsForWorkspace_)
-    .map(row => [
-      row.business_name || "",
-      row.category || "",
-      row.city || "",
-      row.priority_score || "",
-      row.pipeline_stage || "",
-      row.outreach_message || "",
-      row.inbound_reply || "",
-      row.reply_type || "",
-      row.next_action || "",
-      row.next_action_due_at || "",
-      row.follow_up_count || 0,
-      row.is_overdue || "NO",
-      row.owner || "",
-      row.crm_notes || ""
-    ]);
+    .map(row => {
+      const due = row.next_action_due_at ? new Date(row.next_action_due_at) : null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let statusFlag = "";
+      if (row.is_overdue === "YES") {
+        statusFlag = "🔴 OVERDUE";
+      } else if (due && !isNaN(due.getTime())) {
+        due.setHours(0, 0, 0, 0);
+        if (due.getTime() === today.getTime()) {
+          statusFlag = "🟡 TODAY";
+        } else if (due > today) {
+          statusFlag = "🟢 FUTURE";
+        }
+      }
+
+      return [
+        row.lead_id || "",
+        row.business_name || "",
+        row.category || "",
+        row.city || "",
+        row.priority_score || "",
+        row.pipeline_stage || "",
+        statusFlag,
+        row.next_action || "",
+        row.next_action_due_at || "",
+        row.last_contact_at || "",
+        row.follow_up_count || 0,
+        row.outreach_message || "",
+        row.inbound_reply || "",
+        row.reply_type || "",
+        row.owner || "",
+        row.crm_notes || ""
+      ];
+    });
 
   writeView_(sheet, data);
   freezeAndFilterView_(sheet, headers.length);
