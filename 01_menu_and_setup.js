@@ -172,54 +172,55 @@ function setupSearchConfigSheet_(sheet) {
 
 function repairSearchConfigValidation_(sheet) {
   const targetRows = Math.max(sheet.getMaxRows(), 200);
-  const totalRowsToFormat = targetRows - 1; // exclude header
-  const lastCol = Math.max(sheet.getLastColumn(), 13);
+  const totalRowsToFormat = targetRows - 1; // exclude header row
+  const lastCol = 13; // A:M based on actual ledger
 
-  // Clear validations across working area
+  // Clear existing validations in working range
   sheet.getRange(2, 1, totalRowsToFormat, lastCol).clearDataValidations();
 
-  // Text formatting for text fields only
-  sheet.getRange(2, 1, totalRowsToFormat, 1).setNumberFormat("@");   // search_config_id
-  sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@");   // country
-  sheet.getRange(2, 5, totalRowsToFormat, 1).setNumberFormat("@");   // province/state
-  sheet.getRange(2, 6, totalRowsToFormat, 1).setNumberFormat("@");   // city
-  sheet.getRange(2, 7, totalRowsToFormat, 1).setNumberFormat("0");   // max_results
-  sheet.getRange(2, 8, totalRowsToFormat, 1).setNumberFormat("@");   // lang
-  sheet.getRange(2, 9, totalRowsToFormat, 4).setNumberFormat("@");   // query + extras if used
+  // Formats by actual column map
+  sheet.getRange(2, 1, totalRowsToFormat, 1).setNumberFormat("@"); // A config_id
+  sheet.getRange(2, 3, totalRowsToFormat, 1).setNumberFormat("@"); // C niche
+  sheet.getRange(2, 4, totalRowsToFormat, 1).setNumberFormat("@"); // D city
+  sheet.getRange(2, 5, totalRowsToFormat, 1).setNumberFormat("@"); // E country
+  sheet.getRange(2, 6, totalRowsToFormat, 1).setNumberFormat("@"); // F province_state
+  sheet.getRange(2, 7, totalRowsToFormat, 1).setNumberFormat("@"); // G query_override
+  sheet.getRange(2, 8, totalRowsToFormat, 1).setNumberFormat("0"); // H max_results
+  sheet.getRange(2, 9, totalRowsToFormat, 1).setNumberFormat("@"); // I language
+  sheet.getRange(2, 10, totalRowsToFormat, 4).setNumberFormat("@"); // J:M notes + run fields
 
-  // HARD RESET ACTIVE COLUMN (B)
+  // B = active checkbox
   const activeRange = sheet.getRange(2, 2, totalRowsToFormat, 1);
   activeRange.clearContent();
   activeRange.clearDataValidations();
   activeRange.insertCheckboxes();
 
-  // Default blanks to unchecked FALSE
-  const falseValues = Array.from({ length: totalRowsToFormat }, () => [false]);
-  activeRange.setValues(falseValues);
+  const activeValues = Array.from({ length: totalRowsToFormat }, () => [false]);
+  activeRange.setValues(activeValues);
 
-  // Country dropdown
+  // E = country dropdown
   const countryRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.COUNTRIES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 4, totalRowsToFormat, 1).setDataValidation(countryRule);
+  sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(countryRule);
 
-  // Province/state dropdown
+  // F = province/state dropdown
   const provinceRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(APP.PROVINCES_STATES, true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 5, totalRowsToFormat, 1).setDataValidation(provinceRule);
+  sheet.getRange(2, 6, totalRowsToFormat, 1).setDataValidation(provinceRule);
 
-  // Language dropdown
-  const langRule = SpreadsheetApp.newDataValidation()
+  // I = language dropdown
+  const languageRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["en", "fr"], true)
     .setAllowInvalid(true)
     .build();
-  sheet.getRange(2, 8, totalRowsToFormat, 1).setDataValidation(langRule);
+  sheet.getRange(2, 9, totalRowsToFormat, 1).setDataValidation(languageRule);
 
-  // Max results defaults
-  const maxRange = sheet.getRange(2, 7, totalRowsToFormat, 1);
+  // H = max_results defaults
+  const maxRange = sheet.getRange(2, 8, totalRowsToFormat, 1);
   const maxVals = maxRange.getValues().map(r => {
     const n = parseInt(r[0], 10);
     return [n > 0 ? n : APP.MAX_RESULTS_PER_SEARCH];
