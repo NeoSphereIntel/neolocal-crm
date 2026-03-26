@@ -78,7 +78,7 @@ function runActiveSearchImports() {
   // Re-apply official formatting after imports
   styleLeadsSheet_(leadsSheet);
   SpreadsheetApp.flush();
-
+  refreshCRMExecutionLayer();
   SpreadsheetApp.getUi().alert(
     "Active imports complete.\n\n" +
     "Searches run: " + totalSearches + "\n" +
