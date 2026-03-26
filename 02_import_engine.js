@@ -59,6 +59,7 @@ function runActiveSearchImports() {
   }
 
   const configs = readSearchConfigs_(searchSheet).filter(c => isTruthy_(c.active));
+
   if (!configs.length) {
     SpreadsheetApp.getUi().alert("No active Search Config rows found.");
     return;
@@ -77,8 +78,14 @@ function runActiveSearchImports() {
 
   // Re-apply official formatting after imports
   styleLeadsSheet_(leadsSheet);
+
+  // Refresh CRM derived views after imports
+  if (typeof refreshCRMExecutionLayer === "function") {
+    refreshCRMExecutionLayer();
+  }
+
   SpreadsheetApp.flush();
-  refreshCRMExecutionLayer();
+
   SpreadsheetApp.getUi().alert(
     "Active imports complete.\n\n" +
     "Searches run: " + totalSearches + "\n" +

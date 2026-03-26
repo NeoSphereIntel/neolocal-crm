@@ -12,14 +12,26 @@ function getOrCreateSheet_(ss, name) {
 
 function setHeadersIfNeeded_(sheet, headers) {
   const existing = getHeaders_(sheet);
-  const matches =
+
+  // Brand new / empty sheet
+  if (!existing.length) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return;
+  }
+
+  // Exact match = nothing to do
+  const exactMatch =
     existing.length === headers.length &&
     existing.every((h, i) => h === headers[i]);
 
-  if (!matches) {
-    sheet.clear();
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  }
+  if (exactMatch) return;
+
+  // Preserve existing data and append only missing headers
+  const missingHeaders = headers.filter(h => !existing.includes(h));
+  if (!missingHeaders.length) return;
+
+  const startCol = existing.length + 1;
+  sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
 }
 
 function getHeaders_(sheet) {
