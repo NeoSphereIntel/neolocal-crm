@@ -192,3 +192,188 @@ function testMarketMirrorRoofingHtml_() {
 function testMarketMirrorRoofingRepSheet_() {
   return testRepSupportSheetHtml_("roofing");
 }
+
+function testMarketMirrorAutoRetail_() {
+  const input = getMarketMirrorTestInput_("used_car");
+  const payload = buildMarketMirrorPayload_(input);
+  Logger.log(JSON.stringify(payload, null, 2));
+  return payload;
+}
+
+function testMarketMirrorAutoRetailHtml_() {
+  const input = getMarketMirrorTestInput_("used_car");
+  const payload = buildMarketMirrorPayload_(input);
+  const html = renderMarketMirrorHtml_(payload);
+  Logger.log(html);
+  return html;
+}
+
+function testMarketMirrorAutoRetailRepSheet_() {
+  const input = getMarketMirrorTestInput_("used_car");
+  const payload = buildMarketMirrorPayload_(input);
+  const html = renderRepSupportSheetHtml_(payload);
+  Logger.log(html);
+  return html;
+}
+
+function testMarketMirrorHVAC_() {
+  const input = getMarketMirrorTestInput_("hvac");
+  const payload = buildMarketMirrorPayload_(input);
+  Logger.log(JSON.stringify(payload, null, 2));
+  return payload;
+}
+
+function testMarketMirrorHVACHtml_() {
+  const input = getMarketMirrorTestInput_("hvac");
+  const payload = buildMarketMirrorPayload_(input);
+  const html = renderMarketMirrorHtml_(payload);
+  Logger.log(html);
+  return html;
+}
+
+function testMarketMirrorHVACRepSheet_() {
+  const input = getMarketMirrorTestInput_("hvac");
+  const payload = buildMarketMirrorPayload_(input);
+  const html = renderRepSupportSheetHtml_(payload);
+  Logger.log(html);
+  return html;
+}
+
+function testMarketMirrorRoofing_() {
+  const input = getMarketMirrorTestInput_("roofing");
+  const payload = buildMarketMirrorPayload_(input);
+  Logger.log(JSON.stringify(payload, null, 2));
+  return payload;
+}
+
+function testMarketMirrorRoofingHtml_() {
+  const input = getMarketMirrorTestInput_("roofing");
+  const payload = buildMarketMirrorPayload_(input);
+  const html = renderMarketMirrorHtml_(payload);
+  Logger.log(html);
+  return html;
+}
+
+function testMarketMirrorRoofingRepSheet_() {
+  const input = getMarketMirrorTestInput_("roofing");
+  const payload = buildMarketMirrorPayload_(input);
+  const html = renderRepSupportSheetHtml_(payload);
+  Logger.log(html);
+  return html;
+}
+
+function getMarketMirrorTestInput_(vertical) {
+  if (vertical === "used_car") {
+    return {
+      business_name: "Metro Choice Auto",
+      niche: "used_car",
+      city: "Laval",
+      neighborhood: "North Shore",
+      reviews_count: 68,
+      rating: 4.5,
+      competitor_avg_reviews: 211,
+      competitor_max_reviews: 486,
+      competitor_count_sampled: 5,
+      has_website: true,
+      has_phone: true,
+      has_hours: true,
+      has_services: true,
+      has_posts: false,
+      photo_count_band: "medium",
+      secondary_categories_count: 2,
+      has_attributes: true,
+      business_model_visible: "storefront",
+      map_pack_presence: "weak",
+      primary_category_match: "strong",
+      rep: {
+        inventory_band: "40_100",
+        rooftop_count: "1",
+        sales_team_band: "4_8",
+        business_type: "independent",
+        service_department: "yes",
+        financing_model: "mixed",
+        inventory_positioning: "mainstream",
+        merchandising_quality: "average",
+        market_density: "heavy",
+        repeat_buyer_model: "medium",
+        language_market_fit: "strong_bilingual"
+      }
+    };
+  }
+
+  if (vertical === "hvac") {
+    return {
+      business_name: "NorthFlow HVAC",
+      niche: "hvac",
+      city: "Montreal",
+      neighborhood: "West Island",
+      reviews_count: 54,
+      rating: 4.7,
+      competitor_avg_reviews: 179,
+      competitor_max_reviews: 390,
+      competitor_count_sampled: 5,
+      has_website: true,
+      has_phone: true,
+      has_hours: true,
+      has_services: true,
+      has_posts: false,
+      photo_count_band: "medium",
+      secondary_categories_count: 3,
+      has_attributes: true,
+      business_model_visible: "service_area",
+      map_pack_presence: "weak",
+      primary_category_match: "strong",
+      rep: {
+        truck_count_band: "3_6",
+        team_size_band: "4_10",
+        service_mix: "both",
+        emergency_service: "yes",
+        maintenance_plans: "yes",
+        install_focus: "yes",
+        service_focus: "yes",
+        financing_available: "yes",
+        territory_breadth: "metro",
+        seasonality_pressure: "high",
+        dispatcher_capacity: "medium",
+        brand_positioning: "mid"
+      }
+    };
+  }
+
+  return {
+    business_name: "Summit Roofing",
+    niche: "roofing",
+    city: "Montreal",
+    neighborhood: "South Shore",
+    reviews_count: 41,
+    rating: 4.6,
+    competitor_avg_reviews: 143,
+    competitor_max_reviews: 315,
+    competitor_count_sampled: 5,
+    has_website: true,
+    has_phone: true,
+    has_hours: true,
+    has_services: true,
+    has_posts: false,
+    photo_count_band: "high",
+    secondary_categories_count: 2,
+    has_attributes: true,
+    business_model_visible: "service_area",
+    map_pack_presence: "weak",
+    primary_category_match: "strong",
+    rep: {
+      crew_count_band: "3_6",
+      truck_count_band: "3_5",
+      service_mix: "both",
+      residential_or_commercial: "residential",
+      emergency_response: "yes",
+      insurance_claim_support: "yes",
+      financing_available: "yes",
+      territory_breadth: "metro",
+      storm_dependency: "moderate",
+      visual_proof_quality: "strong",
+      estimate_process_strength: "average",
+      positioning: "mainstream"
+    }
+  };
+}
