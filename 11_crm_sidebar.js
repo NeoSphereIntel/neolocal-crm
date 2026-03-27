@@ -186,3 +186,26 @@ function formatSidebarDate_(value) {
     'yyyy-MM-dd'
   );
 }
+
+function getMarketMirrorHtmlForSidebar(vertical) {
+  try {
+    // 1. Get sample input (for now)
+    const input = getMarketMirrorSampleInput_(vertical || "auto_retail");
+
+    // 2. Build payload
+    const payload = buildMarketMirrorPayload_(input);
+
+    // 3. Generate HTML
+    const html = renderMarketMirrorHtml_(payload);
+
+    return html;
+
+  } catch (err) {
+    return `
+      <div style="padding:12px;font-family:Arial;">
+        <strong style="color:red;">Market Mirror Error</strong><br/>
+        <pre>${err.message}</pre>
+      </div>
+    `;
+  }
+}

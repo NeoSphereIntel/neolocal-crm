@@ -112,6 +112,9 @@
         <button onclick="runAction('snooze_2')">Snooze 2d</button>
         <button onclick="runAction('snooze_3')">Snooze 3d</button>
         <button onclick="runAction('snooze_5')">Snooze 5d</button>
+		<button onclick="loadMirror()">Load Market Mirror</button>
+
+<div id="mirror-output"></div>
       </div>
       <div id="status" class="status"></div>
     </div>
@@ -176,5 +179,14 @@
 
       loadLead();
     </script>
+	<script>
+function loadMirror() {
+  google.script.run
+    .withSuccessHandler(function(html) {
+      document.getElementById("mirror-output").innerHTML = html;
+    })
+    .getMarketMirrorHtmlForSidebar("auto_retail");
+}
+</script>
   </body>
 </html>
