@@ -558,6 +558,7 @@ function buildSalesWorkspace_(ss, leads) {
 
 function buildFollowUps_(ss, leads) {
   const headers = [
+    "lead_id",
     "business_name",
     "city",
     "priority_score",
@@ -579,6 +580,7 @@ function buildFollowUps_(ss, leads) {
     .filter(row => row.is_overdue === "YES" || isToday_(row.next_action_due_at) || isPast_(row.next_action_due_at))
     .sort(compareLeadsForWorkspace_)
     .map(row => [
+      row.lead_id || "",
       row.business_name || "",
       row.city || "",
       row.priority_score || "",
@@ -595,6 +597,12 @@ function buildFollowUps_(ss, leads) {
 
   writeView_(sheet, data);
   freezeAndFilterView_(sheet, headers.length);
+
+  // keep date formatting only on due-date column
+  if (sheet.getLastRow() >= 2) {
+    sheet.getRange(2, 7, Math.max(sheet.getLastRow() - 1, 1), 1).setNumberFormat("yyyy-mm-dd");
+    sheet.getRange(2, 8, Math.max(sheet.getLastRow() - 1, 1), 1).setNumberFormat("0");
+  }
 }
 
 function buildPipeline_(ss, leads) {
@@ -610,13 +618,17 @@ function buildPipeline_(ss, leads) {
   ];
 
   const sheet = getOrCreateViewSheet_(ss, "Pipeline", stages);
+
   const grouped = {};
   stages.forEach(s => grouped[s] = []);
 
   leads.forEach(row => {
     const stage = row.pipeline_stage || "New";
     if (grouped[stage]) {
-      grouped[stage].push(row.business_name || "");
+      const leadLabel = [row.lead_id || "", row.business_name || ""]
+        .filter(Boolean)
+        .join(" — ");
+      grouped[stage].push(leadLabel);
     }
   });
 
@@ -642,15 +654,14 @@ function getOrCreateViewSheet_(ss, name, headers) {
     sheet = ss.insertSheet(name);
   }
 
-  const currentMaxCols = sheet.getMaxColumns();
-  if (currentMaxCols < headers.length) {
-    sheet.insertColumnsAfter(currentMaxCols, headers.length - currentMaxCols);
+  if (sheet.getMaxColumns() < headers.length) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
   }
 
-  // Force exact header row every rebuild
+  // Force exact header row every refresh
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
-  // Clear any stale header cells beyond the active header width
+  // Clear stale header cells beyond current width
   if (sheet.getMaxColumns() > headers.length) {
     sheet.getRange(1, headers.length + 1, 1, sheet.getMaxColumns() - headers.length).clearContent();
   }
