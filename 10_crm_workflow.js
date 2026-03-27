@@ -44,6 +44,21 @@ function refreshCRMExecutionLayer() {
   void activitiesSheet; // kept for future use and ensured now
 }
 
+function refreshCRMViewsLite_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const leadsSheet = ss.getSheetByName(APP.SHEETS.LEADS);
+
+  if (!leadsSheet) throw new Error("Leads Master not found");
+
+  ensureCRMColumns_(leadsSheet);
+
+  const rows = getSheetDataObjects_(leadsSheet);
+
+  buildSalesWorkspace_(ss, rows);
+  buildFollowUps_(ss, rows);
+  buildPipeline_(ss, rows);
+}
+
 function computeCRMStateForRow_(row, now) {
   const out = {};
 
@@ -344,7 +359,7 @@ function applyCRMActionByLeadId_(leadId, buildUpdatesFn, activityType) {
     actor: Session.getActiveUser().getEmail() || "unknown"
   });
 
-  refreshCRMExecutionLayer();
+  refreshCRMViewsLite_();
 
   // --- SMART FEEDBACK (ENHANCED) ---
   const updatedLeadId = updatedRow.lead_id || '';
