@@ -1,5 +1,5 @@
 /**
- * File: 14_market_mirror_narratives.js
+ * File: 15_market_mirror_narratives.js
  * NeoLocal Market Mirror — narrative generation
  */
 var MM = typeof MM !== "undefined" ? MM : {};
@@ -13,6 +13,7 @@ function generateMarketMirrorNarrative_(payload) {
 }
 
 function generateAutoRetailNarrative_(payload) {
+  var vertical = payload.vertical_key;
   var o = payload.observed;
   var r = payload.rep;
   var d = payload.derived;

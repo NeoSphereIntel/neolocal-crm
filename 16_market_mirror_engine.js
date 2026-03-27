@@ -19,7 +19,6 @@ function buildMarketMirrorPayload_(input) {
 
   payload.narrative = generateMarketMirrorNarrative_(payload);
   payload.rep_sheet = buildRepSupportSheetData_(payload);
-
   return payload;
 }
 
@@ -33,7 +32,7 @@ function buildRepSupportSheetData_(payload) {
       "Use the mirror to trigger agreement, not to overwhelm.",
       "Stay operator-to-operator. Calm. Direct. No hype."
     ],
-    prompt_groups: p.rep_prompt_groups || [],
+    prompt_groups: p.rep_prompt_groups,
     validation_prompts: [
       "Does this feel accurate to you?",
       "Is that too harsh, or pretty close to reality?",
@@ -41,7 +40,7 @@ function buildRepSupportSheetData_(payload) {
     ],
     metric_bridge_lines: [
       "These numbers are not random — they reflect how the business appears in the market.",
-      "The purpose is not to impress you with a score. It is to show where visible position is helping or hurting.",
+      "The purpose is not to impress you with a score. It's to show where visible position is helping or hurting.",
       "The scoring is proprietary, but the inputs are grounded in real public and operational signals."
     ],
     close_transition: closeTransitionByVertical_(payload.vertical_key, d)
