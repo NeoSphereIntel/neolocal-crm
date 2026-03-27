@@ -54,6 +54,11 @@ function openCRMActionSidebar() {
  */
 function getSelectedLeadContextForSidebar() {
   const leadId = getSelectedLeadIdForCRMAction_();
+  return getLeadContextForSidebarByLeadId(leadId);
+}
+
+function getLeadContextForSidebarByLeadId(leadId) {
+  if (!leadId) throw new Error('Missing lead_id.');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const leadsSheet = ss.getSheetByName(APP.SHEETS.LEADS);
@@ -83,8 +88,10 @@ function getSelectedLeadContextForSidebar() {
  * Sidebar action runner.
  * Reuses existing backend action engine from 10_crm_workflow.js
  */
-function runCRMActionFromSidebar(actionName) {
-  const leadId = getSelectedLeadIdForCRMAction_();
+function runCRMActionFromSidebar(actionName, leadId) {
+  if (!leadId) {
+    throw new Error('Missing lead_id for sidebar action.');
+  }
 
   switch (actionName) {
     case 'contacted':
@@ -164,7 +171,7 @@ function runCRMActionFromSidebar(actionName) {
       throw new Error('Unsupported CRM sidebar action: ' + actionName);
   }
 
-  return getSelectedLeadContextForSidebar();
+  return getLeadContextForSidebarByLeadId(leadId);
 }
 
 function formatSidebarDate_(value) {

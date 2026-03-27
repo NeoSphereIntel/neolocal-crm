@@ -117,11 +117,15 @@
     </div>
 
     <script>
+      let currentLeadId = '';
+
       function setStatus(text) {
         document.getElementById('status').textContent = text || '';
       }
 
       function renderLead(data) {
+        currentLeadId = data.lead_id || '';
+
         document.getElementById('leadTitle').textContent =
           (data.lead_id || '') + ' — ' + (data.business_name || '');
         document.getElementById('leadSub').textContent =
@@ -152,6 +156,11 @@
       }
 
       function runAction(actionName) {
+        if (!currentLeadId) {
+          setStatus('No lead loaded in panel.');
+          return;
+        }
+
         setStatus('Running action…');
 
         google.script.run
@@ -162,7 +171,7 @@
           .withFailureHandler(function(err) {
             setStatus((err && err.message) || 'Action failed.');
           })
-          .runCRMActionFromSidebar(actionName);
+          .runCRMActionFromSidebar(actionName, currentLeadId);
       }
 
       loadLead();
