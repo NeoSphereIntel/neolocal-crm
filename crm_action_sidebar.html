@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        color: #1f1f1f;
+        background: #f8f9fa;
+      }
+
+      .card {
+        border: 1px solid #dadce0;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 14px;
+        background: #ffffff;
+      }
+
+      .lead-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .lead-sub {
+        font-size: 12px;
+        color: #5f6368;
+        margin-bottom: 10px;
+      }
+
+      .meta-row {
+        margin: 6px 0;
+        font-size: 13px;
+      }
+
+      .meta-label {
+        font-weight: 700;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      button {
+        border: 1px solid #dadce0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px 8px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      button:hover {
+        background: #eef3fd;
+      }
+
+      button.primary {
+        background: #e8f0fe;
+        border-color: #c6dafc;
+      }
+
+      .status {
+        margin-top: 12px;
+        font-size: 12px;
+        color: #5f6368;
+        min-height: 16px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .toolbar button {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button onclick="loadLead()">Refresh Panel</button>
+    </div>
+
+    <div class="card">
+      <div id="leadTitle" class="lead-title">Loading…</div>
+      <div id="leadSub" class="lead-sub"></div>
+
+      <div class="meta-row"><span class="meta-label">Stage:</span> <span id="stage"></span></div>
+      <div class="meta-row"><span class="meta-label">Next Action:</span> <span id="nextAction"></span></div>
+      <div class="meta-row"><span class="meta-label">Due:</span> <span id="dueAt"></span></div>
+      <div class="meta-row"><span class="meta-label">Follow-Ups:</span> <span id="followUps"></span></div>
+      <div class="meta-row"><span class="meta-label">Priority:</span> <span id="priority"></span></div>
+      <div class="meta-row"><span class="meta-label">Overdue:</span> <span id="overdue"></span></div>
+    </div>
+
+    <div class="card">
+      <div class="lead-title" style="font-size:14px;">Actions</div>
+      <div class="actions">
+        <button class="primary" onclick="runAction('contacted')">Mark Contacted</button>
+        <button class="primary" onclick="runAction('replied')">Mark Replied</button>
+        <button onclick="runAction('qualified')">Mark Qualified</button>
+        <button onclick="runAction('call_booked')">Mark Call Booked</button>
+        <button onclick="runAction('snapshot_sent')">Mark Snapshot Sent</button>
+        <button onclick="runAction('closed_won')">Closed Won</button>
+        <button onclick="runAction('closed_lost')">Closed Lost</button>
+        <button onclick="runAction('snooze_2')">Snooze 2d</button>
+        <button onclick="runAction('snooze_3')">Snooze 3d</button>
+        <button onclick="runAction('snooze_5')">Snooze 5d</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <script>
+      function setStatus(text) {
+        document.getElementById('status').textContent = text || '';
+      }
+
+      function renderLead(data) {
+        document.getElementById('leadTitle').textContent =
+          (data.lead_id || '') + ' — ' + (data.business_name || '');
+        document.getElementById('leadSub').textContent =
+          [data.city || '', data.owner ? 'Owner: ' + data.owner : '']
+            .filter(Boolean)
+            .join(' • ');
+
+        document.getElementById('stage').textContent = data.pipeline_stage || '';
+        document.getElementById('nextAction').textContent = data.next_action || '';
+        document.getElementById('dueAt').textContent = data.next_action_due_at || '';
+        document.getElementById('followUps').textContent = data.follow_up_count || 0;
+        document.getElementById('priority').textContent = data.priority_score || '';
+        document.getElementById('overdue').textContent = data.is_overdue || 'NO';
+      }
+
+      function loadLead() {
+        setStatus('Loading selected lead…');
+
+        google.script.run
+          .withSuccessHandler(function(data) {
+            renderLead(data);
+            setStatus('Panel synced.');
+          })
+          .withFailureHandler(function(err) {
+            setStatus((err && err.message) || 'Failed to load selected lead.');
+          })
+          .getSelectedLeadContextForSidebar();
+      }
+
+      function runAction(actionName) {
+        setStatus('Running action…');
+
+        google.script.run
+          .withSuccessHandler(function(data) {
+            renderLead(data);
+            setStatus('Action completed.');
+          })
+          .withFailureHandler(function(err) {
+            setStatus((err && err.message) || 'Action failed.');
+          })
+          .runCRMActionFromSidebar(actionName);
+      }
+
+      loadLead();
+    </script>
+  </body>
+</html>
