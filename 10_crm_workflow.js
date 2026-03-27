@@ -301,31 +301,30 @@ function applyCRMActionByLeadId_(leadId, buildUpdatesFn, activityType) {
   const row = getRowObject_(leadsSheet, rowNumber);
   const now = new Date();
   const oldStage = row.pipeline_stage || "";
-  
-  // --- GUARDRAILS (NEW) ---
 
-	const targetStagePreview = buildUpdatesFn(row, new Date())?.pipeline_stage || "";
+  // --- GUARDRAILS ---
+  const targetStagePreview = buildUpdatesFn(row, new Date())?.pipeline_stage || "";
 
-	// prevent modifying closed leads
-		if (oldStage === "Closed Won" || oldStage === "Closed Lost") {
-		SpreadsheetApp.getActive().toast(
-		'Lead ' + leadId + ' is already closed',
-		'CRM Blocked',
-		3
-	);
-	return;
-	}
+  // prevent modifying closed leads
+  if (oldStage === "Closed Won" || oldStage === "Closed Lost") {
+    SpreadsheetApp.getActive().toast(
+      'Lead ' + leadId + ' is already closed',
+      'CRM Blocked',
+      3
+    );
+    return;
+  }
 
-	// prevent same-stage duplicate action
-	if (targetStagePreview && targetStagePreview === oldStage) {
-	SpreadsheetApp.getActive().toast(
-    'Lead ' + leadId + ' is already in "' + oldStage + '"',
-    'No Change',
-    3
-	);
-	return;
-	}
-  
+  // prevent same-stage duplicate action
+  if (targetStagePreview && targetStagePreview === oldStage) {
+    SpreadsheetApp.getActive().toast(
+      'Lead ' + leadId + ' is already in "' + oldStage + '"',
+      'No Change',
+      3
+    );
+    return;
+  }
+
   const updates = buildUpdatesFn(row, now) || {};
 
   writeRowUpdates_(leadsSheet, headers, [{
@@ -347,39 +346,37 @@ function applyCRMActionByLeadId_(leadId, buildUpdatesFn, activityType) {
 
   refreshCRMExecutionLayer();
 
-	// --- SMART FEEDBACK (ENHANCED) ---
-	const leadId = updatedRow.lead_id || '';
-	const businessName = updatedRow.business_name || '';
-	const stage = updatedRow.pipeline_stage || 'Updated';
-	const nextAction = updatedRow.next_action || '';
-	const dueDate = updatedRow.next_action_due_at;
+  // --- SMART FEEDBACK (ENHANCED) ---
+  const updatedLeadId = updatedRow.lead_id || '';
+  const businessName = updatedRow.business_name || '';
+  const stage = updatedRow.pipeline_stage || 'Updated';
+  const nextAction = updatedRow.next_action || '';
+  const dueDate = updatedRow.next_action_due_at;
 
-	let dueText = '';
+  let dueText = '';
 
-	if (dueDate) {
-	  const today = stripTime_(new Date());
-	  const diffMs = stripTime_(new Date(dueDate)) - today;
-	  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  if (dueDate) {
+    const today = stripTime_(new Date());
+    const diffMs = stripTime_(new Date(dueDate)) - today;
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-	  if (diffDays === 0) dueText = 'today';
-	  else if (diffDays === 1) dueText = 'tomorrow';
-	  else if (diffDays > 1) dueText = 'in ' + diffDays + 'd';
-	}
+    if (diffDays === 0) dueText = 'today';
+    else if (diffDays === 1) dueText = 'tomorrow';
+    else if (diffDays > 1) dueText = 'in ' + diffDays + 'd';
+  }
 
-	// Main line
-	let message = leadId + ' — ' + businessName + '\n→ ' + stage;
+  let message = updatedLeadId + ' — ' + businessName + '\n→ ' + stage;
 
-	// Next action line
-	if (nextAction) {
-	  message += '\nNext: ' + nextAction;
-	  if (dueText) {
-		message += ' (' + dueText + ')';
-	  }
-}
+  if (nextAction) {
+    message += '\nNext: ' + nextAction;
+    if (dueText) {
+      message += ' (' + dueText + ')';
+    }
+  }
 
-SpreadsheetApp.getActive().toast(message, 'CRM Action Executed', 6);
+  SpreadsheetApp.getActive().toast(message, 'CRM Action Executed', 6);
 
-return updatedRow;
+  return updatedRow;
 }
 
 /* ------------------------------
