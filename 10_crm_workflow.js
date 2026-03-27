@@ -322,7 +322,11 @@ function applyCRMActionByLeadId_(leadId, buildUpdatesFn, activityType) {
 
   refreshCRMExecutionLayer();
 
-  return updatedRow;
+	// --- ACTION FEEDBACK (NEW) ---
+	const message = 'Lead ' + (updatedRow.lead_id || '') + ' → ' + (updatedRow.pipeline_stage || 'Updated');
+	SpreadsheetApp.getActive().toast(message, 'CRM Update', 3);
+
+	return updatedRow;
 }
 
 /* ------------------------------
