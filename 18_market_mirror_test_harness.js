@@ -155,3 +155,40 @@ function testRepSupportSheetHtml_(vertical) {
   Logger.log(html.substring(0, 2500));
   return html;
 }
+
+
+function testMarketMirrorAutoRetail_() {
+  return testMarketMirrorPayload_("auto_retail");
+}
+
+function testMarketMirrorAutoRetailHtml_() {
+  return testMarketMirrorHtml_("auto_retail");
+}
+
+function testMarketMirrorAutoRetailRepSheet_() {
+  return testRepSupportSheetHtml_("auto_retail");
+}
+
+function testMarketMirrorHVAC_() {
+  return testMarketMirrorPayload_("hvac");
+}
+
+function testMarketMirrorHVACHtml_() {
+  return testMarketMirrorHtml_("hvac");
+}
+
+function testMarketMirrorHVACRepSheet_() {
+  return testRepSupportSheetHtml_("hvac");
+}
+
+function testMarketMirrorRoofing_() {
+  return testMarketMirrorPayload_("roofing");
+}
+
+function testMarketMirrorRoofingHtml_() {
+  return testMarketMirrorHtml_("roofing");
+}
+
+function testMarketMirrorRoofingRepSheet_() {
+  return testRepSupportSheetHtml_("roofing");
+}
