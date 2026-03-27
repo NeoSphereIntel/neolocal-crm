@@ -1,7 +1,6 @@
 /**
  * File: 17_market_mirror_renderers.js
  * NeoLocal Market Mirror — branded HTML renderers
- * Styling direction intentionally preserved: premium, readable, not flattened.
  */
 var MM = typeof MM !== "undefined" ? MM : {};
 
@@ -17,9 +16,8 @@ function renderMarketMirrorHtml_(payload) {
   html.push('<html lang="en"><head><meta charset="UTF-8">');
   html.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
   html.push('<title>NeoLocal Market Mirror</title>');
-  html.push('<style>');
-  html.push(getMarketMirrorCss_());
-  html.push('</style></head><body>');
+  html.push('<style>' + getMarketMirrorCss_() + '</style>');
+  html.push('</head><body>');
   html.push('<div class="mm-shell">');
 
   html.push('<header class="mm-header">');
@@ -29,12 +27,13 @@ function renderMarketMirrorHtml_(payload) {
   html.push('<p class="mm-subhead">' + escapeHtml_(n.subhead) + '</p>');
   html.push('<div class="mm-chip-row">');
   html.push(renderChip_("Business", businessName));
-  html.push(renderChip_("Vertical", escapeHtml_(p.label)));
-  html.push(renderChip_("Position", escapeHtml_(humanizeToken_(d.position_band))));
-  html.push(renderChip_("Comparison Scope", escapeHtml_(d.comparison_scope)));
-  html.push(renderChip_("Pressure", escapeHtml_(humanizeToken_(d.pressure_band))));
-  html.push(renderChip_("Acceleration", escapeHtml_(humanizeToken_(d.acceleration_band))));
-  html.push('</div></header>');
+  html.push(renderChip_("Vertical", p.label));
+  html.push(renderChip_("Position", humanizeToken_(d.position_band)));
+  html.push(renderChip_("Comparison Scope", d.comparison_scope));
+  html.push(renderChip_("Pressure", humanizeToken_(d.pressure_band)));
+  html.push(renderChip_("Acceleration", humanizeToken_(d.acceleration_band)));
+  html.push('</div>');
+  html.push('</header>');
 
   html.push('<section class="mm-grid mm-grid-top">');
   html.push(renderBulletCard_("The Market", n.sections.market, "accent"));
@@ -82,9 +81,8 @@ function renderRepSupportSheetHtml_(payload) {
   html.push('<html lang="en"><head><meta charset="UTF-8">');
   html.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
   html.push('<title>NeoLocal Rep Support Sheet</title>');
-  html.push('<style>');
-  html.push(getMarketMirrorCss_());
-  html.push('</style></head><body>');
+  html.push('<style>' + getMarketMirrorCss_() + '</style>');
+  html.push('</head><body>');
   html.push('<div class="mm-shell rep-shell">');
 
   html.push('<header class="mm-header">');
@@ -114,8 +112,8 @@ function renderRepSupportSheetHtml_(payload) {
 }
 
 function renderBulletCard_(title, items, accentClass) {
-  var cls = 'mm-card';
-  if (accentClass) cls += ' mm-' + accentClass;
+  var cls = "mm-card";
+  if (accentClass) cls += " mm-" + accentClass;
 
   var html = [];
   html.push('<article class="' + cls + '">');
@@ -157,15 +155,17 @@ function renderChip_(label, value) {
 
 function escapeHtml_(value) {
   return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function humanizeToken_(token) {
-  return String(token || "").replace(/_/g, " ").replace(/\b\w/g, function(m) { return m.toUpperCase(); });
+  return String(token || "")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, function(m) { return m.toUpperCase(); });
 }
 
 function getMarketMirrorCss_() {
