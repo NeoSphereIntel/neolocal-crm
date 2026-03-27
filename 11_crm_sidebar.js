@@ -186,15 +186,3 @@ function formatSidebarDate_(value) {
     'yyyy-MM-dd'
   );
 }
-
-function zzMMTestAutoRetail_() {
-  return testMarketMirrorAutoRetail_();
-}
-
-function zzMMTestAutoRetailHtml_() {
-  return testMarketMirrorAutoRetailHtml_();
-}
-
-function zzMMTestAutoRetailRepSheet_() {
-  return testMarketMirrorAutoRetailRepSheet_();
-}
