@@ -642,20 +642,18 @@ function getOrCreateViewSheet_(ss, name, headers) {
     sheet = ss.insertSheet(name);
   }
 
-  if (sheet.getFilter()) {
-    sheet.getFilter().remove();
+  const currentMaxCols = sheet.getMaxColumns();
+  if (currentMaxCols < headers.length) {
+    sheet.insertColumnsAfter(currentMaxCols, headers.length - currentMaxCols);
   }
 
-  const maxRows = Math.max(sheet.getMaxRows(), 2);
-  const maxCols = Math.max(sheet.getMaxColumns(), headers.length);
-
-  sheet.getRange(1, 1, maxRows, maxCols).clearContent();
-
-  if (sheet.getMaxColumns() < headers.length) {
-    sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
-  }
-
+  // Force exact header row every rebuild
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  // Clear any stale header cells beyond the active header width
+  if (sheet.getMaxColumns() > headers.length) {
+    sheet.getRange(1, headers.length + 1, 1, sheet.getMaxColumns() - headers.length).clearContent();
+  }
 
   return sheet;
 }
@@ -663,6 +661,7 @@ function getOrCreateViewSheet_(ss, name, headers) {
 function writeView_(sheet, data) {
   const maxRows = Math.max(sheet.getMaxRows() - 1, 1);
   const maxCols = Math.max(sheet.getMaxColumns(), 1);
+
   sheet.getRange(2, 1, maxRows, maxCols).clearContent();
 
   if (data.length) {
