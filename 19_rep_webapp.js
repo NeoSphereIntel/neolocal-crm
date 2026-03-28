@@ -90,7 +90,7 @@ function getAssignedLeadsForRep_(rep) {
         '',
       activeTask: getCellByHeader_(row, idx, 'Active Task') || '',
       taskType: getCellByHeader_(row, idx, 'Task Type') || '',
-      taskDueAt: getCellByHeader_(row, idx, 'Task Due At') || '',
+      taskDueAt: formatDateTimeForInput_(getCellByHeader_(row, idx, 'Task Due At')),
       taskStatus: getCellByHeader_(row, idx, 'Task Status') || ''
     });
   }
@@ -139,7 +139,7 @@ function getLeadRecordByLeadId_(leadId) {
           '',
         activeTask: getCellByHeader_(row, idx, 'Active Task') || '',
         taskType: getCellByHeader_(row, idx, 'Task Type') || '',
-        taskDueAt: getCellByHeader_(row, idx, 'Task Due At') || '',
+        taskDueAt: formatDateTimeForInput_(getCellByHeader_(row, idx, 'Task Due At')),
         taskStatus: getCellByHeader_(row, idx, 'Task Status') || ''
       };
     }
@@ -298,4 +298,19 @@ function toNumber_(value) {
 
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+function formatDateTimeForInput_(value) {
+  if (!value) return '';
+
+  try {
+    var date = new Date(value);
+    if (isNaN(date)) return '';
+
+    var tz = Session.getScriptTimeZone() || 'America/Montreal';
+
+    return Utilities.formatDate(date, tz, "yyyy-MM-dd'T'HH:mm");
+  } catch (e) {
+    return '';
+  }
 }
