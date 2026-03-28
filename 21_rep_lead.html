@@ -4,32 +4,126 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f6f7fb; color: #1f2937; }
-      .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-      .top { display: grid; grid-template-columns: 1.25fr .75fr; gap: 20px; align-items: start; }
-      .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
-      .title { font-size: 28px; font-weight: 700; margin: 0 0 8px; }
-      .sub { color: #6b7280; margin-bottom: 8px; }
-      label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
-      select, textarea, button { width: 100%; box-sizing: border-box; font: inherit; }
-      select, textarea { border: 1px solid #d1d5db; border-radius: 10px; padding: 10px; background: #fff; }
-      textarea { min-height: 140px; resize: vertical; }
-      button { border: 0; background: #111827; color: white; border-radius: 10px; padding: 12px; margin-top: 14px; cursor: pointer; }
-      .msg { margin-top: 12px; font-size: 14px; color: #065f46; }
-      .back { display: inline-block; margin-bottom: 16px; text-decoration: none; color: #374151; }
-      @media (max-width: 900px) { .top { grid-template-columns: 1fr; } }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f6f7fb;
+        color: #1f2937;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .top {
+        display: grid;
+        grid-template-columns: 1.25fr .75fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.06);
+      }
+
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+
+      .sub {
+        color: #6b7280;
+        margin-bottom: 8px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        margin: 14px 0 6px;
+      }
+
+      select, textarea, button {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+      }
+
+      select, textarea {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      #notesHistory {
+        min-height: 220px;
+        background: #f9fafb;
+        color: #374151;
+      }
+
+      #newNote {
+        min-height: 140px;
+      }
+
+      button {
+        border: 0;
+        background: #111827;
+        color: white;
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 14px;
+        cursor: pointer;
+      }
+
+      .msg {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #065f46;
+      }
+
+      .back {
+        display: inline-block;
+        margin-bottom: 16px;
+        text-decoration: none;
+        color: #374151;
+      }
+
+      @media (max-width: 900px) {
+        .top {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
+
   <body>
     <div class="wrap">
-      <a class="back" href="<?= appUrl ?>?rep=<?= encodeURIComponent(rep || lead.assignedTo || '') ?>">&larr; Back to dashboard</a>
+
+      <a class="back" href="<?= appUrl ?>?rep=<?= encodeURIComponent(rep || lead.assignedTo || '') ?>">
+        &larr; Back to dashboard
+      </a>
 
       <div class="top">
+
+        <!-- LEFT: MARKET MIRROR -->
         <div class="card">
           <div class="title"><?= lead.businessName ?></div>
+
           <div class="sub">
             Lead ID: <?= lead.leadId ?> · <?= lead.city ?> · <?= lead.category ?>
           </div>
+
           <div class="sub">
             Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
           </div>
@@ -39,7 +133,9 @@
           </div>
         </div>
 
+        <!-- RIGHT: CRM PANEL -->
         <div class="card">
+
           <label for="status">Status</label>
           <select id="status">
             <option value="New Lead" <?= lead.status === 'New Lead' ? 'selected' : '' ?>>New Lead</option>
@@ -51,11 +147,15 @@
             <option value="Closed Lost" <?= lead.status === 'Closed Lost' ? 'selected' : '' ?>>Closed Lost</option>
           </select>
 
-          <label for="notes">Notes</label>
-          <textarea id="notes"><?= lead.notes ?></textarea>
+          <label for="notesHistory">Notes History</label>
+          <textarea id="notesHistory" readonly><?= lead.notes || '' ?></textarea>
+
+          <label for="newNote">Add New Note</label>
+          <textarea id="newNote" placeholder="Add a new note here..."></textarea>
 
           <button onclick="saveLead()">Save Update</button>
           <div id="msg" class="msg"></div>
+
         </div>
       </div>
     </div>
@@ -63,19 +163,22 @@
     <script>
       function saveLead() {
         const status = document.getElementById('status').value;
-        const notes = document.getElementById('notes').value;
+        const newNote = document.getElementById('newNote').value;
         const msg = document.getElementById('msg');
+
         msg.textContent = 'Saving...';
 
         google.script.run
-          .withSuccessHandler(function() {
+          .withSuccessHandler(function () {
             msg.textContent = 'Saved successfully.';
+            document.getElementById('newNote').value = '';
           })
-          .withFailureHandler(function(err) {
+          .withFailureHandler(function (err) {
             msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
           })
-          .saveRepLeadUpdate("<?= lead.leadId ?>", status, notes, "<?= rep ?>");
+          .saveRepLeadUpdate("<?= lead.leadId ?>", status, newNote, "<?= rep ?>");
       }
     </script>
+
   </body>
 </html>
