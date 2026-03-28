@@ -189,19 +189,27 @@ function saveRepLeadUpdate(leadId, status, newNote, rep) {
 
     if (rowLeadId === leadIdNorm) {
       var cleanStatus = String(status || '').trim();
-      var noteEntry = buildRepNoteEntry_(rep, newNote);
+      var cleanNewNote = String(newNote || '').trim();
+      var notesHeader = hasHeader_(idx, 'crm_notes') ? 'crm_notes' : (hasHeader_(idx, 'notes') ? 'notes' : '');
+      var existingNotes = notesHeader ? String(getCellByHeader_(row, idx, notesHeader) || '').trim() : '';
+      var appendedEntry = '';
 
       setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
 
-      if (noteEntry) {
-        if (hasHeader_(idx, 'crm_notes')) {
-          var existingCrmNotes = String(getCellByHeader_(row, idx, 'crm_notes') || '').trim();
-          var mergedCrmNotes = existingCrmNotes ? (existingCrmNotes + '\n' + noteEntry) : noteEntry;
-          setCellByHeader_(sheet, r + 1, idx, 'crm_notes', mergedCrmNotes);
-        } else if (hasHeader_(idx, 'notes')) {
-          var existingNotes = String(getCellByHeader_(row, idx, 'notes') || '').trim();
-          var mergedNotes = existingNotes ? (existingNotes + '\n' + noteEntry) : noteEntry;
-          setCellByHeader_(sheet, r + 1, idx, 'notes', mergedNotes);
+      if (cleanNewNote) {
+        if (typeof buildRepNoteEntry_ === 'function') {
+          appendedEntry = buildRepNoteEntry_(rep, cleanNewNote);
+        } else {
+          var tz = Session.getScriptTimeZone() || 'America/Montreal';
+          var stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
+          var who = String(rep || 'Rep').trim() || 'Rep';
+          appendedEntry = '[' + stamp + '] ' + who + ': ' + cleanNewNote;
+        }
+
+        if (notesHeader) {
+          var mergedNotes = existingNotes ? (existingNotes + '\n' + appendedEntry) : appendedEntry;
+          setCellByHeader_(sheet, r + 1, idx, notesHeader, mergedNotes);
+          existingNotes = mergedNotes;
         }
       }
 
@@ -213,11 +221,25 @@ function saveRepLeadUpdate(leadId, status, newNote, rep) {
         setCellByHeader_(sheet, r + 1, idx, 'last_contact_at', new Date());
       }
 
-      return { ok: true, leadId: leadId, status: cleanStatus };
+      return {
+        ok: true,
+        leadId: leadId,
+        status: cleanStatus,
+        notes: existingNotes,
+        appendedEntry: appendedEntry
+      };
     }
   }
 
   throw new Error('Lead not found: ' + leadId);
+}
+
+function buildHeaderIndex_(headers) {
+  var idx = {};
+  for (var i = 0; i < headers.length; i++) {
+    idx[normalizeHeaderKey_(headers[i])] = i;
+  }
+  return idx;
 }
 
 function normalizeHeaderKey_(value) {

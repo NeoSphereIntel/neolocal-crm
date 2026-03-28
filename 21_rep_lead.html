@@ -109,14 +109,11 @@
 
   <body>
     <div class="wrap">
-
       <a class="back" href="<?= appUrl ?>?rep=<?= encodeURIComponent(rep || lead.assignedTo || '') ?>">
         &larr; Back to dashboard
       </a>
 
       <div class="top">
-
-        <!-- LEFT: MARKET MIRROR -->
         <div class="card">
           <div class="title"><?= lead.businessName ?></div>
 
@@ -133,9 +130,7 @@
           </div>
         </div>
 
-        <!-- RIGHT: CRM PANEL -->
         <div class="card">
-
           <label for="status">Status</label>
           <select id="status">
             <option value="New Lead" <?= lead.status === 'New Lead' ? 'selected' : '' ?>>New Lead</option>
@@ -155,7 +150,6 @@
 
           <button onclick="saveLead()">Save Update</button>
           <div id="msg" class="msg"></div>
-
         </div>
       </div>
     </div>
@@ -165,12 +159,31 @@
         const status = document.getElementById('status').value;
         const newNote = document.getElementById('newNote').value;
         const msg = document.getElementById('msg');
+        const notesHistory = document.getElementById('notesHistory');
 
         msg.textContent = 'Saving...';
 
         google.script.run
-          .withSuccessHandler(function () {
+          .withSuccessHandler(function (result) {
             msg.textContent = 'Saved successfully.';
+
+            if (result && typeof result.notes !== 'undefined') {
+              notesHistory.value = result.notes || '';
+            } else if (newNote && newNote.trim()) {
+              const fallbackRep = "<?= rep ?>";
+              const now = new Date();
+              const yyyy = now.getFullYear();
+              const mm = String(now.getMonth() + 1).padStart(2, '0');
+              const dd = String(now.getDate()).padStart(2, '0');
+              const hh = String(now.getHours()).padStart(2, '0');
+              const mi = String(now.getMinutes()).padStart(2, '0');
+              const ss = String(now.getSeconds()).padStart(2, '0');
+              const fallbackEntry = '[' + yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + mi + ':' + ss + '] ' + fallbackRep + ': ' + newNote.trim();
+              notesHistory.value = notesHistory.value
+                ? (notesHistory.value + '\n' + fallbackEntry)
+                : fallbackEntry;
+            }
+
             document.getElementById('newNote').value = '';
           })
           .withFailureHandler(function (err) {
@@ -179,6 +192,5 @@
           .saveRepLeadUpdate("<?= lead.leadId ?>", status, newNote, "<?= rep ?>");
       }
     </script>
-
   </body>
 </html>
