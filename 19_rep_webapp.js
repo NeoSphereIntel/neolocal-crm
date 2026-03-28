@@ -1,18 +1,27 @@
 function doGet(e) {
-  var rep = e && e.parameter ? (e.parameter.rep || '') : '';
-  var leadId = e && e.parameter ? (e.parameter.leadId || '') : '';
+  try {
+    var rep = e && e.parameter ? (e.parameter.rep || '') : '';
+    var leadId = e && e.parameter ? (e.parameter.leadId || '') : '';
 
-  if (leadId) {
-    return renderRepLeadPage_(leadId);
+    if (leadId) {
+      return renderRepLeadPage_(leadId, rep);
+    }
+
+    if (rep) {
+      return renderRepDashboardPage_(rep);
+    }
+
+    return HtmlService.createHtmlOutput(
+      '<div style="font-family:Arial;padding:24px;">Missing rep or leadId parameter.</div>'
+    ).setTitle('NeoLocal');
+  } catch (err) {
+    return HtmlService.createHtmlOutput(
+      '<div style="font-family:Arial;padding:24px;">' +
+      '<h2>Lead Page Error</h2>' +
+      '<pre>' + String(err && err.message ? err.message : err) + '</pre>' +
+      '</div>'
+    ).setTitle('NeoLocal Error');
   }
-
-  if (rep) {
-    return renderRepDashboardPage_(rep);
-  }
-
-  return HtmlService.createHtmlOutput(
-    '<div style="font-family:Arial;padding:24px;">Missing rep or leadId parameter.</div>'
-  ).setTitle('NeoLocal');
 }
 
 function renderRepDashboardPage_(rep) {
