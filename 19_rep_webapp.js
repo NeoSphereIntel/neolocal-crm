@@ -172,7 +172,7 @@ function buildRepNoteEntry_(rep, noteText) {
   return '[' + stamp + '] ' + who + ': ' + body;
 }
 
-function saveRepLeadUpdate(leadId, status, notes, rep) {
+function saveRepLeadUpdate(leadId, status, newNote, rep) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
 
@@ -188,9 +188,8 @@ function saveRepLeadUpdate(leadId, status, notes, rep) {
     var rowLeadId = String(getCellByHeader_(row, idx, 'lead_id') || '').trim();
 
     if (rowLeadId === leadIdNorm) {
-      var cleanStatus = status || '';
-      var cleanNotes = String(notes || '').trim();
-      var noteEntry = buildRepNoteEntry_(rep, cleanNotes);
+      var cleanStatus = String(status || '').trim();
+      var noteEntry = buildRepNoteEntry_(rep, newNote);
 
       setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
 
@@ -219,14 +218,6 @@ function saveRepLeadUpdate(leadId, status, notes, rep) {
   }
 
   throw new Error('Lead not found: ' + leadId);
-}
-
-function buildHeaderIndex_(headers) {
-  var idx = {};
-  for (var i = 0; i < headers.length; i++) {
-    idx[normalizeHeaderKey_(headers[i])] = i;
-  }
-  return idx;
 }
 
 function normalizeHeaderKey_(value) {
