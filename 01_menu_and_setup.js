@@ -64,9 +64,13 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("Assigned To");
   ensureLeadsColumn_("Market Mirror URL");
 
+  try {
   SpreadsheetApp.getUi().alert(
     "NeoLocal Sales Engine v2.3 is ready.\n\nSearch Config validation has been repaired.\nRefresh the sheet if the NeoLocal menu is not visible yet."
   );
+} catch (e) {
+  Logger.log("buildNeoLocalSalesEngineV23 completed without UI context.");
+}
 }
 
 function resetSearchConfigValidation() {
