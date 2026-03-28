@@ -63,6 +63,10 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("reply_message");
   ensureLeadsColumn_("Assigned To");
   ensureLeadsColumn_("Market Mirror URL");
+  ensureLeadsColumn_("Active Task");	
+  ensureLeadsColumn_("Task Type");
+  ensureLeadsColumn_("Task Due At");
+  ensureLeadsColumn_("Task Status");
 
   backfillAssignedToAndMarketMirrorUrl();
 
@@ -320,8 +324,12 @@ function setupLeadsMasterSheet_(sheet) {
     "inbound_reply",
     "reply_type",
     "reply_message",
-    "Assigned To",
-    "Market Mirror URL"
+	"Assigned To",
+	"Market Mirror URL",
+	"Active Task",
+	"Task Type",
+	"Task Due At",
+	"Task Status"
   ];
 
   setHeadersIfNeeded_(sheet, headers);

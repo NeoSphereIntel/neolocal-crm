@@ -63,7 +63,8 @@
       }
       .meta,
       .contact,
-      .update {
+      .update,
+      .taskline {
         font-size: 14px;
         color: #4b5563;
         margin-bottom: 8px;
@@ -79,6 +80,14 @@
         background: #eef2ff;
         font-size: 12px;
         margin-left: 6px;
+      }
+      .task-open {
+        color: #92400e;
+        font-weight: 700;
+      }
+      .task-done {
+        color: #065f46;
+        font-weight: 700;
       }
       .actions a {
         display: inline-block;
@@ -112,7 +121,7 @@
       <div class="filters">
         <input type="text" id="searchInput" placeholder="Search business, city, category, contact">
         <select id="statusFilter">
-          <option value="">All statuses</option>
+          <option value="">All lead statuses</option>
           <option value="New Lead">New Lead</option>
           <option value="Contacted">Contacted</option>
           <option value="Replied">Replied</option>
@@ -120,6 +129,11 @@
           <option value="Call Booked">Call Booked</option>
           <option value="Closed Won">Closed Won</option>
           <option value="Closed Lost">Closed Lost</option>
+        </select>
+        <select id="taskFilter">
+          <option value="">All task statuses</option>
+          <option value="Open">Open</option>
+          <option value="Done">Done</option>
         </select>
       </div>
 
@@ -130,23 +144,35 @@
           <? for (var i = 0; i < leads.length; i++) { var lead = leads[i]; ?>
             <div class="card"
                  data-status="<?= lead.status || '' ?>"
+                 data-task-status="<?= lead.taskStatus || '' ?>"
                  data-search="<?= [
                    lead.businessName || '',
                    lead.city || '',
                    lead.category || '',
                    lead.contactName || '',
                    lead.phone || '',
-                   lead.email || ''
+                   lead.email || '',
+                   lead.activeTask || '',
+                   lead.taskType || ''
                  ].join(' ').toLowerCase() ?>">
               <h3><?= lead.businessName || 'Unnamed Lead' ?></h3>
               <div class="meta"><?= lead.city || '—' ?> · <?= lead.category || '—' ?></div>
               <div class="statusline">
-                Status: <span class="pill"><?= lead.status || '—' ?></span>
+                Lead status: <span class="pill"><?= lead.status || '—' ?></span>
               </div>
               <div class="meta">Rating: <?= lead.rating || 0 ?> · Reviews: <?= lead.reviews || 0 ?></div>
               <div class="contact">Contact: <?= lead.contactName || '—' ?></div>
               <div class="contact">Phone: <?= lead.phone || '—' ?></div>
               <div class="contact">Email: <?= lead.email || '—' ?></div>
+              <div class="taskline">Task: <?= lead.activeTask || '—' ?></div>
+              <div class="taskline">Type: <?= lead.taskType || '—' ?></div>
+              <div class="taskline">Due: <?= lead.taskDueAt || '—' ?></div>
+              <div class="taskline">
+                Task status:
+                <span class="<?= (lead.taskStatus || '') === 'Done' ? 'task-done' : 'task-open' ?>">
+                  <?= lead.taskStatus || '—' ?>
+                </span>
+              </div>
               <div class="update">Last update: <?= lead.lastUpdatedAt || '—' ?></div>
               <div class="actions">
                 <a href="<?= appUrl ?>?leadId=<?= encodeURIComponent(lead.leadId) ?>&rep=<?= encodeURIComponent(rep) ?>">Open Lead</a>
@@ -161,23 +187,28 @@
       (function () {
         var searchInput = document.getElementById('searchInput');
         var statusFilter = document.getElementById('statusFilter');
+        var taskFilter = document.getElementById('taskFilter');
         var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
 
         function applyFilters() {
           var q = (searchInput.value || '').trim().toLowerCase();
           var status = statusFilter.value || '';
+          var taskStatus = taskFilter.value || '';
 
           cards.forEach(function(card) {
             var hay = card.getAttribute('data-search') || '';
             var cardStatus = card.getAttribute('data-status') || '';
+            var cardTaskStatus = card.getAttribute('data-task-status') || '';
             var matchesSearch = !q || hay.indexOf(q) !== -1;
             var matchesStatus = !status || cardStatus === status;
-            card.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+            var matchesTask = !taskStatus || cardTaskStatus === taskStatus;
+            card.style.display = (matchesSearch && matchesStatus && matchesTask) ? '' : 'none';
           });
         }
 
         if (searchInput) searchInput.addEventListener('input', applyFilters);
         if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+        if (taskFilter) taskFilter.addEventListener('change', applyFilters);
       })();
     </script>
   </body>

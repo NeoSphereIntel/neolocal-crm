@@ -87,7 +87,11 @@ function getAssignedLeadsForRep_(rep) {
         getCellByHeader_(row, idx, 'updated_at') ||
         getCellByHeader_(row, idx, 'last_contact_at') ||
         getCellByHeader_(row, idx, 'date_added') ||
-        ''
+        '',
+      activeTask: getCellByHeader_(row, idx, 'Active Task') || '',
+      taskType: getCellByHeader_(row, idx, 'Task Type') || '',
+      taskDueAt: getCellByHeader_(row, idx, 'Task Due At') || '',
+      taskStatus: getCellByHeader_(row, idx, 'Task Status') || ''
     });
   }
 
@@ -132,7 +136,11 @@ function getLeadRecordByLeadId_(leadId) {
           getCellByHeader_(row, idx, 'updated_at') ||
           getCellByHeader_(row, idx, 'last_contact_at') ||
           getCellByHeader_(row, idx, 'date_added') ||
-          ''
+          '',
+        activeTask: getCellByHeader_(row, idx, 'Active Task') || '',
+        taskType: getCellByHeader_(row, idx, 'Task Type') || '',
+        taskDueAt: getCellByHeader_(row, idx, 'Task Due At') || '',
+        taskStatus: getCellByHeader_(row, idx, 'Task Status') || ''
       };
     }
   }
@@ -172,7 +180,7 @@ function buildRepNoteEntry_(rep, noteText) {
   return '[' + stamp + '] ' + who + ': ' + body;
 }
 
-function saveRepLeadUpdate(leadId, status, newNote, rep) {
+function saveRepLeadUpdate(leadId, status, newNote, rep, activeTask, taskType, taskDueAt, taskStatus) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
 
@@ -190,21 +198,35 @@ function saveRepLeadUpdate(leadId, status, newNote, rep) {
     if (rowLeadId === leadIdNorm) {
       var cleanStatus = String(status || '').trim();
       var cleanNewNote = String(newNote || '').trim();
+      var cleanActiveTask = String(activeTask || '').trim();
+      var cleanTaskType = String(taskType || '').trim();
+      var cleanTaskDueAt = String(taskDueAt || '').trim();
+      var cleanTaskStatus = String(taskStatus || '').trim();
+
       var notesHeader = hasHeader_(idx, 'crm_notes') ? 'crm_notes' : (hasHeader_(idx, 'notes') ? 'notes' : '');
       var existingNotes = notesHeader ? String(getCellByHeader_(row, idx, notesHeader) || '').trim() : '';
       var appendedEntry = '';
 
       setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
 
+      if (hasHeader_(idx, 'Active Task')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Active Task', cleanActiveTask);
+      }
+
+      if (hasHeader_(idx, 'Task Type')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Task Type', cleanTaskType);
+      }
+
+      if (hasHeader_(idx, 'Task Due At')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Task Due At', cleanTaskDueAt);
+      }
+
+      if (hasHeader_(idx, 'Task Status')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Task Status', cleanTaskStatus);
+      }
+
       if (cleanNewNote) {
-        if (typeof buildRepNoteEntry_ === 'function') {
-          appendedEntry = buildRepNoteEntry_(rep, cleanNewNote);
-        } else {
-          var tz = Session.getScriptTimeZone() || 'America/Montreal';
-          var stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
-          var who = String(rep || 'Rep').trim() || 'Rep';
-          appendedEntry = '[' + stamp + '] ' + who + ': ' + cleanNewNote;
-        }
+        appendedEntry = buildRepNoteEntry_(rep, cleanNewNote);
 
         if (notesHeader) {
           var mergedNotes = existingNotes ? (existingNotes + '\n' + appendedEntry) : appendedEntry;
@@ -226,7 +248,11 @@ function saveRepLeadUpdate(leadId, status, newNote, rep) {
         leadId: leadId,
         status: cleanStatus,
         notes: existingNotes,
-        appendedEntry: appendedEntry
+        appendedEntry: appendedEntry,
+        activeTask: cleanActiveTask,
+        taskType: cleanTaskType,
+        taskDueAt: cleanTaskDueAt,
+        taskStatus: cleanTaskStatus
       };
     }
   }

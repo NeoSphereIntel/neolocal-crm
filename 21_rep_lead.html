@@ -49,13 +49,13 @@
         margin: 14px 0 6px;
       }
 
-      select, textarea, button {
+      select, textarea, button, input {
         width: 100%;
         box-sizing: border-box;
         font: inherit;
       }
 
-      select, textarea {
+      select, textarea, input {
         border: 1px solid #d1d5db;
         border-radius: 10px;
         padding: 10px;
@@ -135,7 +135,7 @@
         </div>
 
         <div class="card">
-          <label for="status">Status</label>
+          <label for="status">Lead Status</label>
           <select id="status">
             <option value="New Lead" <?= lead.status === 'New Lead' ? 'selected' : '' ?>>New Lead</option>
             <option value="Contacted" <?= lead.status === 'Contacted' ? 'selected' : '' ?>>Contacted</option>
@@ -144,6 +144,31 @@
             <option value="Call Booked" <?= lead.status === 'Call Booked' ? 'selected' : '' ?>>Call Booked</option>
             <option value="Closed Won" <?= lead.status === 'Closed Won' ? 'selected' : '' ?>>Closed Won</option>
             <option value="Closed Lost" <?= lead.status === 'Closed Lost' ? 'selected' : '' ?>>Closed Lost</option>
+          </select>
+
+          <label for="activeTask">Active Task</label>
+          <input id="activeTask" type="text" value="<?= lead.activeTask || '' ?>" placeholder="Add one active task">
+
+          <label for="taskType">Task Type</label>
+          <select id="taskType">
+            <option value="" <?= !lead.taskType ? 'selected' : '' ?>>—</option>
+            <option value="Call" <?= lead.taskType === 'Call' ? 'selected' : '' ?>>Call</option>
+            <option value="Email" <?= lead.taskType === 'Email' ? 'selected' : '' ?>>Email</option>
+            <option value="SMS" <?= lead.taskType === 'SMS' ? 'selected' : '' ?>>SMS</option>
+            <option value="Follow-up" <?= lead.taskType === 'Follow-up' ? 'selected' : '' ?>>Follow-up</option>
+            <option value="Proposal" <?= lead.taskType === 'Proposal' ? 'selected' : '' ?>>Proposal</option>
+            <option value="Meeting" <?= lead.taskType === 'Meeting' ? 'selected' : '' ?>>Meeting</option>
+            <option value="Other" <?= lead.taskType === 'Other' ? 'selected' : '' ?>>Other</option>
+          </select>
+
+          <label for="taskDueAt">Task Due At</label>
+          <input id="taskDueAt" type="datetime-local" value="<?= lead.taskDueAt || '' ?>">
+
+          <label for="taskStatus">Task Status</label>
+          <select id="taskStatus">
+            <option value="" <?= !lead.taskStatus ? 'selected' : '' ?>>—</option>
+            <option value="Open" <?= lead.taskStatus === 'Open' ? 'selected' : '' ?>>Open</option>
+            <option value="Done" <?= lead.taskStatus === 'Done' ? 'selected' : '' ?>>Done</option>
           </select>
 
           <label for="notesHistory">Notes History</label>
@@ -213,6 +238,10 @@
       function saveLead() {
         const status = document.getElementById('status').value;
         const newNote = document.getElementById('newNote').value;
+        const activeTask = document.getElementById('activeTask').value;
+        const taskType = document.getElementById('taskType').value;
+        const taskDueAt = document.getElementById('taskDueAt').value;
+        const taskStatus = document.getElementById('taskStatus').value;
         const msg = document.getElementById('msg');
 
         msg.textContent = 'Saving...';
@@ -226,12 +255,28 @@
               renderNotesHistory(result.notes || '');
             }
 
+            if (result) {
+              document.getElementById('activeTask').value = result.activeTask || '';
+              document.getElementById('taskType').value = result.taskType || '';
+              document.getElementById('taskDueAt').value = result.taskDueAt || '';
+              document.getElementById('taskStatus').value = result.taskStatus || '';
+            }
+
             document.getElementById('newNote').value = '';
           })
           .withFailureHandler(function(err) {
             msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
           })
-          .saveRepLeadUpdate("<?= lead.leadId ?>", status, newNote, "<?= rep ?>");
+          .saveRepLeadUpdate(
+            "<?= lead.leadId ?>",
+            status,
+            newNote,
+            "<?= rep ?>",
+            activeTask,
+            taskType,
+            taskDueAt,
+            taskStatus
+          );
       }
 
       (function initNotes() {
