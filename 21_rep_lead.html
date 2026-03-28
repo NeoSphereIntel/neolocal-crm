@@ -67,7 +67,7 @@
       }
 
       #notesHistory {
-        min-height: 220px;
+        min-height: 260px;
         background: #f9fafb;
         color: #374151;
       }
@@ -155,16 +155,49 @@
     </div>
 
     <script>
-      function formatNotesDescending(rawNotes) {
-        if (!rawNotes) return '';
+      function splitNoteEntries(rawNotes) {
+        if (!rawNotes) return [];
 
-        return rawNotes
-          .split('\n')
-          .filter(function(line) {
-            return line.trim() !== '';
-          })
-          .reverse()
-          .join('\n');
+        var normalized = String(rawNotes).replace(/\r\n/g, '\n').trim();
+        if (!normalized) return [];
+
+        var lines = normalized.split('\n');
+        var entries = [];
+        var current = [];
+
+        function isEntryStart(line) {
+          return /^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\s/.test(line);
+        }
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+
+          if (isEntryStart(line)) {
+            if (current.length) {
+              entries.push(current.join('\n').trim());
+            }
+            current = [line];
+          } else {
+            if (!current.length) {
+              current = [line];
+            } else {
+              current.push(line);
+            }
+          }
+        }
+
+        if (current.length) {
+          entries.push(current.join('\n').trim());
+        }
+
+        return entries.filter(function(entry) {
+          return entry && entry.trim() !== '';
+        });
+      }
+
+      function formatNotesDescending(rawNotes) {
+        var entries = splitNoteEntries(rawNotes);
+        return entries.reverse().join('\n\n');
       }
 
       function saveLead() {
@@ -176,7 +209,7 @@
         msg.textContent = 'Saving...';
 
         google.script.run
-          .withSuccessHandler(function (result) {
+          .withSuccessHandler(function(result) {
             msg.textContent = 'Saved successfully.';
 
             if (result && typeof result.notes !== 'undefined') {
@@ -185,7 +218,7 @@
 
             document.getElementById('newNote').value = '';
           })
-          .withFailureHandler(function (err) {
+          .withFailureHandler(function(err) {
             msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
           })
           .saveRepLeadUpdate("<?= lead.leadId ?>", status, newNote, "<?= rep ?>");
