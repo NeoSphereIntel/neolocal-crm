@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; background: #f6f7fb; color: #1f2937; }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+      .top { display: grid; grid-template-columns: 1.25fr .75fr; gap: 20px; align-items: start; }
+      .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+      .title { font-size: 28px; font-weight: 700; margin: 0 0 8px; }
+      .sub { color: #6b7280; margin-bottom: 8px; }
+      label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
+      select, textarea, button { width: 100%; box-sizing: border-box; font: inherit; }
+      select, textarea { border: 1px solid #d1d5db; border-radius: 10px; padding: 10px; background: #fff; }
+      textarea { min-height: 140px; resize: vertical; }
+      button { border: 0; background: #111827; color: white; border-radius: 10px; padding: 12px; margin-top: 14px; cursor: pointer; }
+      .msg { margin-top: 12px; font-size: 14px; color: #065f46; }
+      .back { display: inline-block; margin-bottom: 16px; text-decoration: none; color: #374151; }
+      @media (max-width: 900px) { .top { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="back" href="?rep=<?= encodeURIComponent(lead.assignedTo) ?>">&larr; Back to dashboard</a>
+
+      <div class="top">
+        <div class="card">
+          <div class="title"><?= lead.businessName ?></div>
+          <div class="sub">
+            Lead ID: <?= lead.leadId ?> · <?= lead.city ?> · <?= lead.category ?>
+          </div>
+          <div class="sub">
+            Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
+          </div>
+
+          <div style="margin-top:18px;">
+            <?!= mirrorHtml ?>
+          </div>
+        </div>
+
+        <div class="card">
+          <label for="status">Status</label>
+          <select id="status">
+            <option value="New Lead" <?= lead.status === 'New Lead' ? 'selected' : '' ?>>New Lead</option>
+            <option value="Contacted" <?= lead.status === 'Contacted' ? 'selected' : '' ?>>Contacted</option>
+            <option value="Replied" <?= lead.status === 'Replied' ? 'selected' : '' ?>>Replied</option>
+            <option value="Conversation" <?= lead.status === 'Conversation' ? 'selected' : '' ?>>Conversation</option>
+            <option value="Call Booked" <?= lead.status === 'Call Booked' ? 'selected' : '' ?>>Call Booked</option>
+            <option value="Closed Won" <?= lead.status === 'Closed Won' ? 'selected' : '' ?>>Closed Won</option>
+            <option value="Closed Lost" <?= lead.status === 'Closed Lost' ? 'selected' : '' ?>>Closed Lost</option>
+          </select>
+
+          <label for="notes">Notes</label>
+          <textarea id="notes"><?= lead.notes ?></textarea>
+
+          <button onclick="saveLead()">Save Update</button>
+          <div id="msg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function saveLead() {
+        const status = document.getElementById('status').value;
+        const notes = document.getElementById('notes').value;
+        const msg = document.getElementById('msg');
+        msg.textContent = 'Saving...';
+
+        google.script.run
+          .withSuccessHandler(function() {
+            msg.textContent = 'Saved successfully.';
+          })
+          .withFailureHandler(function(err) {
+            msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
+          })
+          .saveRepLeadUpdate("<?= lead.leadId ?>", status, notes);
+      }
+    </script>
+  </body>
+</html>
