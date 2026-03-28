@@ -318,7 +318,7 @@ function appendNewLead_(sheet, leadObj) {
   sheet.appendRow(row);
 }
 
-function backfillAssignedToAndMarketMirrorUrl_() {
+function backfillAssignedToAndMarketMirrorUrl() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(APP.SHEETS.LEADS);
   if (!sheet) throw new Error("Leads Master sheet not found.");
