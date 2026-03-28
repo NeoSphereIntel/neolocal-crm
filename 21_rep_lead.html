@@ -76,6 +76,10 @@
         min-height: 140px;
       }
 
+      #notesRaw {
+        display: none;
+      }
+
       button {
         border: 0;
         background: #111827;
@@ -148,6 +152,8 @@
           <label for="newNote">Add New Note</label>
           <textarea id="newNote" placeholder="Add a new note here..."></textarea>
 
+          <textarea id="notesRaw" readonly><?= lead.notes || '' ?></textarea>
+
           <button onclick="saveLead()">Save Update</button>
           <div id="msg" class="msg"></div>
         </div>
@@ -200,11 +206,14 @@
         return entries.reverse().join('\n\n');
       }
 
+      function renderNotesHistory(rawNotes) {
+        document.getElementById('notesHistory').value = formatNotesDescending(rawNotes || '');
+      }
+
       function saveLead() {
         const status = document.getElementById('status').value;
         const newNote = document.getElementById('newNote').value;
         const msg = document.getElementById('msg');
-        const notesHistory = document.getElementById('notesHistory');
 
         msg.textContent = 'Saving...';
 
@@ -213,7 +222,8 @@
             msg.textContent = 'Saved successfully.';
 
             if (result && typeof result.notes !== 'undefined') {
-              notesHistory.value = formatNotesDescending(result.notes || '');
+              document.getElementById('notesRaw').value = result.notes || '';
+              renderNotesHistory(result.notes || '');
             }
 
             document.getElementById('newNote').value = '';
@@ -225,8 +235,8 @@
       }
 
       (function initNotes() {
-        var rawNotes = <?= JSON.stringify(lead.notes || '') ?>;
-        document.getElementById('notesHistory').value = formatNotesDescending(rawNotes);
+        var rawNotes = document.getElementById('notesRaw').value || '';
+        renderNotesHistory(rawNotes);
       })();
     </script>
   </body>
