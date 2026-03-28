@@ -184,13 +184,16 @@ function normalizeLocalResults_(localResults, config, searchId) {
   const marketContext = buildMarketContext_(normalizedLeads);
 
   return normalizedLeads.map(lead => {
-    const competitorSignals = calculateCompetitorSignals_(lead, marketContext);
-    const snapshot = generateSnapshot_(lead, competitorSignals);
+	const competitorSignals = calculateCompetitorSignals_(lead, marketContext);
+	const snapshot = generateSnapshot_(lead, competitorSignals);
+	const leadId = generateLeadId_(lead, searchId);
 
-    return Object.assign({}, lead, competitorSignals, snapshot, {
-      lead_id: generateLeadId_(lead, searchId)
-    });
-  });
+	return Object.assign({}, lead, competitorSignals, snapshot, {
+		lead_id: leadId,
+		"Assigned To": "",
+		"Market Mirror URL": buildMarketMirrorUrl_(leadId)
+	});
+});
 }
 
 function buildNormalizedLeadObject_(r, i, config, searchId) {
@@ -296,8 +299,10 @@ function updateExistingLeadFromImport_(sheet, rowNumber, newData) {
     strategic_gap_summary: newData.strategic_gap_summary,
     action_implication_summary: newData.action_implication_summary,
     snapshot_narrative: newData.snapshot_narrative,
-    snapshot_version: newData.snapshot_version,
-    priority_bucket: newData.priority_bucket || row.priority_bucket || ""
+	snapshot_version: newData.snapshot_version,
+	priority_bucket: newData.priority_bucket || row.priority_bucket || "",
+	"Assigned To": row["Assigned To"] || "",
+	"Market Mirror URL": buildMarketMirrorUrl_(row.lead_id || newData.lead_id)
   });
 
   const headers = getHeaders_(sheet);
@@ -311,6 +316,39 @@ function appendNewLead_(sheet, leadObj) {
   const headers = getHeaders_(sheet);
   const row = headers.map(h => leadObj[h] !== undefined ? leadObj[h] : "");
   sheet.appendRow(row);
+}
+
+function backfillAssignedToAndMarketMirrorUrl_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(APP.SHEETS.LEADS);
+  if (!sheet) throw new Error("Leads Master sheet not found.");
+
+  const data = getSheetDataObjects_(sheet);
+  const headers = getHeaders_(sheet);
+  const updates = [];
+
+  data.forEach(row => {
+    const patch = {};
+
+    if (!row["Assigned To"]) {
+      patch["Assigned To"] = "";
+    }
+
+    if (row.lead_id && !row["Market Mirror URL"]) {
+      patch["Market Mirror URL"] = buildMarketMirrorUrl_(row.lead_id);
+    }
+
+    if (Object.keys(patch).length) {
+      updates.push({
+        rowNumber: row.__rowNumber,
+        updates: patch
+      });
+    }
+  });
+
+  if (updates.length) {
+    writeRowUpdates_(sheet, headers, updates);
+  }
 }
 
 function buildLeadIndex_(sheet) {

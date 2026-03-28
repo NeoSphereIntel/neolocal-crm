@@ -357,3 +357,8 @@ function ensureLeadsColumn_(columnName) {
     sheet.getRange(1, sheet.getLastColumn()).setValue(columnName);
   }
 }
+
+function buildMarketMirrorUrl_(leadId) {
+  const base = ScriptApp.getService().getUrl();
+  return base + '?leadId=' + encodeURIComponent(leadId);
+}

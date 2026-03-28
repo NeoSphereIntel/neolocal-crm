@@ -1,4 +1,4 @@
-/**
+ /**
  * File: 01_menu_and_setup.gs
  */
 
@@ -61,6 +61,8 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("inbound_reply");
   ensureLeadsColumn_("reply_type");
   ensureLeadsColumn_("reply_message");
+  ensureLeadsColumn_("Assigned To");
+  ensureLeadsColumn_("Market Mirror URL");
 
   SpreadsheetApp.getUi().alert(
     "NeoLocal Sales Engine v2.3 is ready.\n\nSearch Config validation has been repaired.\nRefresh the sheet if the NeoLocal menu is not visible yet."
