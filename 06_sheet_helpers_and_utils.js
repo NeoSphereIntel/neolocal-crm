@@ -349,16 +349,18 @@ function hardResetLeadsFormats_() {
 function ensureLeadsColumn_(columnName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(APP.SHEETS.LEADS);
+  if (!sheet) throw new Error("Leads Master sheet not found.");
 
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const lastCol = sheet.getLastColumn();
+  const headers = lastCol > 0
+    ? sheet.getRange(1, 1, 1, lastCol).getValues()[0]
+    : [];
 
   if (!headers.includes(columnName)) {
-    sheet.insertColumnAfter(sheet.getLastColumn());
-    sheet.getRange(1, sheet.getLastColumn()).setValue(columnName);
+    sheet.getRange(1, headers.length + 1).setValue(columnName);
   }
 }
 
 function buildMarketMirrorUrl_(leadId) {
-  const base = ScriptApp.getService().getUrl();
-  return base + '?leadId=' + encodeURIComponent(leadId);
+  return APP.MARKET_MIRROR_WEBAPP_URL + '?leadId=' + encodeURIComponent(leadId);
 }

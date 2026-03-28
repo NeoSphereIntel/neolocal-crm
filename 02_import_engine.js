@@ -323,6 +323,9 @@ function backfillAssignedToAndMarketMirrorUrl() {
   const sheet = ss.getSheetByName(APP.SHEETS.LEADS);
   if (!sheet) throw new Error("Leads Master sheet not found.");
 
+  ensureLeadsColumn_("Assigned To");
+  ensureLeadsColumn_("Market Mirror URL");
+
   const data = getSheetDataObjects_(sheet);
   const headers = getHeaders_(sheet);
   const updates = [];
@@ -330,12 +333,15 @@ function backfillAssignedToAndMarketMirrorUrl() {
   data.forEach(row => {
     const patch = {};
 
-    if (!row["Assigned To"]) {
+    if (row["Assigned To"] === undefined || row["Assigned To"] === null) {
       patch["Assigned To"] = "";
     }
 
-    if (row.lead_id && !row["Market Mirror URL"]) {
-      patch["Market Mirror URL"] = buildMarketMirrorUrl_(row.lead_id);
+    if (row.lead_id) {
+      const expectedUrl = buildMarketMirrorUrl_(row.lead_id);
+      if (row["Market Mirror URL"] !== expectedUrl) {
+        patch["Market Mirror URL"] = expectedUrl;
+      }
     }
 
     if (Object.keys(patch).length) {

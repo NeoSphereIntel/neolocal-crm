@@ -64,13 +64,16 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("Assigned To");
   ensureLeadsColumn_("Market Mirror URL");
 
+  backfillAssignedToAndMarketMirrorUrl();
+
+  const readyMessage =
+    "NeoLocal Sales Engine v2.3 is ready.\n\nSearch Config validation has been repaired.\nRefresh the sheet if the NeoLocal menu is not visible yet.";
+
   try {
-  SpreadsheetApp.getUi().alert(
-    "NeoLocal Sales Engine v2.3 is ready.\n\nSearch Config validation has been repaired.\nRefresh the sheet if the NeoLocal menu is not visible yet."
-  );
-} catch (e) {
-  Logger.log("buildNeoLocalSalesEngineV23 completed without UI context.");
-}
+    SpreadsheetApp.getUi().alert(readyMessage);
+  } catch (err) {
+    Logger.log(readyMessage);
+  }
 }
 
 function resetSearchConfigValidation() {
@@ -316,7 +319,9 @@ function setupLeadsMasterSheet_(sheet) {
     "outreach_message",
     "inbound_reply",
     "reply_type",
-    "reply_message"
+    "reply_message",
+    "Assigned To",
+    "Market Mirror URL"
   ];
 
   setHeadersIfNeeded_(sheet, headers);
