@@ -28,6 +28,7 @@ function renderRepDashboardPage_(rep) {
   var template = HtmlService.createTemplateFromFile('20_rep_dashboard');
   template.rep = rep;
   template.leads = getAssignedLeadsForRep_(rep);
+  template.appUrl = ScriptApp.getService().getUrl();
 
   return template
     .evaluate()
@@ -35,7 +36,7 @@ function renderRepDashboardPage_(rep) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-function renderRepLeadPage_(leadId) {
+function renderRepLeadPage_(leadId, rep) {
   var lead = getLeadRecordByLeadId_(leadId);
   var input = buildMarketMirrorInputFromLeadRow_(lead);
   var payload = buildMarketMirrorPayload_(input);
@@ -43,6 +44,8 @@ function renderRepLeadPage_(leadId) {
 
   var template = HtmlService.createTemplateFromFile('21_rep_lead');
   template.lead = lead;
+  template.rep = rep || lead.assignedTo || '';
+  template.appUrl = ScriptApp.getService().getUrl();
   template.mirrorHtml = mirrorHtml;
 
   return template

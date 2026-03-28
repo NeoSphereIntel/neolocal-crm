@@ -36,7 +36,7 @@
                 Status: <?= lead.status || 'New Lead' ?><br>
                 Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
               </div>
-              <a class="btn" href="?rep=<?= encodeURIComponent(rep) ?>&leadId=<?= encodeURIComponent(lead.leadId) ?>">Open Lead</a>
+              <a class="btn" target="_top" href="<?= appUrl ?>?rep=<?= encodeURIComponent(rep) ?>&leadId=<?= encodeURIComponent(lead.leadId) ?>">Open Lead</a>"
             </div>
           <? }); ?>
         </div>
