@@ -28,8 +28,7 @@ function renderRepDashboardPage_(rep) {
   var template = HtmlService.createTemplateFromFile('20_rep_dashboard');
   template.rep = rep;
   template.leads = getAssignedLeadsForRep_(rep);
-  template.appUrl = ScriptApp.getService().getUrl();
-
+  template.appUrl = APP.MARKET_MIRROR_WEBAPP_URL || ScriptApp.getService().getUrl();
   return template
     .evaluate()
     .setTitle('NeoLocal Rep Dashboard')
@@ -41,13 +40,11 @@ function renderRepLeadPage_(leadId, rep) {
   var input = buildMarketMirrorInputFromLeadRow_(lead);
   var payload = buildMarketMirrorPayload_(input);
   var mirrorHtml = renderMarketMirrorHtml_(payload);
-
   var template = HtmlService.createTemplateFromFile('21_rep_lead');
   template.lead = lead;
   template.rep = rep || lead.assignedTo || '';
-  template.appUrl = ScriptApp.getService().getUrl();
+  template.appUrl = APP.MARKET_MIRROR_WEBAPP_URL || ScriptApp.getService().getUrl();
   template.mirrorHtml = mirrorHtml;
-
   return template
     .evaluate()
     .setTitle('NeoLocal Lead')
@@ -69,7 +66,6 @@ function getAssignedLeadsForRep_(rep) {
   for (var r = 1; r < values.length; r++) {
     var row = values[r];
     var assignedTo = normalizeHeaderKey_(getCellByHeader_(row, idx, 'Assigned To'));
-
     if (assignedTo !== repNorm) continue;
 
     out.push({
@@ -79,7 +75,19 @@ function getAssignedLeadsForRep_(rep) {
       category: getCellByHeader_(row, idx, 'category'),
       status: getCellByHeader_(row, idx, 'status'),
       reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
-      rating: toNumber_(getCellByHeader_(row, idx, 'rating'))
+      rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
+      phone: getCellByHeader_(row, idx, 'phone'),
+      email: getCellByHeader_(row, idx, 'email'),
+      contactName:
+        getCellByHeader_(row, idx, 'contact_name') ||
+        getCellByHeader_(row, idx, 'owner_name') ||
+        getCellByHeader_(row, idx, 'owner') ||
+        '',
+      lastUpdatedAt:
+        getCellByHeader_(row, idx, 'updated_at') ||
+        getCellByHeader_(row, idx, 'last_contact_at') ||
+        getCellByHeader_(row, idx, 'date_added') ||
+        ''
     });
   }
 
@@ -111,8 +119,20 @@ function getLeadRecordByLeadId_(leadId) {
         status: getCellByHeader_(row, idx, 'status'),
         reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
         rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
+        phone: getCellByHeader_(row, idx, 'phone'),
+        email: getCellByHeader_(row, idx, 'email'),
+        contactName:
+          getCellByHeader_(row, idx, 'contact_name') ||
+          getCellByHeader_(row, idx, 'owner_name') ||
+          getCellByHeader_(row, idx, 'owner') ||
+          '',
         notes: getCellByHeader_(row, idx, 'crm_notes') || getCellByHeader_(row, idx, 'notes'),
-        assignedTo: getCellByHeader_(row, idx, 'Assigned To')
+        assignedTo: getCellByHeader_(row, idx, 'Assigned To'),
+        lastUpdatedAt:
+          getCellByHeader_(row, idx, 'updated_at') ||
+          getCellByHeader_(row, idx, 'last_contact_at') ||
+          getCellByHeader_(row, idx, 'date_added') ||
+          ''
       };
     }
   }
@@ -141,7 +161,18 @@ function detectVerticalFromCategory_(category) {
   return 'auto_retail';
 }
 
-function saveRepLeadUpdate(leadId, status, notes) {
+function buildRepNoteEntry_(rep, noteText) {
+  var tz = (APP && APP.TZ) ? APP.TZ : Session.getScriptTimeZone() || 'America/Montreal';
+  var stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
+  var who = String(rep || 'Rep').trim() || 'Rep';
+  var body = String(noteText || '').trim();
+
+  if (!body) return '';
+
+  return '[' + stamp + '] ' + who + ': ' + body;
+}
+
+function saveRepLeadUpdate(leadId, status, notes, rep) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
 
@@ -157,19 +188,33 @@ function saveRepLeadUpdate(leadId, status, notes) {
     var rowLeadId = String(getCellByHeader_(row, idx, 'lead_id') || '').trim();
 
     if (rowLeadId === leadIdNorm) {
-      setCellByHeader_(sheet, r + 1, idx, 'status', status || '');
+      var cleanStatus = status || '';
+      var cleanNotes = String(notes || '').trim();
+      var noteEntry = buildRepNoteEntry_(rep, cleanNotes);
 
-      if (hasHeader_(idx, 'crm_notes')) {
-        setCellByHeader_(sheet, r + 1, idx, 'crm_notes', notes || '');
-      } else if (hasHeader_(idx, 'notes')) {
-        setCellByHeader_(sheet, r + 1, idx, 'notes', notes || '');
+      setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
+
+      if (noteEntry) {
+        if (hasHeader_(idx, 'crm_notes')) {
+          var existingCrmNotes = String(getCellByHeader_(row, idx, 'crm_notes') || '').trim();
+          var mergedCrmNotes = existingCrmNotes ? (existingCrmNotes + '\n' + noteEntry) : noteEntry;
+          setCellByHeader_(sheet, r + 1, idx, 'crm_notes', mergedCrmNotes);
+        } else if (hasHeader_(idx, 'notes')) {
+          var existingNotes = String(getCellByHeader_(row, idx, 'notes') || '').trim();
+          var mergedNotes = existingNotes ? (existingNotes + '\n' + noteEntry) : noteEntry;
+          setCellByHeader_(sheet, r + 1, idx, 'notes', mergedNotes);
+        }
       }
 
-      if ((status || '') === 'Contacted' && hasHeader_(idx, 'last_contact_at')) {
+      if (hasHeader_(idx, 'updated_at')) {
+        setCellByHeader_(sheet, r + 1, idx, 'updated_at', new Date());
+      }
+
+      if (cleanStatus === 'Contacted' && hasHeader_(idx, 'last_contact_at')) {
         setCellByHeader_(sheet, r + 1, idx, 'last_contact_at', new Date());
       }
 
-      return { ok: true, leadId: leadId, status: status };
+      return { ok: true, leadId: leadId, status: cleanStatus };
     }
   }
 

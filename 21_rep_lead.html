@@ -22,7 +22,7 @@
   </head>
   <body>
     <div class="wrap">
-      <a class="back" href="?rep=<?= encodeURIComponent(lead.assignedTo) ?>">&larr; Back to dashboard</a>
+      <a class="back" href="?rep=<?= encodeURIComponent(rep || lead.assignedTo || '') ?>">&larr; Back to dashboard</a>
 
       <div class="top">
         <div class="card">
@@ -74,7 +74,7 @@
           .withFailureHandler(function(err) {
             msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
           })
-          .saveRepLeadUpdate("<?= lead.leadId ?>", status, notes);
+          .saveRepLeadUpdate("<?= lead.leadId ?>", status, notes, "<?= rep ?>");
       }
     </script>
   </body>

@@ -4,43 +4,181 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f6f7fb; color: #1f2937; }
-      .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-      .topbar { margin-bottom: 20px; }
-      .title { font-size: 28px; font-weight: 700; margin: 0 0 6px; }
-      .sub { color: #6b7280; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-      .card { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
-      .name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-      .meta { color: #6b7280; font-size: 14px; line-height: 1.5; margin-bottom: 14px; }
-      .btn { display: inline-block; text-decoration: none; background: #111827; color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px; }
-      .empty { background: #fff; padding: 18px; border-radius: 16px; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f5f7fb;
+        color: #1f2937;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .title {
+        margin: 0;
+        font-size: 28px;
+      }
+      .sub {
+        color: #6b7280;
+        font-size: 14px;
+      }
+      .filters {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .filters input,
+      .filters select {
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        font-size: 14px;
+        background: #fff;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
+      }
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      .meta,
+      .contact,
+      .update {
+        font-size: 14px;
+        color: #4b5563;
+        margin-bottom: 8px;
+      }
+      .statusline {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #eef2ff;
+        font-size: 12px;
+        margin-left: 6px;
+      }
+      .actions a {
+        display: inline-block;
+        margin-top: 10px;
+        text-decoration: none;
+        background: #111827;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+      .empty {
+        background: #fff;
+        border: 1px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        color: #6b7280;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="topbar">
-        <div class="title">Rep Dashboard</div>
-        <div class="sub">Assigned to: <?= rep ?></div>
+        <div>
+          <h1 class="title">Rep Dashboard</h1>
+          <div class="sub">Assigned to: <strong><?= rep ?></strong></div>
+        </div>
+      </div>
+
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Search business, city, category, contact">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="New Lead">New Lead</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Replied">Replied</option>
+          <option value="Conversation">Conversation</option>
+          <option value="Call Booked">Call Booked</option>
+          <option value="Closed Won">Closed Won</option>
+          <option value="Closed Lost">Closed Lost</option>
+        </select>
       </div>
 
       <? if (!leads || !leads.length) { ?>
         <div class="empty">No leads assigned.</div>
       <? } else { ?>
-        <div class="grid">
-          <? leads.forEach(function(lead) { ?>
-            <div class="card">
-              <div class="name"><?= lead.businessName ?></div>
-              <div class="meta">
-                <?= lead.city ?> · <?= lead.category ?><br>
-                Status: <?= lead.status || 'New Lead' ?><br>
-                Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
+        <div class="grid" id="leadGrid">
+          <? for (var i = 0; i < leads.length; i++) { var lead = leads[i]; ?>
+            <div class="card"
+                 data-status="<?= lead.status || '' ?>"
+                 data-search="<?= [
+                   lead.businessName || '',
+                   lead.city || '',
+                   lead.category || '',
+                   lead.contactName || '',
+                   lead.phone || '',
+                   lead.email || ''
+                 ].join(' ').toLowerCase() ?>">
+              <h3><?= lead.businessName || 'Unnamed Lead' ?></h3>
+              <div class="meta"><?= lead.city || '—' ?> · <?= lead.category || '—' ?></div>
+              <div class="statusline">
+                Status: <span class="pill"><?= lead.status || '—' ?></span>
               </div>
-              <a class="btn" target="_top" href="<?= appUrl ?>?rep=<?= encodeURIComponent(rep) ?>&leadId=<?= encodeURIComponent(lead.leadId) ?>">Open Lead</a>"
+              <div class="meta">Rating: <?= lead.rating || 0 ?> · Reviews: <?= lead.reviews || 0 ?></div>
+              <div class="contact">Contact: <?= lead.contactName || '—' ?></div>
+              <div class="contact">Phone: <?= lead.phone || '—' ?></div>
+              <div class="contact">Email: <?= lead.email || '—' ?></div>
+              <div class="update">Last update: <?= lead.lastUpdatedAt || '—' ?></div>
+              <div class="actions">
+                <a href="<?= appUrl ?>?leadId=<?= encodeURIComponent(lead.leadId) ?>&rep=<?= encodeURIComponent(rep) ?>">Open Lead</a>
+              </div>
             </div>
-          <? }); ?>
+          <? } ?>
         </div>
       <? } ?>
     </div>
+
+    <script>
+      (function () {
+        var searchInput = document.getElementById('searchInput');
+        var statusFilter = document.getElementById('statusFilter');
+        var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+
+        function applyFilters() {
+          var q = (searchInput.value || '').trim().toLowerCase();
+          var status = statusFilter.value || '';
+
+          cards.forEach(function(card) {
+            var hay = card.getAttribute('data-search') || '';
+            var cardStatus = card.getAttribute('data-status') || '';
+            var matchesSearch = !q || hay.indexOf(q) !== -1;
+            var matchesStatus = !status || cardStatus === status;
+            card.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+          });
+        }
+
+        if (searchInput) searchInput.addEventListener('input', applyFilters);
+        if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+      })();
+    </script>
   </body>
 </html>
