@@ -37,7 +37,8 @@ function renderRepDashboardPage_(rep) {
 
 function renderRepLeadPage_(leadId, rep) {
   var lead = getLeadRecordByLeadId_(leadId);
-  var input = buildMarketMirrorInputFromLeadRow_(lead);
+  var leadForMirror = JSON.parse(JSON.stringify(lead));
+  var input = buildMarketMirrorInputFromLeadRow_(leadForMirror);
   var payload = buildMarketMirrorPayload_(input);
   var mirrorHtml = renderMarketMirrorHtml_(payload);
   var template = HtmlService.createTemplateFromFile('21_rep_lead');

@@ -181,8 +181,8 @@
 
           <label for="secondaryContactEmail">Secondary Contact Email</label>
           <input id="secondaryContactEmail" type="text" value="<?= lead.secondaryContactEmail || '' ?>">
-		  
-		  <label for="secondaryAddress">Secondary Address</label>
+
+          <label for="secondaryAddress">Secondary Address</label>
           <input id="secondaryAddress" type="text" value="<?= lead.secondaryAddress || '' ?>">
 
           <label for="activeTask">Active Task</label>
@@ -288,7 +288,7 @@
         const secondaryContactRole = document.getElementById('secondaryContactRole').value;
         const secondaryContactPhone = document.getElementById('secondaryContactPhone').value;
         const secondaryContactEmail = document.getElementById('secondaryContactEmail').value;
-		const secondaryAddress = document.getElementById('secondaryAddress').value;
+        const secondaryAddress = document.getElementById('secondaryAddress').value;
         const activeTask = document.getElementById('activeTask').value;
         const taskType = document.getElementById('taskType').value;
         const taskDueAt = document.getElementById('taskDueAt').value;
@@ -320,7 +320,7 @@
               document.getElementById('secondaryContactRole').value = result.secondaryContactRole || '';
               document.getElementById('secondaryContactPhone').value = result.secondaryContactPhone || '';
               document.getElementById('secondaryContactEmail').value = result.secondaryContactEmail || '';
-			  document.getElementById('secondaryAddress').value = result.secondaryAddress || '';
+              document.getElementById('secondaryAddress').value = result.secondaryAddress || '';
               document.getElementById('activeTask').value = result.activeTask || '';
               document.getElementById('taskType').value = result.taskType || '';
               document.getElementById('taskDueAt').value = result.taskDueAt || '';
@@ -353,7 +353,7 @@
             secondaryContactRole,
             secondaryContactPhone,
             secondaryContactEmail,
-			secondaryAddress
+            secondaryAddress
           );
       }
 
