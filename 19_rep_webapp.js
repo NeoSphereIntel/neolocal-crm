@@ -419,7 +419,10 @@ function saveRepLeadUpdate(
 function buildHeaderIndex_(headers) {
   var idx = {};
   for (var i = 0; i < headers.length; i++) {
-    idx[normalizeHeaderKey_(headers[i])] = i;
+    var key = normalizeHeaderKey_(headers[i]);
+    if (idx[key] === undefined) {
+      idx[key] = i;
+    }
   }
   return idx;
 }
