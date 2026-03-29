@@ -348,7 +348,7 @@ function setupLeadsMasterSheet_(sheet) {
 	"Secondary Contact Name",
 	"Secondary Contact Role",
 	"Secondary Contact Phone",
-	"Secondary Contact Email"
+	"Secondary Contact Email",
 	"Secondary Address"
   ];
 
