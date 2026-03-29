@@ -124,15 +124,8 @@ function getLeadRecordByLeadId_(leadId) {
         reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
         rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
 
-        address:
-          getCellByHeader_(row, idx, 'Address') ||
-          getCellByHeader_(row, idx, 'address') ||
-          '',
-
-        website:
-          getCellByHeader_(row, idx, 'Website') ||
-          getCellByHeader_(row, idx, 'website') ||
-          '',
+        address: getCellByHeader_(row, idx, 'address') || '',
+        website: getCellByHeader_(row, idx, 'website') || '',
 
         mainPhone:
           getCellByHeader_(row, idx, 'Main Phone') ||
@@ -173,6 +166,10 @@ function getLeadRecordByLeadId_(leadId) {
 
         secondaryContactEmail:
           getCellByHeader_(row, idx, 'Secondary Contact Email') ||
+          '',
+
+        secondaryAddress:
+          getCellByHeader_(row, idx, 'Secondary Address') ||
           '',
 
         notes: getCellByHeader_(row, idx, 'crm_notes') || getCellByHeader_(row, idx, 'notes'),
@@ -244,7 +241,8 @@ function saveRepLeadUpdate(
   secondaryContactName,
   secondaryContactRole,
   secondaryContactPhone,
-  secondaryContactEmail
+  secondaryContactEmail,
+  secondaryAddress
 ) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
@@ -281,6 +279,7 @@ function saveRepLeadUpdate(
       var cleanSecondaryContactRole = String(secondaryContactRole || '').trim();
       var cleanSecondaryContactPhone = String(secondaryContactPhone || '').trim();
       var cleanSecondaryContactEmail = String(secondaryContactEmail || '').trim();
+      var cleanSecondaryAddress = String(secondaryAddress || '').trim();
 
       var notesHeader = hasHeader_(idx, 'crm_notes') ? 'crm_notes' : (hasHeader_(idx, 'notes') ? 'notes' : '');
       var existingNotes = notesHeader ? String(getCellByHeader_(row, idx, notesHeader) || '').trim() : '';
@@ -292,16 +291,10 @@ function saveRepLeadUpdate(
         setCellByHeader_(sheet, r + 1, idx, 'business_name', cleanBusinessName);
       }
 
-      if (hasHeader_(idx, 'Address')) {
-        setCellByHeader_(sheet, r + 1, idx, 'Address', cleanAddress);
-      }
       if (hasHeader_(idx, 'address')) {
         setCellByHeader_(sheet, r + 1, idx, 'address', cleanAddress);
       }
 
-      if (hasHeader_(idx, 'Website')) {
-        setCellByHeader_(sheet, r + 1, idx, 'Website', cleanWebsite);
-      }
       if (hasHeader_(idx, 'website')) {
         setCellByHeader_(sheet, r + 1, idx, 'website', cleanWebsite);
       }
@@ -349,6 +342,10 @@ function saveRepLeadUpdate(
 
       if (hasHeader_(idx, 'Secondary Contact Email')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Email', cleanSecondaryContactEmail);
+      }
+
+      if (hasHeader_(idx, 'Secondary Address')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Secondary Address', cleanSecondaryAddress);
       }
 
       if (hasHeader_(idx, 'Active Task')) {
@@ -409,7 +406,8 @@ function saveRepLeadUpdate(
         secondaryContactName: cleanSecondaryContactName,
         secondaryContactRole: cleanSecondaryContactRole,
         secondaryContactPhone: cleanSecondaryContactPhone,
-        secondaryContactEmail: cleanSecondaryContactEmail
+        secondaryContactEmail: cleanSecondaryContactEmail,
+        secondaryAddress: cleanSecondaryAddress
       };
     }
   }
