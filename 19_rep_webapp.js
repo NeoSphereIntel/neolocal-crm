@@ -123,13 +123,58 @@ function getLeadRecordByLeadId_(leadId) {
         status: getCellByHeader_(row, idx, 'status'),
         reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
         rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
-        phone: getCellByHeader_(row, idx, 'phone'),
-        email: getCellByHeader_(row, idx, 'email'),
+
+        address:
+          getCellByHeader_(row, idx, 'Address') ||
+          getCellByHeader_(row, idx, 'address') ||
+          '',
+
+        website:
+          getCellByHeader_(row, idx, 'Website') ||
+          getCellByHeader_(row, idx, 'website') ||
+          '',
+
+        mainPhone:
+          getCellByHeader_(row, idx, 'Main Phone') ||
+          getCellByHeader_(row, idx, 'phone') ||
+          '',
+
+        mobilePhone:
+          getCellByHeader_(row, idx, 'Mobile Phone') ||
+          '',
+
+        mainEmail:
+          getCellByHeader_(row, idx, 'Main Email') ||
+          getCellByHeader_(row, idx, 'email') ||
+          '',
+
         contactName:
+          getCellByHeader_(row, idx, 'Contact Name') ||
           getCellByHeader_(row, idx, 'contact_name') ||
           getCellByHeader_(row, idx, 'owner_name') ||
           getCellByHeader_(row, idx, 'owner') ||
           '',
+
+        contactRole:
+          getCellByHeader_(row, idx, 'Contact Role') ||
+          '',
+
+        secondaryContactName:
+          getCellByHeader_(row, idx, 'Secondary Contact Name') ||
+          '',
+
+        secondaryContactRole:
+          getCellByHeader_(row, idx, 'Secondary Contact Role') ||
+          '',
+
+        secondaryContactPhone:
+          getCellByHeader_(row, idx, 'Secondary Contact Phone') ||
+          '',
+
+        secondaryContactEmail:
+          getCellByHeader_(row, idx, 'Secondary Contact Email') ||
+          '',
+
         notes: getCellByHeader_(row, idx, 'crm_notes') || getCellByHeader_(row, idx, 'notes'),
         assignedTo: getCellByHeader_(row, idx, 'Assigned To'),
         lastUpdatedAt:
@@ -147,7 +192,6 @@ function getLeadRecordByLeadId_(leadId) {
 
   throw new Error('Lead not found: ' + leadId);
 }
-
 function buildMarketMirrorInputFromLeadRow_(lead) {
   return {
     lead_id: lead.leadId,
@@ -180,7 +224,28 @@ function buildRepNoteEntry_(rep, noteText) {
   return '[' + stamp + '] ' + who + ': ' + body;
 }
 
-function saveRepLeadUpdate(leadId, status, newNote, rep, activeTask, taskType, taskDueAt, taskStatus) {
+function saveRepLeadUpdate(
+  leadId,
+  status,
+  newNote,
+  rep,
+  activeTask,
+  taskType,
+  taskDueAt,
+  taskStatus,
+  businessName,
+  address,
+  website,
+  mainPhone,
+  mobilePhone,
+  mainEmail,
+  contactName,
+  contactRole,
+  secondaryContactName,
+  secondaryContactRole,
+  secondaryContactPhone,
+  secondaryContactEmail
+) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
 
@@ -198,16 +263,93 @@ function saveRepLeadUpdate(leadId, status, newNote, rep, activeTask, taskType, t
     if (rowLeadId === leadIdNorm) {
       var cleanStatus = String(status || '').trim();
       var cleanNewNote = String(newNote || '').trim();
+
       var cleanActiveTask = String(activeTask || '').trim();
       var cleanTaskType = String(taskType || '').trim();
       var cleanTaskDueAt = String(taskDueAt || '').trim();
       var cleanTaskStatus = String(taskStatus || '').trim();
+
+      var cleanBusinessName = String(businessName || '').trim();
+      var cleanAddress = String(address || '').trim();
+      var cleanWebsite = String(website || '').trim();
+      var cleanMainPhone = String(mainPhone || '').trim();
+      var cleanMobilePhone = String(mobilePhone || '').trim();
+      var cleanMainEmail = String(mainEmail || '').trim();
+      var cleanContactName = String(contactName || '').trim();
+      var cleanContactRole = String(contactRole || '').trim();
+      var cleanSecondaryContactName = String(secondaryContactName || '').trim();
+      var cleanSecondaryContactRole = String(secondaryContactRole || '').trim();
+      var cleanSecondaryContactPhone = String(secondaryContactPhone || '').trim();
+      var cleanSecondaryContactEmail = String(secondaryContactEmail || '').trim();
 
       var notesHeader = hasHeader_(idx, 'crm_notes') ? 'crm_notes' : (hasHeader_(idx, 'notes') ? 'notes' : '');
       var existingNotes = notesHeader ? String(getCellByHeader_(row, idx, notesHeader) || '').trim() : '';
       var appendedEntry = '';
 
       setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
+
+      if (hasHeader_(idx, 'business_name')) {
+        setCellByHeader_(sheet, r + 1, idx, 'business_name', cleanBusinessName);
+      }
+
+      if (hasHeader_(idx, 'Address')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Address', cleanAddress);
+      }
+      if (hasHeader_(idx, 'address')) {
+        setCellByHeader_(sheet, r + 1, idx, 'address', cleanAddress);
+      }
+
+      if (hasHeader_(idx, 'Website')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Website', cleanWebsite);
+      }
+      if (hasHeader_(idx, 'website')) {
+        setCellByHeader_(sheet, r + 1, idx, 'website', cleanWebsite);
+      }
+
+      if (hasHeader_(idx, 'Main Phone')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Main Phone', cleanMainPhone);
+      }
+      if (hasHeader_(idx, 'phone')) {
+        setCellByHeader_(sheet, r + 1, idx, 'phone', cleanMainPhone);
+      }
+
+      if (hasHeader_(idx, 'Mobile Phone')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Mobile Phone', cleanMobilePhone);
+      }
+
+      if (hasHeader_(idx, 'Main Email')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Main Email', cleanMainEmail);
+      }
+      if (hasHeader_(idx, 'email')) {
+        setCellByHeader_(sheet, r + 1, idx, 'email', cleanMainEmail);
+      }
+
+      if (hasHeader_(idx, 'Contact Name')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Contact Name', cleanContactName);
+      }
+      if (hasHeader_(idx, 'contact_name')) {
+        setCellByHeader_(sheet, r + 1, idx, 'contact_name', cleanContactName);
+      }
+
+      if (hasHeader_(idx, 'Contact Role')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Contact Role', cleanContactRole);
+      }
+
+      if (hasHeader_(idx, 'Secondary Contact Name')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Name', cleanSecondaryContactName);
+      }
+
+      if (hasHeader_(idx, 'Secondary Contact Role')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Role', cleanSecondaryContactRole);
+      }
+
+      if (hasHeader_(idx, 'Secondary Contact Phone')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Phone', cleanSecondaryContactPhone);
+      }
+
+      if (hasHeader_(idx, 'Secondary Contact Email')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Email', cleanSecondaryContactEmail);
+      }
 
       if (hasHeader_(idx, 'Active Task')) {
         setCellByHeader_(sheet, r + 1, idx, 'Active Task', cleanActiveTask);
@@ -221,13 +363,16 @@ function saveRepLeadUpdate(leadId, status, newNote, rep, activeTask, taskType, t
         setCellByHeader_(sheet, r + 1, idx, 'Task Due At', cleanTaskDueAt);
       }
 
+      if (!cleanTaskStatus && cleanActiveTask) {
+        cleanTaskStatus = 'Open';
+      }
+
       if (hasHeader_(idx, 'Task Status')) {
         setCellByHeader_(sheet, r + 1, idx, 'Task Status', cleanTaskStatus);
       }
 
       if (cleanNewNote) {
         appendedEntry = buildRepNoteEntry_(rep, cleanNewNote);
-
         if (notesHeader) {
           var mergedNotes = existingNotes ? (existingNotes + '\n' + appendedEntry) : appendedEntry;
           setCellByHeader_(sheet, r + 1, idx, notesHeader, mergedNotes);
@@ -252,7 +397,19 @@ function saveRepLeadUpdate(leadId, status, newNote, rep, activeTask, taskType, t
         activeTask: cleanActiveTask,
         taskType: cleanTaskType,
         taskDueAt: cleanTaskDueAt,
-        taskStatus: cleanTaskStatus
+        taskStatus: cleanTaskStatus,
+        businessName: cleanBusinessName,
+        address: cleanAddress,
+        website: cleanWebsite,
+        mainPhone: cleanMainPhone,
+        mobilePhone: cleanMobilePhone,
+        mainEmail: cleanMainEmail,
+        contactName: cleanContactName,
+        contactRole: cleanContactRole,
+        secondaryContactName: cleanSecondaryContactName,
+        secondaryContactRole: cleanSecondaryContactRole,
+        secondaryContactPhone: cleanSecondaryContactPhone,
+        secondaryContactEmail: cleanSecondaryContactEmail
       };
     }
   }

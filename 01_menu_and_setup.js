@@ -67,6 +67,17 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("Task Type");
   ensureLeadsColumn_("Task Due At");
   ensureLeadsColumn_("Task Status");
+  ensureLeadsColumn_("Address");
+  ensureLeadsColumn_("Website");
+  ensureLeadsColumn_("Main Phone");
+  ensureLeadsColumn_("Mobile Phone");
+  ensureLeadsColumn_("Main Email");
+  ensureLeadsColumn_("Contact Name");
+  ensureLeadsColumn_("Contact Role");
+  ensureLeadsColumn_("Secondary Contact Name");
+  ensureLeadsColumn_("Secondary Contact Role");
+  ensureLeadsColumn_("Secondary Contact Phone");
+  ensureLeadsColumn_("Secondary Contact Email");
 
   backfillAssignedToAndMarketMirrorUrl();
 
@@ -329,7 +340,18 @@ function setupLeadsMasterSheet_(sheet) {
 	"Active Task",
 	"Task Type",
 	"Task Due At",
-	"Task Status"
+	"Task Status",
+	"Address",
+	"Website",
+	"Main Phone",
+	"Mobile Phone",
+	"Main Email",
+	"Contact Name",
+	"Contact Role",
+	"Secondary Contact Name",
+	"Secondary Contact Role",
+	"Secondary Contact Phone",
+	"Secondary Contact Email"
   ];
 
   setHeadersIfNeeded_(sheet, headers);

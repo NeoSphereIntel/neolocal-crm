@@ -146,6 +146,42 @@
             <option value="Closed Lost" <?= lead.status === 'Closed Lost' ? 'selected' : '' ?>>Closed Lost</option>
           </select>
 
+          <label for="businessName">Business Name</label>
+          <input id="businessName" type="text" value="<?= lead.businessName || '' ?>">
+
+          <label for="address">Address</label>
+          <input id="address" type="text" value="<?= lead.address || '' ?>">
+
+          <label for="website">Website</label>
+          <input id="website" type="text" value="<?= lead.website || '' ?>">
+
+          <label for="mainPhone">Main Phone</label>
+          <input id="mainPhone" type="text" value="<?= lead.mainPhone || '' ?>">
+
+          <label for="mobilePhone">Mobile Phone</label>
+          <input id="mobilePhone" type="text" value="<?= lead.mobilePhone || '' ?>">
+
+          <label for="mainEmail">Main Email</label>
+          <input id="mainEmail" type="text" value="<?= lead.mainEmail || '' ?>">
+
+          <label for="contactName">Contact Name</label>
+          <input id="contactName" type="text" value="<?= lead.contactName || '' ?>">
+
+          <label for="contactRole">Contact Role</label>
+          <input id="contactRole" type="text" value="<?= lead.contactRole || '' ?>">
+
+          <label for="secondaryContactName">Secondary Contact Name</label>
+          <input id="secondaryContactName" type="text" value="<?= lead.secondaryContactName || '' ?>">
+
+          <label for="secondaryContactRole">Secondary Contact Role</label>
+          <input id="secondaryContactRole" type="text" value="<?= lead.secondaryContactRole || '' ?>">
+
+          <label for="secondaryContactPhone">Secondary Contact Phone</label>
+          <input id="secondaryContactPhone" type="text" value="<?= lead.secondaryContactPhone || '' ?>">
+
+          <label for="secondaryContactEmail">Secondary Contact Email</label>
+          <input id="secondaryContactEmail" type="text" value="<?= lead.secondaryContactEmail || '' ?>">
+
           <label for="activeTask">Active Task</label>
           <input id="activeTask" type="text" value="<?= lead.activeTask || '' ?>" placeholder="Add one active task">
 
@@ -237,11 +273,23 @@
 
       function saveLead() {
         const status = document.getElementById('status').value;
-        const newNote = document.getElementById('newNote').value;
+        const businessName = document.getElementById('businessName').value;
+        const address = document.getElementById('address').value;
+        const website = document.getElementById('website').value;
+        const mainPhone = document.getElementById('mainPhone').value;
+        const mobilePhone = document.getElementById('mobilePhone').value;
+        const mainEmail = document.getElementById('mainEmail').value;
+        const contactName = document.getElementById('contactName').value;
+        const contactRole = document.getElementById('contactRole').value;
+        const secondaryContactName = document.getElementById('secondaryContactName').value;
+        const secondaryContactRole = document.getElementById('secondaryContactRole').value;
+        const secondaryContactPhone = document.getElementById('secondaryContactPhone').value;
+        const secondaryContactEmail = document.getElementById('secondaryContactEmail').value;
         const activeTask = document.getElementById('activeTask').value;
         const taskType = document.getElementById('taskType').value;
         const taskDueAt = document.getElementById('taskDueAt').value;
         const taskStatus = document.getElementById('taskStatus').value;
+        const newNote = document.getElementById('newNote').value;
         const msg = document.getElementById('msg');
 
         msg.textContent = 'Saving...';
@@ -256,6 +304,18 @@
             }
 
             if (result) {
+              document.getElementById('businessName').value = result.businessName || '';
+              document.getElementById('address').value = result.address || '';
+              document.getElementById('website').value = result.website || '';
+              document.getElementById('mainPhone').value = result.mainPhone || '';
+              document.getElementById('mobilePhone').value = result.mobilePhone || '';
+              document.getElementById('mainEmail').value = result.mainEmail || '';
+              document.getElementById('contactName').value = result.contactName || '';
+              document.getElementById('contactRole').value = result.contactRole || '';
+              document.getElementById('secondaryContactName').value = result.secondaryContactName || '';
+              document.getElementById('secondaryContactRole').value = result.secondaryContactRole || '';
+              document.getElementById('secondaryContactPhone').value = result.secondaryContactPhone || '';
+              document.getElementById('secondaryContactEmail').value = result.secondaryContactEmail || '';
               document.getElementById('activeTask').value = result.activeTask || '';
               document.getElementById('taskType').value = result.taskType || '';
               document.getElementById('taskDueAt').value = result.taskDueAt || '';
@@ -275,7 +335,19 @@
             activeTask,
             taskType,
             taskDueAt,
-            taskStatus
+            taskStatus,
+            businessName,
+            address,
+            website,
+            mainPhone,
+            mobilePhone,
+            mainEmail,
+            contactName,
+            contactRole,
+            secondaryContactName,
+            secondaryContactRole,
+            secondaryContactPhone,
+            secondaryContactEmail
           );
       }
 
