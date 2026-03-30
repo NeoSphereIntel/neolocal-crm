@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f6f7fb;
+        color: #1f2937;
+      }
+
+      .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .back {
+        display: inline-block;
+        margin-bottom: 16px;
+        text-decoration: none;
+        color: #374151;
+      }
+
+      .title {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      .sub {
+        color: #6b7280;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.06);
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        margin: 14px 0 6px;
+      }
+
+      input, textarea, select, button {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+      }
+
+      input, textarea, select {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .grid-1 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      button {
+        border: 0;
+        background: #111827;
+        color: #fff;
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        margin-top: 14px;
+      }
+
+      button.secondary {
+        background: #374151;
+      }
+
+      .msg {
+        margin-top: 12px;
+        font-size: 14px;
+      }
+
+      .msg.error {
+        color: #b91c1c;
+      }
+
+      .msg.success {
+        color: #166534;
+      }
+
+      .preview {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        margin-top: 14px;
+      }
+
+      .preview-row {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #374151;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="back" href="<?= appUrl ?>?rep=<?= encodeURIComponent(rep || '') ?>">
+        &larr; Back to dashboard
+      </a>
+
+      <h1 class="title">Add Lead</h1>
+      <div class="sub">Paste a Google Maps URL containing a place_id, or paste the Place ID directly.</div>
+
+      <div class="card">
+        <label for="placeIdentifier">Google Maps URL or Place ID</label>
+        <input id="placeIdentifier" type="text" placeholder="Paste Maps URL or Place ID">
+
+        <button type="button" class="secondary" onclick="fetchLead()">Fetch from SerpAPI</button>
+        <div id="fetchMsg" class="msg"></div>
+
+        <div id="preview" class="preview" style="display:none;">
+          <div class="preview-row"><strong>Business:</strong> <span id="previewBusiness">—</span></div>
+          <div class="preview-row"><strong>Category:</strong> <span id="previewCategory">—</span></div>
+          <div class="preview-row"><strong>City:</strong> <span id="previewCity">—</span></div>
+          <div class="preview-row"><strong>Address:</strong> <span id="previewAddress">—</span></div>
+          <div class="preview-row"><strong>Phone:</strong> <span id="previewPhone">—</span></div>
+          <div class="preview-row"><strong>Website:</strong> <span id="previewWebsite">—</span></div>
+          <div class="preview-row"><strong>Rating:</strong> <span id="previewRating">—</span></div>
+          <div class="preview-row"><strong>Reviews:</strong> <span id="previewReviews">—</span></div>
+          <div class="preview-row"><strong>Place ID:</strong> <span id="previewPlaceId">—</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="grid">
+          <div>
+            <label for="businessName">Business Name</label>
+            <input id="businessName" type="text">
+          </div>
+          <div>
+            <label for="category">Category</label>
+            <input id="category" type="text">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="city">City</label>
+            <input id="city" type="text">
+          </div>
+          <div>
+            <label for="mainPhone">Main Phone</label>
+            <input id="mainPhone" type="text">
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <div>
+            <label for="address">Address</label>
+            <input id="address" type="text">
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <div>
+            <label for="website">Website</label>
+            <input id="website" type="text">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="contactName">Contact Name</label>
+            <input id="contactName" type="text">
+          </div>
+          <div>
+            <label for="contactRole">Contact Role</label>
+            <input id="contactRole" type="text">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="mainEmail">Main Email</label>
+            <input id="mainEmail" type="text">
+          </div>
+          <div>
+            <label for="assignedTo">Assigned To</label>
+            <input id="assignedTo" type="text" value="<?= rep || '' ?>">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="activeTask">Active Task</label>
+            <input id="activeTask" type="text" placeholder="Optional first task">
+          </div>
+          <div>
+            <label for="taskType">Task Type</label>
+            <select id="taskType">
+              <option value="">—</option>
+              <option value="Call">Call</option>
+              <option value="Email">Email</option>
+              <option value="SMS">SMS</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Proposal">Proposal</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="taskDueAt">Task Due At</label>
+            <input id="taskDueAt" type="datetime-local">
+          </div>
+          <div>
+            <label for="taskStatus">Task Status</label>
+            <select id="taskStatus">
+              <option value="">—</option>
+              <option value="Open">Open</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="notes">Opening Note</label>
+        <textarea id="notes" rows="6" placeholder="Optional starting note"></textarea>
+
+        <button type="button" onclick="saveLead()">Save Lead</button>
+        <div id="saveMsg" class="msg"></div>
+      </div>
+    </div>
+
+    <script>
+      function setMsg(el, text, isError, isSuccess) {
+        el.className = 'msg' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
+        el.textContent = text || '';
+      }
+
+      function fetchLead() {
+        var placeIdentifier = document.getElementById('placeIdentifier').value;
+        var msg = document.getElementById('fetchMsg');
+
+        setMsg(msg, 'Fetching...', false, false);
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            setMsg(msg, 'Lead data fetched.', false, true);
+
+            document.getElementById('businessName').value = result.businessName || '';
+            document.getElementById('category').value = result.category || '';
+            document.getElementById('city').value = result.city || '';
+            document.getElementById('address').value = result.address || '';
+            document.getElementById('website').value = result.website || '';
+            document.getElementById('mainPhone').value = result.mainPhone || '';
+
+            document.getElementById('preview').style.display = '';
+            document.getElementById('previewBusiness').textContent = result.businessName || '—';
+            document.getElementById('previewCategory').textContent = result.category || '—';
+            document.getElementById('previewCity').textContent = result.city || '—';
+            document.getElementById('previewAddress').textContent = result.address || '—';
+            document.getElementById('previewPhone').textContent = result.mainPhone || '—';
+            document.getElementById('previewWebsite').textContent = result.website || '—';
+            document.getElementById('previewRating').textContent = String(result.rating || 0);
+            document.getElementById('previewReviews').textContent = String(result.reviews || 0);
+            document.getElementById('previewPlaceId').textContent = result.placeId || '—';
+
+            if (result.placeId) {
+              document.getElementById('placeIdentifier').value = result.placeId;
+            }
+          })
+          .withFailureHandler(function(err) {
+            setMsg(msg, 'Error: ' + (err && err.message ? err.message : err), true, false);
+          })
+          .lookupManualLeadFromSerpApi(placeIdentifier);
+      }
+
+      function saveLead() {
+        var assignedTo = document.getElementById('assignedTo').value;
+        var placeIdentifier = document.getElementById('placeIdentifier').value;
+        var businessName = document.getElementById('businessName').value;
+        var category = document.getElementById('category').value;
+        var city = document.getElementById('city').value;
+        var address = document.getElementById('address').value;
+        var website = document.getElementById('website').value;
+        var mainPhone = document.getElementById('mainPhone').value;
+        var mainEmail = document.getElementById('mainEmail').value;
+        var contactName = document.getElementById('contactName').value;
+        var contactRole = document.getElementById('contactRole').value;
+        var notes = document.getElementById('notes').value;
+        var activeTask = document.getElementById('activeTask').value;
+        var taskType = document.getElementById('taskType').value;
+        var taskDueAt = document.getElementById('taskDueAt').value;
+        var taskStatus = document.getElementById('taskStatus').value;
+        var msg = document.getElementById('saveMsg');
+
+        setMsg(msg, 'Saving...', false, false);
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            setMsg(msg, 'Lead saved. Redirecting...', false, true);
+            if (result && result.redirectUrl) {
+              window.location.href = result.redirectUrl;
+            }
+          })
+          .withFailureHandler(function(err) {
+            setMsg(msg, 'Error: ' + (err && err.message ? err.message : err), true, false);
+          })
+          .saveManualLead(
+            assignedTo,
+            placeIdentifier,
+            businessName,
+            category,
+            city,
+            address,
+            website,
+            mainPhone,
+            mainEmail,
+            contactName,
+            contactRole,
+            notes,
+            activeTask,
+            taskType,
+            taskDueAt,
+            taskStatus
+          );
+      }
+    </script>
+  </body>
+</html>

@@ -10,11 +10,13 @@
         background: #f5f7fb;
         color: #1f2937;
       }
+
       .wrap {
         max-width: 1200px;
         margin: 0 auto;
         padding: 24px;
       }
+
       .topbar {
         display: flex;
         justify-content: space-between;
@@ -23,20 +25,34 @@
         margin-bottom: 20px;
         flex-wrap: wrap;
       }
+
       .title {
         margin: 0;
         font-size: 28px;
       }
+
       .sub {
         color: #6b7280;
         font-size: 14px;
       }
+
+      .top-actions a {
+        display: inline-block;
+        text-decoration: none;
+        background: #111827;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+
       .filters {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 20px;
       }
+
       .filters input,
       .filters select {
         padding: 10px 12px;
@@ -45,11 +61,13 @@
         font-size: 14px;
         background: #fff;
       }
+
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 16px;
       }
+
       .card {
         background: #fff;
         border-radius: 16px;
@@ -57,10 +75,12 @@
         box-shadow: 0 4px 18px rgba(0,0,0,0.06);
         border: 1px solid #e5e7eb;
       }
+
       .card h3 {
         margin: 0 0 8px;
         font-size: 20px;
       }
+
       .meta,
       .contact,
       .update,
@@ -69,10 +89,12 @@
         color: #4b5563;
         margin-bottom: 8px;
       }
+
       .statusline {
         font-size: 14px;
         margin-bottom: 10px;
       }
+
       .pill {
         display: inline-block;
         padding: 4px 10px;
@@ -81,14 +103,90 @@
         font-size: 12px;
         margin-left: 6px;
       }
+
       .task-open {
         color: #92400e;
         font-weight: 700;
       }
+
       .task-done {
         color: #065f46;
         font-weight: 700;
       }
+
+      .task-overdue {
+        border-color: #fecaca;
+        box-shadow: 0 4px 18px rgba(220, 38, 38, 0.12);
+      }
+
+      .task-due-today {
+        border-color: #fde68a;
+        box-shadow: 0 4px 18px rgba(217, 119, 6, 0.12);
+      }
+
+      .taskline.overdue {
+        color: #b91c1c;
+        font-weight: 700;
+      }
+
+      .taskline.due-today {
+        color: #b45309;
+        font-weight: 700;
+      }
+
+      .badge-overdue,
+      .badge-due-today,
+      .badge-fresh,
+      .badge-warm,
+      .badge-stale {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .badge-overdue {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .badge-due-today {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .badge-fresh {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .badge-warm {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .badge-stale {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .update.stale {
+        color: #b91c1c;
+        font-weight: 700;
+      }
+
+      .update.warm {
+        color: #b45309;
+        font-weight: 700;
+      }
+
+      .update.fresh {
+        color: #166534;
+        font-weight: 700;
+      }
+
       .actions a {
         display: inline-block;
         margin-top: 10px;
@@ -99,6 +197,7 @@
         border-radius: 10px;
         font-size: 14px;
       }
+
       .empty {
         background: #fff;
         border: 1px dashed #cbd5e1;
@@ -115,6 +214,9 @@
         <div>
           <h1 class="title">Rep Dashboard</h1>
           <div class="sub">Assigned to: <strong><?= rep ?></strong></div>
+        </div>
+        <div class="top-actions">
+          <a href="<?= appUrl ?>?mode=add&rep=<?= encodeURIComponent(rep) ?>">+ Add Lead</a>
         </div>
       </div>
 
@@ -145,6 +247,8 @@
             <div class="card"
                  data-status="<?= lead.status || '' ?>"
                  data-task-status="<?= lead.taskStatus || '' ?>"
+                 data-task-due-at="<?= lead.taskDueAt || '' ?>"
+                 data-last-updated-at="<?= lead.lastUpdatedAt || '' ?>"
                  data-search="<?= [
                    lead.businessName || '',
                    lead.city || '',
@@ -166,14 +270,14 @@
               <div class="contact">Email: <?= lead.email || '—' ?></div>
               <div class="taskline">Task: <?= lead.activeTask || '—' ?></div>
               <div class="taskline">Type: <?= lead.taskType || '—' ?></div>
-              <div class="taskline">Due: <?= lead.taskDueAt || '—' ?></div>
+              <div class="taskline task-due-line">Due: <?= lead.taskDueAt || '—' ?></div>
               <div class="taskline">
                 Task status:
                 <span class="<?= (lead.taskStatus || '') === 'Done' ? 'task-done' : 'task-open' ?>">
                   <?= lead.taskStatus || '—' ?>
                 </span>
               </div>
-              <div class="update">Last update: <?= lead.lastUpdatedAt || '—' ?></div>
+              <div class="update last-update-line">Last activity: <?= lead.lastUpdatedAt || '—' ?></div>
               <div class="actions">
                 <a href="<?= appUrl ?>?leadId=<?= encodeURIComponent(lead.leadId) ?>&rep=<?= encodeURIComponent(rep) ?>">Open Lead</a>
               </div>
@@ -190,6 +294,131 @@
         var taskFilter = document.getElementById('taskFilter');
         var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
 
+        function parseLocalDateTime(value) {
+          if (!value) return null;
+
+          var raw = String(value).trim();
+          if (!raw) return null;
+
+          var normalized = raw.replace(' ', 'T');
+          var date = new Date(normalized);
+
+          if (!isNaN(date.getTime())) {
+            return date;
+          }
+
+          return null;
+        }
+
+        function parseAnyDate(value) {
+          if (!value) return null;
+
+          var raw = String(value).trim();
+          if (!raw || raw === '—') return null;
+
+          var firstTry = new Date(raw);
+          if (!isNaN(firstTry.getTime())) return firstTry;
+
+          var secondTry = new Date(raw.replace(' ', 'T'));
+          if (!isNaN(secondTry.getTime())) return secondTry;
+
+          return null;
+        }
+
+        function getTaskTimingState(taskDueAt, taskStatus) {
+          if (!taskDueAt || taskStatus === 'Done') return '';
+
+          var due = parseLocalDateTime(taskDueAt);
+          if (!due) return '';
+
+          var now = new Date();
+          var startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          var startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+          if (due < now) {
+            return 'overdue';
+          }
+
+          if (due >= startOfToday && due < startOfTomorrow) {
+            return 'due-today';
+          }
+
+          return '';
+        }
+
+        function getFreshnessState(lastUpdatedAt) {
+          var lastDate = parseAnyDate(lastUpdatedAt);
+          if (!lastDate) return '';
+
+          var now = new Date();
+          var msPerDay = 24 * 60 * 60 * 1000;
+          var diffDays = Math.floor((now - lastDate) / msPerDay);
+
+          if (diffDays <= 2) return 'fresh';
+          if (diffDays <= 7) return 'warm';
+          return 'stale';
+        }
+
+        function decorateTaskState(card) {
+          card.classList.remove('task-overdue', 'task-due-today');
+
+          var dueLine = card.querySelector('.task-due-line');
+          if (dueLine) {
+            dueLine.classList.remove('overdue', 'due-today');
+            var oldBadge = dueLine.querySelector('.badge-overdue, .badge-due-today');
+            if (oldBadge) oldBadge.remove();
+          }
+
+          var taskDueAt = card.getAttribute('data-task-due-at') || '';
+          var taskStatus = card.getAttribute('data-task-status') || '';
+          var timingState = getTaskTimingState(taskDueAt, taskStatus);
+
+          if (timingState === 'overdue') {
+            card.classList.add('task-overdue');
+            if (dueLine) {
+              dueLine.classList.add('overdue');
+              var overdueBadge = document.createElement('span');
+              overdueBadge.className = 'badge-overdue';
+              overdueBadge.textContent = 'OVERDUE';
+              dueLine.appendChild(overdueBadge);
+            }
+          } else if (timingState === 'due-today') {
+            card.classList.add('task-due-today');
+            if (dueLine) {
+              dueLine.classList.add('due-today');
+              var dueTodayBadge = document.createElement('span');
+              dueTodayBadge.className = 'badge-due-today';
+              dueTodayBadge.textContent = 'TODAY';
+              dueLine.appendChild(dueTodayBadge);
+            }
+          }
+        }
+
+        function decorateFreshness(card) {
+          var updateLine = card.querySelector('.last-update-line');
+          if (!updateLine) return;
+
+          updateLine.classList.remove('fresh', 'warm', 'stale');
+
+          var oldBadge = updateLine.querySelector('.badge-fresh, .badge-warm, .badge-stale');
+          if (oldBadge) oldBadge.remove();
+
+          var lastUpdatedAt = card.getAttribute('data-last-updated-at') || '';
+          var freshness = getFreshnessState(lastUpdatedAt);
+
+          if (!freshness) return;
+
+          updateLine.classList.add(freshness);
+
+          var badge = document.createElement('span');
+          badge.className =
+            freshness === 'fresh' ? 'badge-fresh' :
+            freshness === 'warm' ? 'badge-warm' :
+            'badge-stale';
+          badge.textContent = freshness === 'fresh' ? 'FRESH' : freshness === 'warm' ? 'WARM' : 'STALE';
+          updateLine.appendChild(badge);
+        }
+
         function applyFilters() {
           var q = (searchInput.value || '').trim().toLowerCase();
           var status = statusFilter.value || '';
@@ -202,13 +431,23 @@
             var matchesSearch = !q || hay.indexOf(q) !== -1;
             var matchesStatus = !status || cardStatus === status;
             var matchesTask = !taskStatus || cardTaskStatus === taskStatus;
+
+            decorateTaskState(card);
+            decorateFreshness(card);
             card.style.display = (matchesSearch && matchesStatus && matchesTask) ? '' : 'none';
           });
         }
 
+        cards.forEach(function(card) {
+          decorateTaskState(card);
+          decorateFreshness(card);
+        });
+
         if (searchInput) searchInput.addEventListener('input', applyFilters);
         if (statusFilter) statusFilter.addEventListener('change', applyFilters);
         if (taskFilter) taskFilter.addEventListener('change', applyFilters);
+
+        applyFilters();
       })();
     </script>
   </body>

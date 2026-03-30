@@ -31,6 +31,16 @@
         box-shadow: 0 8px 24px rgba(0,0,0,.06);
       }
 
+      .card.task-overdue {
+        border: 1px solid #fecaca;
+        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.12);
+      }
+
+      .card.task-due-today {
+        border: 1px solid #fde68a;
+        box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12);
+      }
+
       .title {
         font-size: 28px;
         font-weight: 700;
@@ -40,6 +50,27 @@
       .sub {
         color: #6b7280;
         margin-bottom: 8px;
+      }
+
+      .task-alert {
+        display: none;
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .task-alert.overdue {
+        display: block;
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .task-alert.due-today {
+        display: block;
+        background: #fef3c7;
+        color: #b45309;
       }
 
       label {
@@ -134,7 +165,9 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="crmCard">
+          <div id="taskAlert" class="task-alert"></div>
+
           <label for="status">Lead Status</label>
           <select id="status">
             <option value="New Lead" <?= lead.status === 'New Lead' ? 'selected' : '' ?>>New Lead</option>
@@ -274,6 +307,56 @@
         document.getElementById('notesHistory').value = formatNotesDescending(rawNotes || '');
       }
 
+      function parseLocalDateTime(value) {
+        if (!value) return null;
+
+        var raw = String(value).trim();
+        if (!raw) return null;
+
+        var normalized = raw.replace(' ', 'T');
+        var date = new Date(normalized);
+
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+
+        return null;
+      }
+
+      function renderTaskState() {
+        var card = document.getElementById('crmCard');
+        var alertBox = document.getElementById('taskAlert');
+        var dueValue = document.getElementById('taskDueAt').value;
+        var taskStatus = document.getElementById('taskStatus').value;
+
+        card.classList.remove('task-overdue', 'task-due-today');
+        alertBox.className = 'task-alert';
+        alertBox.textContent = '';
+
+        if (!dueValue || taskStatus === 'Done') {
+          return;
+        }
+
+        var due = parseLocalDateTime(dueValue);
+        if (!due) {
+          return;
+        }
+
+        var now = new Date();
+        var startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+        if (due < now) {
+          card.classList.add('task-overdue');
+          alertBox.classList.add('overdue');
+          alertBox.textContent = 'This task is overdue.';
+        } else if (due >= startOfToday && due < startOfTomorrow) {
+          card.classList.add('task-due-today');
+          alertBox.classList.add('due-today');
+          alertBox.textContent = 'This task is due today.';
+        }
+      }
+
       function saveLead() {
         const status = document.getElementById('status').value;
         const businessName = document.getElementById('businessName').value;
@@ -328,6 +411,7 @@
             }
 
             document.getElementById('newNote').value = '';
+            renderTaskState();
           })
           .withFailureHandler(function(err) {
             msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
@@ -360,6 +444,12 @@
       (function initNotes() {
         var rawNotes = document.getElementById('notesRaw').value || '';
         renderNotesHistory(rawNotes);
+      })();
+
+      (function initTaskState() {
+        renderTaskState();
+        document.getElementById('taskDueAt').addEventListener('change', renderTaskState);
+        document.getElementById('taskStatus').addEventListener('change', renderTaskState);
       })();
     </script>
   </body>
