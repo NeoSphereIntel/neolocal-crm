@@ -52,6 +52,30 @@
         margin-bottom: 8px;
       }
 
+      .presentation-links {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .presentation-link {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        border: 1px solid #d1d5db;
+        color: #1f2937;
+        background: #fff;
+      }
+
+      .presentation-link.primary {
+        background: #111827;
+        border-color: #111827;
+        color: #fff;
+      }
+
       .activity-line {
         margin: 0 0 14px;
         font-size: 13px;
@@ -217,8 +241,13 @@
             Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
           </div>
 
-          <div style="margin-top:18px;">
-            <?!= mirrorHtml ?>
+          <div class="presentation-links">
+            <a class="presentation-link primary" href="<?= marketMirrorUrl ?>" target="_blank" rel="noopener noreferrer">
+              Open Market Mirror
+            </a>
+            <a class="presentation-link" href="<?= repSupportUrl ?>" target="_blank" rel="noopener noreferrer">
+              Open Rep Support
+            </a>
           </div>
         </div>
 
