@@ -52,6 +52,25 @@
         margin-bottom: 8px;
       }
 
+      .activity-line {
+        margin: 0 0 14px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #374151;
+      }
+
+      .activity-line.fresh {
+        color: #166534;
+      }
+
+      .activity-line.warm {
+        color: #b45309;
+      }
+
+      .activity-line.stale {
+        color: #b91c1c;
+      }
+
       .task-alert {
         display: none;
         margin: 0 0 14px;
@@ -71,6 +90,44 @@
         display: block;
         background: #fef3c7;
         color: #b45309;
+      }
+
+      .badge-overdue,
+      .badge-due-today,
+      .badge-fresh,
+      .badge-warm,
+      .badge-stale {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .badge-overdue {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .badge-due-today {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .badge-fresh {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .badge-warm {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .badge-stale {
+        background: #fee2e2;
+        color: #b91c1c;
       }
 
       label {
@@ -166,6 +223,7 @@
         </div>
 
         <div class="card" id="crmCard">
+          <div id="activityLine" class="activity-line">Last activity: <?= lead.lastUpdatedAt || '—' ?></div>
           <div id="taskAlert" class="task-alert"></div>
 
           <label for="status">Lead Status</label>
@@ -234,6 +292,7 @@
           </select>
 
           <label for="taskDueAt">Task Due At</label>
+          <div id="taskInlineBadge" style="margin-bottom:8px;"></div>
           <input id="taskDueAt" type="datetime-local" value="<?= lead.taskDueAt || '' ?>">
 
           <label for="taskStatus">Task Status</label>
@@ -323,15 +382,63 @@
         return null;
       }
 
+      function parseAnyDate(value) {
+        if (!value) return null;
+
+        var raw = String(value).trim();
+        if (!raw || raw === '—') return null;
+
+        var firstTry = new Date(raw);
+        if (!isNaN(firstTry.getTime())) return firstTry;
+
+        var secondTry = new Date(raw.replace(' ', 'T'));
+        if (!isNaN(secondTry.getTime())) return secondTry;
+
+        return null;
+      }
+
+      function renderFreshness() {
+        var activityLine = document.getElementById('activityLine');
+        if (!activityLine) return;
+
+        activityLine.classList.remove('fresh', 'warm', 'stale');
+
+        var oldBadge = activityLine.querySelector('.badge-fresh, .badge-warm, .badge-stale');
+        if (oldBadge) oldBadge.remove();
+
+        var rawText = activityLine.textContent || '';
+        var lastValue = rawText.replace(/^Last activity:\s*/, '').trim();
+        var lastDate = parseAnyDate(lastValue);
+
+        if (!lastDate) return;
+
+        var now = new Date();
+        var msPerDay = 24 * 60 * 60 * 1000;
+        var diffDays = Math.floor((now - lastDate) / msPerDay);
+
+        var state = diffDays <= 2 ? 'fresh' : diffDays <= 7 ? 'warm' : 'stale';
+        activityLine.classList.add(state);
+
+        var badge = document.createElement('span');
+        badge.className =
+          state === 'fresh' ? 'badge-fresh' :
+          state === 'warm' ? 'badge-warm' :
+          'badge-stale';
+        badge.textContent = state === 'fresh' ? 'FRESH' : state === 'warm' ? 'WARM' : 'STALE';
+        activityLine.appendChild(badge);
+      }
+
       function renderTaskState() {
         var card = document.getElementById('crmCard');
         var alertBox = document.getElementById('taskAlert');
+        var inlineBadge = document.getElementById('taskInlineBadge');
         var dueValue = document.getElementById('taskDueAt').value;
         var taskStatus = document.getElementById('taskStatus').value;
 
         card.classList.remove('task-overdue', 'task-due-today');
         alertBox.className = 'task-alert';
         alertBox.textContent = '';
+        if (inlineBadge) inlineBadge.innerHTML = '';
 
         if (!dueValue || taskStatus === 'Done') {
           return;
@@ -349,11 +456,13 @@
         if (due < now) {
           card.classList.add('task-overdue');
           alertBox.classList.add('overdue');
-          alertBox.textContent = 'This task is overdue.';
+          alertBox.innerHTML = 'Task status: <span class="badge-overdue">OVERDUE</span>';
+          if (inlineBadge) inlineBadge.innerHTML = '<span class="badge-overdue">OVERDUE</span>';
         } else if (due >= startOfToday && due < startOfTomorrow) {
           card.classList.add('task-due-today');
           alertBox.classList.add('due-today');
-          alertBox.textContent = 'This task is due today.';
+          alertBox.innerHTML = 'Task status: <span class="badge-due-today">TODAY</span>';
+          if (inlineBadge) inlineBadge.innerHTML = '<span class="badge-due-today">TODAY</span>';
         }
       }
 
@@ -412,6 +521,8 @@
 
             document.getElementById('newNote').value = '';
             renderTaskState();
+            renderFreshness();
+            document.getElementById('newNote').focus();
           })
           .withFailureHandler(function(err) {
             msg.textContent = 'Error: ' + (err && err.message ? err.message : err);
@@ -450,6 +561,10 @@
         renderTaskState();
         document.getElementById('taskDueAt').addEventListener('change', renderTaskState);
         document.getElementById('taskStatus').addEventListener('change', renderTaskState);
+      })();
+
+      (function initFreshness() {
+        renderFreshness();
       })();
     </script>
   </body>
