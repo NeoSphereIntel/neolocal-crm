@@ -191,7 +191,8 @@ function normalizeLocalResults_(localResults, config, searchId) {
 	return Object.assign({}, lead, competitorSignals, snapshot, {
 		lead_id: leadId,
 		"Assigned To": "",
-		"Market Mirror URL": buildMarketMirrorUrl_(leadId)
+		"Market Mirror URL": buildMarketMirrorUrl_(leadId),
+		"Rep Support URL": buildRepSupportUrl_(leadId)
 	});
 });
 }
@@ -302,7 +303,8 @@ function updateExistingLeadFromImport_(sheet, rowNumber, newData) {
 	snapshot_version: newData.snapshot_version,
 	priority_bucket: newData.priority_bucket || row.priority_bucket || "",
 	"Assigned To": row["Assigned To"] || "",
-	"Market Mirror URL": buildMarketMirrorUrl_(row.lead_id || newData.lead_id)
+	"Market Mirror URL": buildMarketMirrorUrl_(row.lead_id || newData.lead_id),
+	"Rep Support URL": buildRepSupportUrl_(row.lead_id || newData.lead_id)
   });
 
   const headers = getHeaders_(sheet);
@@ -325,6 +327,7 @@ function backfillAssignedToAndMarketMirrorUrl() {
 
   ensureLeadsColumn_("Assigned To");
   ensureLeadsColumn_("Market Mirror URL");
+  ensureLeadsColumn_("Rep Support URL");
 
   const data = getSheetDataObjects_(sheet);
   const headers = getHeaders_(sheet);
@@ -338,9 +341,13 @@ function backfillAssignedToAndMarketMirrorUrl() {
     }
 
     if (row.lead_id) {
-      const expectedUrl = buildMarketMirrorUrl_(row.lead_id);
-      if (row["Market Mirror URL"] !== expectedUrl) {
-        patch["Market Mirror URL"] = expectedUrl;
+      const expectedMirrorUrl = buildMarketMirrorUrl_(row.lead_id);
+      const expectedSupportUrl = buildRepSupportUrl_(row.lead_id);
+      if (row["Market Mirror URL"] !== expectedMirrorUrl) {
+        patch["Market Mirror URL"] = expectedMirrorUrl;
+      }
+      if (row["Rep Support URL"] !== expectedSupportUrl) {
+        patch["Rep Support URL"] = expectedSupportUrl;
       }
     }
 

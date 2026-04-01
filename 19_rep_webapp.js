@@ -8,6 +8,14 @@ function doGet(e) {
       return renderRepAddLeadPage_(rep);
     }
 
+    if (leadId && mode === 'mirror') {
+      return renderMarketMirrorStandalonePage_(leadId);
+    }
+
+    if (leadId && mode === 'support') {
+      return renderRepSupportStandalonePage_(leadId);
+    }
+
     if (leadId) {
       return renderRepLeadPage_(leadId, rep);
     }
@@ -42,18 +50,33 @@ function renderRepDashboardPage_(rep) {
 
 function renderRepLeadPage_(leadId, rep) {
   var lead = getLeadRecordByLeadId_(leadId);
-  var leadForMirror = JSON.parse(JSON.stringify(lead));
-  var input = buildMarketMirrorInputFromLeadRow_(leadForMirror);
-  var payload = buildMarketMirrorPayload_(input);
-  var mirrorHtml = renderMarketMirrorHtml_(payload);
   var template = HtmlService.createTemplateFromFile('21_rep_lead');
   template.lead = lead;
   template.rep = rep || lead.assignedTo || '';
   template.appUrl = APP.MARKET_MIRROR_WEBAPP_URL || ScriptApp.getService().getUrl();
-  template.mirrorHtml = mirrorHtml;
+  template.marketMirrorUrl = lead.marketMirrorUrl || buildMarketMirrorUrl_(lead.leadId);
+  template.repSupportUrl = lead.repSupportUrl || buildRepSupportUrl_(lead.leadId);
   return template
     .evaluate()
     .setTitle('NeoLocal Lead')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function renderMarketMirrorStandalonePage_(leadId) {
+  var lead = getLeadRecordByLeadId_(leadId);
+  var input = buildMarketMirrorInputFromLeadRow_(lead);
+  var payload = buildMarketMirrorPayload_(input);
+  return HtmlService.createHtmlOutput(renderMarketMirrorHtml_(payload))
+    .setTitle('NeoLocal Market Mirror')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function renderRepSupportStandalonePage_(leadId) {
+  var lead = getLeadRecordByLeadId_(leadId);
+  var input = buildMarketMirrorInputFromLeadRow_(lead);
+  var payload = buildMarketMirrorPayload_(input);
+  return HtmlService.createHtmlOutput(renderRepSupportSheetHtml_(payload))
+    .setTitle('NeoLocal Rep Support')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -193,6 +216,8 @@ function getLeadRecordByLeadId_(leadId) {
 
         notes: getCellByHeader_(row, idx, 'crm_notes') || getCellByHeader_(row, idx, 'notes'),
         assignedTo: getCellByHeader_(row, idx, 'Assigned To'),
+        marketMirrorUrl: getCellByHeader_(row, idx, 'Market Mirror URL') || '',
+        repSupportUrl: getCellByHeader_(row, idx, 'Rep Support URL') || '',
         lastUpdatedAt:
           getCellByHeader_(row, idx, 'updated_at') ||
           getCellByHeader_(row, idx, 'last_contact_at') ||
@@ -378,6 +403,8 @@ function saveManualLead(
   leadObj.priority_bucket = '';
   leadObj.lead_signature = leadSignature;
   leadObj['Assigned To'] = String(rep || '').trim();
+  leadObj['Market Mirror URL'] = buildMarketMirrorUrl_(leadId);
+  leadObj['Rep Support URL'] = buildRepSupportUrl_(leadId);
   leadObj['Active Task'] = finalActiveTask;
   leadObj['Task Type'] = finalTaskType;
   leadObj['Task Due At'] = finalTaskDueAt;

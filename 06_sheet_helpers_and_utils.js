@@ -308,7 +308,7 @@ function enforceLeadsNumericFormats_() {
   const lastRow = Math.max(sheet.getLastRow(), 2);
 
   // Force text columns that should never become dates
-  [1,2,3,6,7,8,9,10,11,12,13,14,15,17,20,21,22,23,24,25,26,27,28,29,30,32,34,40,41,42,49,50,51,52,53,54,55,56,58]
+  [1,2,3,6,7,8,9,10,11,12,13,14,15,17,20,21,22,23,24,25,26,27,28,29,30,32,34,40,41,42,49,50,51,52,53,54,55,56,58,59]
     .forEach(col => sheet.getRange(2, col, lastRow - 1, 1).setNumberFormat("@"));
 
   // Force date/time columns
@@ -362,5 +362,9 @@ function ensureLeadsColumn_(columnName) {
 }
 
 function buildMarketMirrorUrl_(leadId) {
-  return APP.MARKET_MIRROR_WEBAPP_URL + '?leadId=' + encodeURIComponent(leadId);
+  return APP.MARKET_MIRROR_WEBAPP_URL + '?mode=mirror&leadId=' + encodeURIComponent(leadId);
+}
+
+function buildRepSupportUrl_(leadId) {
+  return APP.MARKET_MIRROR_WEBAPP_URL + '?mode=support&leadId=' + encodeURIComponent(leadId);
 }
