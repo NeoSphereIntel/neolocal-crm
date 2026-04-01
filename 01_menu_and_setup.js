@@ -63,6 +63,7 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("reply_message");
   ensureLeadsColumn_("Assigned To");
   ensureLeadsColumn_("Market Mirror URL");
+  ensureLeadsColumn_("Rep Support URL");
   ensureLeadsColumn_("Active Task");	
   ensureLeadsColumn_("Task Type");
   ensureLeadsColumn_("Task Due At");
@@ -349,7 +350,8 @@ function setupLeadsMasterSheet_(sheet) {
 	"Secondary Contact Role",
 	"Secondary Contact Phone",
 	"Secondary Contact Email",
-	"Secondary Address"
+	"Secondary Address",
+	"Rep Support URL"
   ];
 
   setHeadersIfNeeded_(sheet, headers);
@@ -435,7 +437,7 @@ function styleLeadsSheet_(sheet) {
     120, 150, 120, 145, 145, 110, 110, 100, 220, 160, 130, 130, 110, 220, 160,
     90, 220, 80, 100, 220, 220, 140, 260, 170, 130, 180, 220, 100, 100,
     180, 90, 180, 90, 180, 90, 110, 110, 100, 90, 120, 120, 120,
-    100, 90, 100, 100, 100, 100, 130, 260, 260, 260, 420, 220, 130, 220, 145, 220
+    100, 90, 100, 100, 100, 100, 130, 260, 260, 260, 420, 220, 130, 220, 145, 220, 220
   ];
   applyBaseSheetStyle_(sheet, widths);
 
@@ -443,7 +445,7 @@ function styleLeadsSheet_(sheet) {
   [
     "A:A","B:B","C:C","F:F","G:G","H:H","I:I","J:J","K:K","L:L","M:M","N:N","O:O","Q:Q",
     "T:T","U:U","V:V","W:W","X:X","Y:Y","Z:Z","AA:AA","AB:AB","AC:AC","AD:AD",
-    "AF:AF","AH:AH","AN:AN","AO:AO","AP:AP","AQ:AQ","AR:AR","AS:AS","AT:AT","AU:AU","AV:AV","AX:AX"
+    "AF:AF","AH:AH","AN:AN","AO:AO","AP:AP","AQ:AQ","AR:AR","AS:AS","AT:AT","AU:AU","AV:AV","AX:AX","BG:BG"
   ].forEach(r => sheet.getRange(r).setNumberFormat("@"));
 
   // TIMESTAMPS
