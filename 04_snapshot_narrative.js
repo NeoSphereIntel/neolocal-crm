@@ -34,54 +34,56 @@ function buildAutoRetailSnapshotNarrativePackage_(m, scores, diagnosis, profile)
 
 function buildAutoRetailMarketPressureSummary_(m, diagnosisState, profile) {
   const location = buildMarketLabel_(m);
-  const category = safeText_(m.category || "used car dealership");
   const compAvg = Math.round(m.comp_avg_reviews || 0);
   const compMax = Math.round(m.comp_max_reviews || 0);
   const topCompetitor = safeText_(m.comp_1_name || "a stronger visible dealership");
   const topCompetitorReviews = Math.round(m.comp_1_reviews || 0);
 
   if (compAvg <= 0) {
-    return `In the ${category} market in ${location}, buyer trust does not appear fully consolidated yet.
+    return `In the used car market in ${location}, buyers are still making fast trust decisions even when no single dealership fully dominates visible authority.
 
-That usually means shoppers are deciding quickly based on which dealership feels safest and most credible first. In auto retail, that matters because trust often forms before inventory gets a fair comparison.`;
+That matters because shoppers do not evaluate stores from scratch. They usually narrow the field first based on which dealership feels safer, more active, and more proven before inventory gets a full comparison.`;
   }
 
-  return `In the used car market in ${location}, shoppers are not evaluating dealerships from a neutral starting point.
+  return `In the used car market in ${location}, buyer confidence is already being shaped by visible proof before the first conversation happens.
 
-Visible trust is already clustering around dealerships that look proven, established, and safer to transact with. The visible market average sits around ${compAvg} reviews, while stronger trust anchors such as ${topCompetitor} are already projecting closer to ${topCompetitorReviews || compMax} reviews.
-
-At that stage, buyers are no longer just comparing cars. They are pre-sorting dealerships by perceived purchase safety.`;
+The sampled market appears to cluster around roughly ${compAvg} reviews, while stronger visible operators such as ${topCompetitor} are projecting closer to ${topCompetitorReviews || compMax}. In auto retail, that does not just influence visibility. It influences which dealership feels like the safer place to buy from before vehicles are weighed on their own merits.`;
 }
 
 function buildAutoRetailPerceptionGapSummary_(m, diagnosisState, profile) {
   const reviews = Math.round(m.reviews_count || 0);
-  const compAvg = Math.round(m.comp_avg_reviews || 0);
   const reviewGap = Math.round(m.review_gap || 0);
   const ratio = Number(m.gap_ratio || 0);
   const topCompetitor = safeText_(m.comp_1_name || "the strongest visible dealership");
   const topCompetitorReviews = Math.round(m.comp_1_reviews || 0);
 
-  if (reviews <= 10) {
-    return `At ${reviews} reviews, the dealership is not yet projecting enough visible customer experience to feel like a default-safe place to buy.
+  if (diagnosisState === "Invisible") {
+    return `At roughly ${reviews} reviews, the dealership is not yet projecting enough visible buyer experience to feel established at first glance.
 
-That does not automatically mean the dealership is weak operationally. It means the market is still reading it as under-proven, especially beside stores like ${topCompetitor}${topCompetitorReviews ? ` with roughly ${topCompetitorReviews} visible reviews` : ""}.`;
+That does not automatically mean the operation is weak. It means the market is still reading it as under-proven, especially beside stores like ${topCompetitor}${topCompetitorReviews ? ` with around ${topCompetitorReviews} visible reviews` : ""}.`;
   }
 
-  if (ratio < 0.50) {
-    return `With ${reviews} reviews against a visible market average near ${compAvg}, the dealership is materially underweighted in buyer trust.
+  if (diagnosisState === "Outgunned") {
+    return `The dealership is being read against a stronger visible market standard and is still trailing that trust layer by roughly ${reviewGap} reviews.
 
-That creates a perception gap wide enough that shoppers can interpret competing dealers as more established, more reliable, and less risky before inventory quality is seriously compared.`;
+In used car retail, this usually means the store can be credible in reality while still feeling less purchase-safe than competing lots at the exact moment shoppers are filtering options.`;
   }
 
-  if (ratio < 1.00) {
-    return `At ${reviews} reviews, the dealership is in the conversation, but still trailing the visible market standard by roughly ${reviewGap} reviews.
+  if (diagnosisState === "Undersignaled") {
+    return `At roughly ${reviews} reviews, the dealership is present enough to be taken seriously, but not yet strong enough to control how it is interpreted.
 
-That sounds moderate on paper, but in used car retail, small trust gaps often decide which dealership feels safer at the exact moment the buyer has to commit.`;
+This is the zone where the business can be legitimate, active, and capable, while still being read as in the mix rather than like the store buyers default to when they want the safest-looking option.`;
   }
 
-  return `At ${reviews} reviews, the dealership is operating at a competitive trust level in its market.
+  if (diagnosisState === "Contender") {
+    return `At roughly ${reviews} reviews, the dealership is no longer under-proven. It is competing.
 
-The issue here is no longer basic credibility. It is maintaining enough visible authority to continue feeling like the safer dealership choice as competitors keep building momentum.`;
+The gap now is more subtle: the store looks credible, but not yet inevitable. In auto retail, that difference matters because buyers often treat slightly stronger visible proof as a shortcut for deciding where to trust the transaction.`;
+  }
+
+  return `At roughly ${reviews} reviews, the dealership is operating with meaningful visible trust in market.
+
+The challenge at this level is no longer basic credibility. It is defending enough visible authority to keep feeling like the safer and more established option as other dealerships continue building momentum.`;
 }
 
 function buildAutoRetailCommercialRiskSummary_(m, diagnosisState, profile) {
@@ -89,62 +91,62 @@ function buildAutoRetailCommercialRiskSummary_(m, diagnosisState, profile) {
   const topCompetitorReviews = Math.round(m.comp_1_reviews || 0);
 
   if (diagnosisState === "Invisible") {
-    return `Commercially, this means the dealership is likely being screened out before serious dealership comparison even begins.
+    return `Commercially, this means the dealership can be filtered out before serious comparison begins.
 
-In practical terms, shoppers can assign more default trust to ${topCompetitor}${topCompetitorReviews ? ` and similar dealerships with review counts around ${topCompetitorReviews}` : ""}, which means opportunities may be lost before financing options, inventory quality, pricing, warranty confidence, or staff experience are ever weighed properly.`;
+Shoppers may assign more default trust to ${topCompetitor}${topCompetitorReviews ? ` and similar stores showing around ${topCompetitorReviews} reviews` : ""}, which means opportunities can be lost before inventory, financing flexibility, staff quality, or pricing strategy get a fair read.`;
   }
 
   if (diagnosisState === "Outgunned") {
-    return `This creates a structural disadvantage.
+    return `This creates a structural sales disadvantage.
 
-Right now, competing dealerships are shaping buyer confidence earlier in the decision path. By the time a shopper starts comparing inventory, this dealership may already feel less safe than operators like ${topCompetitor}. That means the deal is being weakened before the vehicles themselves are fully evaluated.`;
+Competing dealerships are shaping buyer confidence earlier in the path, so by the time a shopper starts comparing inventory, this store may already feel like the less certain option. That weakens leverage before the vehicles themselves are fully evaluated.`;
   }
 
   if (diagnosisState === "Undersignaled") {
-    return `This creates a costly mismatch between what the dealership may actually deliver and how the market currently reads it.
+    return `The commercial cost here is not just fewer leads. It is weaker position inside the deal.
 
-The store may be stronger than it looks, but the public trust layer is too thin for buyers to assign it the same confidence they give more visibly validated dealerships. When that happens, real inventory and sales capability remain commercially underweighted.`;
+If the dealership looks credible but not fully proven, more buyers hesitate, more comparisons stay open longer, and pricing pressure tends to get harder because trust has not been won early enough.`;
   }
 
   if (diagnosisState === "Contender") {
-    return `At this stage, the risk becomes subtle but expensive.
+    return `At this stage, the risk shifts from being overlooked to being edged out.
 
-The dealership is no longer invisible, but small differences in perceived safety can still redirect high-intent shoppers toward the lot that feels slightly more proven. In used car retail, “close” still loses gross.`;
+The dealership is in the conversation, but small differences in visible confidence can still redirect high-intent shoppers toward the lot that feels slightly safer or more established. In used car retail, close still loses margin.`;
   }
 
-  return `At this level, the risk shifts from being ignored to losing comparative edge.
+  return `At the top end, the commercial risk becomes defensive rather than foundational.
 
-Once a dealership becomes competitive, slower trust accumulation can gradually let other dealers narrow the confidence gap and weaken default preference over time.`;
+Once a dealership is already trusted, the issue is protecting default preference so competitors do not gradually narrow the confidence gap and weaken first-choice status over time.`;
 }
 
 function buildAutoRetailStrategicOpeningSummary_(m, diagnosisState, profile) {
   if (diagnosisState === "Invisible") {
     return `The upside is that this is still highly movable.
 
-Because the weakness appears concentrated in visible buyer trust rather than necessarily in the underlying business, a stronger proof layer can change how the dealership is read by the market much faster than a full operational rebuild would.`;
+The weakness appears concentrated in visible buyer trust, not necessarily in the underlying business. A stronger proof layer can change how the dealership is read much faster than a full operational rebuild would.`;
   }
 
   if (diagnosisState === "Outgunned") {
-    return `This is still recoverable, but it requires density, not cosmetic polish.
+    return `This is recoverable, but it requires density rather than cosmetic polish.
 
-The dealership does not simply need more visibility. It needs enough public trust reinforcement to close a buyer-confidence deficit that is already influencing shopping behavior. If that gap narrows, the store can re-enter serious comparison much more consistently.`;
+The dealership does not simply need more visibility. It needs enough visible proof and trust reinforcement to reduce a buyer-confidence deficit that is already affecting shopping behavior before contact.`;
   }
 
   if (diagnosisState === "Undersignaled") {
-    return `This is a high-leverage opening because the problem appears to be translation more than capability.
+    return `This is a high-leverage opening because the gap appears to be translation more than capability.
 
-If the dealership’s real strengths are converted into denser public proof, the market can begin assigning more of the confidence the business may already deserve operationally.`;
+If the dealership’s real strengths are converted into denser public proof, the market can start assigning more of the confidence the business may already deserve operationally.`;
   }
 
   if (diagnosisState === "Contender") {
     return `The opening here is precision.
 
-The dealership does not need reinvention. It needs enough additional trust reinforcement to stop being merely credible and start feeling like the safer place to buy more consistently.`;
+The dealership is already credible enough to compete, which means tighter proof density, stronger visible consistency, and better market reading can shift it from being considered to being chosen more often.`;
   }
 
-  return `The opportunity now is both defensive and expansionary.
+  return `The opening here is reinforcement.
 
-Maintaining authority while continuing to widen the visible trust gap is what keeps the dealership from being pulled back into the competitive pack.`;
+Once a dealership becomes a visible market anchor, the strategy is no longer about proving legitimacy. It is about hardening leadership signals so the store remains the default-safe option as the market around it keeps evolving.`;
 }
 
 /* ============================================================================
@@ -233,7 +235,7 @@ The business may be stronger than it looks, but the visible trust layer is too t
   if (diagnosisState === "Contender") {
     return `At this stage, the risk is subtle but expensive.
 
-    The business is no longer being ignored, but small trust differences can still redirect high-intent buyers toward the option that feels marginally more proven. In markets like this, “close” still loses share.`;
+    The business is no longer being ignored, but small trust differences can still redirect high-intent buyers toward the option that feels marginally more proven. In markets like this, close still loses share.`;
   }
 
   return `At this level, the risk shifts from being overlooked to losing comparative edge.
