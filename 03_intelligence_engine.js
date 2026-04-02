@@ -171,55 +171,64 @@ function determineAutoRetailDiagnosisState_(m, scores, authorityPosition) {
   const presenceScore = parseFloat(scores.base_presence_score) || 0;
   const pressureScore = parseFloat(scores.competitive_pressure_score) || 0;
 
-  // 1) Very weak public trust
-  if (reviews <= 15 && trustScore < 25) {
+  // 1) Very weak visible trust / barely read by market
+  if (reviews < 20 && trustScore < 30) {
     return "Invisible";
   }
 
-  // 2) Market is strong and dealership is far behind
+  // 2) Strong market pressure + dealership clearly behind visible standard
   if (
-    (compAvg >= 80 || compMax >= 150 || pressureScore >= 65) &&
-    gapRatio < 0.40
+    (compAvg >= 90 || compMax >= 180 || pressureScore >= 68) &&
+    gapRatio < 0.45 &&
+    reviews < 120
   ) {
     return "Outgunned";
   }
 
-  // 3) Operationally plausible, but not safe enough yet
+  // 3) Credible enough to be present, but still under-read versus market weight
   if (
-    reviews >= 15 &&
-    reviews < 75 &&
-    gapRatio >= 0.40 &&
-    gapRatio < 0.85 &&
-    trustScore >= 20 &&
-    trustScore < 55
+    reviews >= 20 &&
+    reviews < 120 &&
+    trustScore >= 25 &&
+    trustScore < 58 &&
+    gapRatio >= 0.45 &&
+    gapRatio < 0.90
   ) {
     return "Undersignaled";
   }
 
-  // 4) Competitive enough to be considered, but still not default-safe
+  // 4) In the mix and commercially credible, but not yet default-safe
   if (
-    reviews >= 60 &&
-    gapRatio >= 0.65 &&
-    gapRatio < 1.00 &&
-    trustScore >= 45
+    reviews >= 80 &&
+    trustScore >= 50 &&
+    gapRatio >= 0.70 &&
+    (gapRatio < 1.15 || reviewGap <= 40)
   ) {
     return "Contender";
   }
 
-  // 5) Strong visible position
+  // 5) Strong visible trust + enough proof to influence buyer confidence
   if (
-    authorityPosition === "Leader" ||
-    (reviews >= 120 && gapRatio >= 1.00 && trustScore >= 60)
+    reviews >= 180 &&
+    trustScore >= 68 &&
+    presenceScore >= 55 &&
+    (gapRatio >= 1.00 || authorityPosition === "High")
   ) {
     return "Anchor";
   }
 
-  // fallback logic
-  if (reviews <= 20) return "Invisible";
-  if (gapRatio < 0.50) return "Outgunned";
-  if (trustScore < 45 || presenceScore < 70) return "Undersignaled";
-  if (gapRatio < 1.00) return "Contender";
-  return "Anchor";
+  // Fallback logic:
+  // - if market is weak, even moderate proof can make a store competitive
+  if (compAvg < 50 && reviews >= 60 && trustScore >= 45) {
+    return "Contender";
+  }
+
+  // - otherwise default to under-read rather than over-crediting dominance
+  if (reviews >= 20) {
+    return "Undersignaled";
+  }
+
+  return "Invisible";
 }
 
 function getDiagnosisDisplayLabel_(diagnosisState, verticalKey) {
