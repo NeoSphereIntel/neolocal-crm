@@ -1,10 +1,10 @@
 /**
- * Snapshot Narrative Engine v4 — Diagnosis-Driven (Controlled Blunt)
- * Each diagnosis has distinct:
- * - mirror meaning
- * - market interaction
- * - commercial consequence
- * - direction
+ * Snapshot Narrative Engine v5 — Diagnosis-Differentiated
+ * Each diagnosis now has:
+ * - unique mirror meaning
+ * - unique market interaction
+ * - unique commercial consequence
+ * - unique strategic direction
  */
 
 function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
@@ -12,11 +12,9 @@ function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
   const marketTier = String(diagnosis.market_tier || "").trim() || "Emerging Operators";
   const pressure = String(diagnosis.market_pressure_band || "").trim() || "Medium";
 
-  const decisionTiming = classifyDecisionTiming_(diagnosisState);
-
-  const mirror = buildMirrorSummary_(m, diagnosisState, marketTier, decisionTiming);
-  const market = buildMarketSummary_(m, pressure);
-  const consequence = buildConsequenceSummary_(m, diagnosisState, marketTier, pressure, decisionTiming);
+  const mirror = buildMirrorSummary_(m, diagnosisState, marketTier);
+  const market = buildMarketSummary_(m, diagnosisState, pressure);
+  const consequence = buildConsequenceSummary_(m, diagnosisState, pressure);
   const direction = buildDirectionSummary_(diagnosisState);
 
   return {
@@ -35,29 +33,9 @@ function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
 
 /**
  * =========================
- * DECISION TIMING
- * =========================
- */
-function classifyDecisionTiming_(diagnosisState) {
-  if (diagnosisState === "Competitive but Not Dominant") return "mid";
-
-  return "late";
-}
-
-/**
- * =========================
  * HELPERS
  * =========================
  */
-function hasUsableCompetitorName_(name) {
-  const s = String(name || "").trim().toLowerCase();
-  if (!s) return false;
-  if (s.indexOf("competitor") !== -1) return false;
-  if (s.indexOf("visible") !== -1) return false;
-  if (s.indexOf("stronger") !== -1) return false;
-  return true;
-}
-
 function getReviewScaleLabel_(count) {
   const n = Math.round(count || 0);
 
@@ -72,92 +50,108 @@ function getReviewScaleLabel_(count) {
 
 /**
  * =========================
- * MIRROR (DIAGNOSIS-DRIVEN)
+ * MIRROR (UNIQUE PER DIAGNOSIS)
  * =========================
  */
-function buildMirrorSummary_(m, diagnosisState, marketTier, decisionTiming) {
+function buildMirrorSummary_(m, diagnosisState, marketTier) {
   const category = safeText_(m.category || "market");
 
   if (diagnosisState === "Invisible Operator") {
-    return `Right now, the business is not getting seriously considered early enough in this ${category} market. Buyers are making decisions before they have enough reason to trust this business, which means it is being filtered out before the real offer is evaluated.`;
+    return `Right now, this business is not getting seriously considered early enough in the ${category} market. Buyers are making decisions before they have enough reason to trust it, which means it is being filtered out before the real offer is evaluated.`;
   }
 
   if (diagnosisState === "Constrained Operator") {
-    return `You are not a weak operator in this ${category} market. But buyers are trusting stronger stores before they seriously consider you. That means you are entering the decision after confidence is already leaning elsewhere.`;
+    return `You are not a weak operator in this ${category} market. But you should be winning more of these opportunities, and stronger stores are taking the early position instead.`;
   }
 
   if (diagnosisState === "Structured but Under-Amplified") {
-    return `The business is credible and structured, but it is not carrying enough visible weight to be prioritized early. Buyers see it, but they are not treating it as a leading option when they make their first shortlist.`;
+    return `The business is solid, but it is not showing up with enough weight. In practice, it is better than how it is currently being perceived by the market.`;
   }
 
   if (diagnosisState === "Competitive but Not Dominant") {
-    return `The business is firmly in the competitive set, but it is not the default choice. Buyers include it early, but they still feel the need to compare instead of committing quickly.`;
+    return `You are already competing at a high level in this ${category} market, but you are not the default choice. Buyers include you early, but they are not committing without comparison.`;
   }
 
   if (diagnosisState === "Under-Leveraged Inventory") {
-    return `The business likely has competitive inventory, but buyers are not reaching it with enough confidence. Trust is being decided before inventory gets a fair chance to influence the decision.`;
+    return `The business likely has competitive inventory, but buyers are not reaching it with enough confidence. The vehicles are there, but the trust needed to engage with them is not strong enough early.`;
   }
 
   if (diagnosisState === "Demand Not Captured") {
-    return `The business appears capable of handling more demand than it is currently capturing. Buyers exist, but stronger-positioned competitors are absorbing more of that demand earlier in the decision process.`;
+    return `The business is capable of handling more demand than it is currently capturing. The issue is not availability of work, but how much of that demand is being absorbed.`;
   }
 
-  return `The business is not being positioned strongly enough early in the decision process.`;
+  return `The business is not positioned strongly enough early in the decision process.`;
 }
 
 /**
  * =========================
- * MARKET
+ * MARKET (DIAGNOSIS-AWARE)
  * =========================
  */
-function buildMarketSummary_(m, pressure) {
+function buildMarketSummary_(m, diagnosisState, pressure) {
   const location = buildMarketLabel_(m);
   const compAvg = Math.round(m.comp_avg_reviews || 0);
   const compMax = Math.round(m.comp_max_reviews || 0);
 
-  if (pressure === "High") {
-    const avgScale = getReviewScaleLabel_(compAvg);
-    const leaderScale = getReviewScaleLabel_(compMax);
+  const avgScale = getReviewScaleLabel_(compAvg);
+  const leaderScale = getReviewScaleLabel_(compMax);
 
-    return `In ${location}, buyers shortlist quickly based on who looks more established. This is a high-trust market where the benchmark sits in ${avgScale}, and leading operators are playing in ${leaderScale}. That creates a strong bias before full comparison begins.`;
+  if (diagnosisState === "Constrained Operator") {
+    return `In ${location}, stronger operators are already shaping buyer confidence early. This is a heavy-proof market where leading dealerships are operating in ${leaderScale}, and they are setting the tone before your business fully enters the decision.`;
   }
 
-  if (pressure === "Medium") {
-    return `In ${location}, visible proof still heavily influences who gets evaluated first. Businesses with stronger trust signals are more likely to be considered early.`;
+  if (diagnosisState === "Structured but Under-Amplified") {
+    return `In ${location}, the market already has enough visible trust signals to guide decisions. The issue is not that trust is missing, but that your business is not contributing enough to that layer to stand out early.`;
   }
 
-  return `In ${location}, buyers still rely on visible trust signals when deciding who to consider first.`;
+  if (diagnosisState === "Competitive but Not Dominant") {
+    return `In ${location}, several operators already meet the trust threshold. Buyers are not looking for just a credible option — they are gravitating toward the one that feels like the most established choice.`;
+  }
+
+  if (diagnosisState === "Invisible Operator") {
+    return `In ${location}, buyers shortlist quickly based on visible proof. Businesses without enough public trust signals are filtered out early, before full comparison even begins.`;
+  }
+
+  if (diagnosisState === "Under-Leveraged Inventory") {
+    return `In ${location}, buyers are deciding who to trust before they explore inventory. That means inventory strength only matters if the business has already earned enough confidence to be explored.`;
+  }
+
+  if (diagnosisState === "Demand Not Captured") {
+    return `In ${location}, demand exists, but it is not evenly distributed. Businesses that establish stronger trust earlier tend to capture a larger share of that demand.`;
+  }
+
+  return `In ${location}, visible trust plays a central role in who gets considered first.`;
 }
 
 /**
  * =========================
- * CONSEQUENCE (DIAGNOSIS-DRIVEN)
+ * CONSEQUENCE (UNIQUE ECONOMICS)
  * =========================
  */
-function buildConsequenceSummary_(m, diagnosisState, marketTier, pressure, decisionTiming) {
+function buildConsequenceSummary_(m, diagnosisState, pressure) {
 
   if (diagnosisState === "Invisible Operator") {
-    return `The business is losing opportunities before conversations even start. Stronger competitors are getting the first contact, which means better opportunities never reach this business at all.`;
+    return `The business is losing opportunities before conversations even start. Stronger competitors are capturing the first contact, which means better opportunities never reach this business at all.`;
   }
 
   if (diagnosisState === "Constrained Operator") {
-    return `You are competing from behind. That leads to more comparison-driven deals, higher price sensitivity, and reduced leverage once negotiations begin.`;
+    return `You are losing deals you should be winning. Buyers are leaning toward stronger stores early, which forces your deals into comparison and puts pressure on pricing and closing position.`;
   }
 
   if (diagnosisState === "Structured but Under-Amplified") {
-    return `The business is active, but underperforming relative to its actual capability. Too many opportunities turn into comparisons instead of clean wins.`;
+    return `The business is under-converting relative to its actual capability. It generates activity, but too many opportunities turn into comparisons instead of clean wins.`;
   }
 
   if (diagnosisState === "Competitive but Not Dominant") {
-    return `Deals are being won, but not cleanly. Buyers are still comparing heavily, which puts pressure on margin and reduces first-choice conversion.`;
+    return `You are winning deals, but not efficiently. Buyers are still comparing heavily, which compresses margins and reduces first-choice conversion.`;
   }
 
   if (diagnosisState === "Under-Leveraged Inventory") {
-    return `Inventory is not converting as efficiently as it should. Vehicles are not getting the level of attention they deserve because trust is not strong enough early in the process.`;
+    return `Inventory is not performing to its potential. Vehicles are not getting full exposure because buyers are not engaging deeply enough with the business early on.`;
   }
 
   if (diagnosisState === "Demand Not Captured") {
-    return `The business is not capturing the full demand available to it. Competitors are absorbing more opportunities simply because they are positioned more strongly at the trust stage.`;
+    return `The business is not capturing the full demand available to it. Stronger-positioned competitors are absorbing more opportunities simply because they are trusted earlier.`;
   }
 
   return `The business is not converting its position into strong commercial outcomes.`;
@@ -165,21 +159,21 @@ function buildConsequenceSummary_(m, diagnosisState, marketTier, pressure, decis
 
 /**
  * =========================
- * DIRECTION (DIAGNOSIS-DRIVEN)
+ * DIRECTION (CLEAR PER STATE)
  * =========================
  */
 function buildDirectionSummary_(diagnosisState) {
 
   if (diagnosisState === "Invisible Operator") {
-    return `The priority is to establish enough trust early so the business is considered at all.`;
+    return `The priority is to become visible enough to be considered early.`;
   }
 
   if (diagnosisState === "Constrained Operator") {
-    return `The priority is to stop starting the sale from behind by earning buyer confidence earlier in the decision.`;
+    return `The priority is to take back the early position so stronger competitors stop setting the tone before you.`;
   }
 
   if (diagnosisState === "Structured but Under-Amplified") {
-    return `The priority is to convert existing strength into visible proof so the business is prioritized earlier.`;
+    return `The priority is to translate existing strength into visible proof so the market recognizes it earlier.`;
   }
 
   if (diagnosisState === "Competitive but Not Dominant") {
@@ -187,11 +181,11 @@ function buildDirectionSummary_(diagnosisState) {
   }
 
   if (diagnosisState === "Under-Leveraged Inventory") {
-    return `The priority is to bring inventory into the trust layer earlier so it can influence decisions sooner.`;
+    return `The priority is to connect inventory strength with trust earlier so it influences decisions sooner.`;
   }
 
   if (diagnosisState === "Demand Not Captured") {
-    return `The priority is to align trust with capacity so the business can absorb more of the available demand.`;
+    return `The priority is to align trust with capacity so the business captures more of the available demand.`;
   }
 
   return `The priority is to strengthen early positioning in the market.`;
