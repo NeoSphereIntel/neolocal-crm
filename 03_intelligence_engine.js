@@ -128,10 +128,19 @@ function determineDiagnosisState_(m, scores) {
   const authorityPosition = classifyAuthorityPosition_(m, scores.trust_score);
   const verticalKey = determineVerticalType_(m);
 
+  const marketTier = classifyMarketTier_(m, scores, authorityPosition);
+  const marketPressureBand = classifyMarketPressureBand_(m, scores);
+
   let diagnosisState;
 
   if (verticalKey === "auto_retail") {
-    diagnosisState = determineAutoRetailDiagnosisState_(m, scores, authorityPosition);
+    diagnosisState = determineAutoRetailDiagnosisState_(
+      m,
+      scores,
+      authorityPosition,
+      marketTier,
+      marketPressureBand
+    );
   } else {
     diagnosisState = classifyDiagnosisState_({
       trustScore: scores.trust_score,
@@ -141,85 +150,133 @@ function determineDiagnosisState_(m, scores) {
       difficultyScore: scores.difficulty_score,
       reviews_count: m.reviews_count,
       gap_ratio: m.gap_ratio,
-      authority_position: authorityPosition
+      authority_position: authorityPosition,
+      market_tier: marketTier,
+      market_pressure_band: marketPressureBand
     });
   }
 
   let priorityBucket;
 
-if (verticalKey === "auto_retail") {
-  priorityBucket = classifyAutoRetailPriority_(m, scores, diagnosisState);
-} else {
-  priorityBucket = classifyPriorityBucket_(scores.priority_score, diagnosisState);
-}
+  if (verticalKey === "auto_retail") {
+    priorityBucket = classifyAutoRetailPriority_(m, scores, diagnosisState);
+  } else {
+    priorityBucket = classifyPriorityBucket_(scores.priority_score, diagnosisState);
+  }
 
   return {
     market_maturity: marketMaturity,
     authority_position: authorityPosition,
+    market_tier: marketTier,
+    market_pressure_band: marketPressureBand,
     diagnosis_state: diagnosisState,
     priority_bucket: priorityBucket
   };
 }
 
-function determineAutoRetailDiagnosisState_(m, scores, authorityPosition) {
+function classifyMarketTier_(m, scores, authorityPosition) {
   const reviews = parseInt(m.reviews_count, 10) || 0;
+  const gapRatio = parseFloat(m.gap_ratio) || 0;
+  const trustScore = parseFloat(scores.trust_score) || 0;
+
+  if (
+    authorityPosition === "Leader" ||
+    (trustScore >= 70 && gapRatio >= 0.95) ||
+    reviews >= 250
+  ) {
+    return "Dominant Operators";
+  }
+
+  if (
+    authorityPosition === "Competitive" ||
+    (trustScore >= 40 && gapRatio >= 0.40) ||
+    reviews >= 40
+  ) {
+    return "Competitive Independents";
+  }
+
+  return "Emerging Operators";
+}
+
+function classifyMarketPressureBand_(m, scores) {
   const compAvg = parseFloat(m.comp_avg_reviews) || 0;
   const compMax = parseFloat(m.comp_max_reviews) || 0;
+  const pressureScore = parseFloat(scores.competitive_pressure_score) || 0;
+
+  if (pressureScore >= 70 || compAvg >= 100 || compMax >= 180) {
+    return "High";
+  }
+
+  if (pressureScore >= 45 || compAvg >= 35 || compMax >= 75) {
+    return "Medium";
+  }
+
+  return "Low";
+}
+
+function determineAutoRetailDiagnosisState_(m, scores, authorityPosition, marketTier, marketPressureBand) {
+  const reviews = parseInt(m.reviews_count, 10) || 0;
   const gapRatio = parseFloat(m.gap_ratio) || 0;
-  const reviewGap = parseFloat(m.review_gap) || 0;
   const trustScore = parseFloat(scores.trust_score) || 0;
   const presenceScore = parseFloat(scores.base_presence_score) || 0;
   const pressureScore = parseFloat(scores.competitive_pressure_score) || 0;
 
-  // 1) Very weak public trust
-  if (reviews <= 15 && trustScore < 25) {
-    return "Invisible";
+  const inventoryLevel = String(m.inventory_level || "").trim().toLowerCase();
+  const hasServiceDepartment = /^(yes|true|1)$/i.test(String(m.service_department || "").trim());
+
+  if (reviews < 20 && trustScore < 30) {
+    return "Invisible Operator";
   }
 
-  // 2) Market is strong and dealership is far behind
   if (
-    (compAvg >= 80 || compMax >= 150 || pressureScore >= 65) &&
-    gapRatio < 0.40
+    inventoryLevel &&
+    (inventoryLevel === "low" || inventoryLevel === "limited") &&
+    marketPressureBand === "High" &&
+    gapRatio < 0.90
   ) {
-    return "Outgunned";
+    return "Under-Leveraged Inventory";
   }
 
-  // 3) Operationally plausible, but not safe enough yet
   if (
-    reviews >= 15 &&
-    reviews < 75 &&
-    gapRatio >= 0.40 &&
-    gapRatio < 0.85 &&
-    trustScore >= 20 &&
-    trustScore < 55
+    hasServiceDepartment &&
+    trustScore >= 28 &&
+    trustScore < 50 &&
+    gapRatio < 0.55 &&
+    pressureScore >= 55
   ) {
-    return "Undersignaled";
+    return "Demand Not Captured";
   }
 
-  // 4) Competitive enough to be considered, but still not default-safe
   if (
-    reviews >= 60 &&
-    gapRatio >= 0.65 &&
-    gapRatio < 1.00 &&
-    trustScore >= 45
+    marketTier === "Competitive Independents" &&
+    pressureScore >= 65 &&
+    gapRatio < 0.45
   ) {
-    return "Contender";
+    return "Constrained Operator";
   }
 
-  // 5) Strong visible position
   if (
-    authorityPosition === "Leader" ||
-    (reviews >= 120 && gapRatio >= 1.00 && trustScore >= 60)
+    presenceScore >= 55 &&
+    trustScore >= 28 &&
+    reviews >= 20 &&
+    gapRatio < 0.85
   ) {
-    return "Anchor";
+    return "Structured but Under-Amplified";
   }
 
-  // fallback logic
-  if (reviews <= 20) return "Invisible";
-  if (gapRatio < 0.50) return "Outgunned";
-  if (trustScore < 45 || presenceScore < 70) return "Undersignaled";
-  if (gapRatio < 1.00) return "Contender";
-  return "Anchor";
+  if (
+    trustScore >= 45 &&
+    gapRatio >= 0.45 &&
+    gapRatio < 1.05
+  ) {
+    return "Competitive but Not Dominant";
+  }
+
+  if (authorityPosition === "Leader" || (trustScore >= 70 && gapRatio >= 1.00)) {
+    return "Competitive but Not Dominant";
+  }
+
+  return "Invisible Operator";
 }
 
 function getDiagnosisDisplayLabel_(diagnosisState, verticalKey) {
@@ -458,15 +515,43 @@ function classifyDiagnosisState_(x) {
   const trust = x.trustScore || 0;
   const presence = x.basePresenceScore || 0;
   const pressure = x.competitivePressureScore || 0;
-  const authority = x.authority_position || "";
+  const marketTier = x.market_tier || "";
+  const marketPressureBand = x.market_pressure_band || "";
 
-  if (reviews <= 2 && trust < 18 && presence < 55) return "Invisible";
-  if (authority === "Leader") return "Anchor";
-  if (pressure >= 70 && gapRatio < 0.35) return "Outgunned";
-  if (presence >= 60 && trust >= 18 && trust < 42 && gapRatio < 0.75) return "Undersignaled";
-  if (trust >= 42 && gapRatio >= 0.40 && gapRatio < 0.95) return "Contender";
-  if (reviews > 0 || trust >= 18) return "Emerging";
-  return "Invisible";
+  if (reviews <= 2 && trust < 18 && presence < 55) {
+    return "Invisible Operator";
+  }
+
+  if (
+    marketTier === "Competitive Independents" &&
+    (marketPressureBand === "High" || pressure >= 70) &&
+    gapRatio < 0.35
+  ) {
+    return "Constrained Operator";
+  }
+
+  if (
+    presence >= 60 &&
+    trust >= 18 &&
+    trust < 42 &&
+    gapRatio < 0.75
+  ) {
+    return "Structured but Under-Amplified";
+  }
+
+  if (
+    trust >= 42 &&
+    gapRatio >= 0.40 &&
+    gapRatio < 0.95
+  ) {
+    return "Competitive but Not Dominant";
+  }
+
+  if (reviews > 0 || trust >= 18) {
+    return "Structured but Under-Amplified";
+  }
+
+  return "Invisible Operator";
 }
 
 function classifyPriorityBucket_(priorityScore, diagnosisState) {
