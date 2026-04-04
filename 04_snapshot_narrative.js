@@ -39,20 +39,17 @@ function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
  * =========================
  */
 function classifyDecisionTiming_(diagnosisState) {
-  if (
-    diagnosisState === "Competitive but Not Dominant"
-  ) return "mid";
+  if (diagnosisState === "Competitive but Not Dominant") return "mid";
 
   if (
     diagnosisState === "Structured but Under-Amplified" ||
-    diagnosisState === "Constrained Operator"
-  ) return "late";
-
-  if (
+    diagnosisState === "Constrained Operator" ||
     diagnosisState === "Invisible Operator" ||
     diagnosisState === "Under-Leveraged Inventory" ||
     diagnosisState === "Demand Not Captured"
-  ) return "late";
+  ) {
+    return "late";
+  }
 
   return "mid";
 }
@@ -63,41 +60,42 @@ function classifyDecisionTiming_(diagnosisState) {
  * =========================
  */
 function buildMirrorSummary_(m, diagnosisState, marketTier, decisionTiming) {
-  const category = m.category || "market";
+  const category = safeText_(m.category || "market");
+  const reviews = Math.round(m.reviews_count || 0);
+  const topCompetitor = safeText_(m.comp_1_name || "the strongest visible competitor");
+  const topCompetitorReviews = Math.round(m.comp_1_reviews || 0);
+  const hasNamedCompetitor = topCompetitor && topCompetitor !== "the strongest visible competitor";
 
-  let timingLine = "";
-  if (decisionTiming === "late") {
-    timingLine = "You are entering the decision after trust is already being assigned.";
-  } else if (decisionTiming === "mid") {
-    timingLine = "You are being considered, but not prioritized early.";
-  } else {
-    timingLine = "You are part of the early decision set, but not controlling it.";
+  if (marketTier === "Dominant Operators") {
+    return [
+      `At your scale, the problem is not whether the business looks legitimate.`,
+      `The problem is that you are not locking the decision early enough.`,
+      `You are leaving enough room for competitors to stay alive in the buyer's mind longer than they should.`,
+      `That means authority exists, but it is not being converted into full control.`
+    ].join(" ");
   }
 
   if (marketTier === "Competitive Independents") {
     return [
       `You are not a weak operator in this ${category} market.`,
-      `But right now, you are not being chosen early enough.`,
-      timingLine,
-      `The operation may be solid, but the market is not seeing enough proof early enough to treat you as a default choice.`,
-      `That forces you into more comparisons, more price sensitivity, and weaker positioning inside the deal.`
-    ].join(" ");
-  }
-
-  if (marketTier === "Dominant Operators") {
-    return [
-      `At your scale, the issue is not credibility.`,
-      `The issue is control.`,
-      `You are not consistently locking in first-choice status early enough.`,
-      `That allows competitors to stay in the decision longer than they should.`
+      `But you are still arriving too late in the decision.`,
+      decisionTiming === "late"
+        ? `Trust is being assigned before your business has done enough to deserve serious priority.`
+        : `Your business is being considered, but not strongly enough to become the safe default early.`,
+      hasNamedCompetitor
+        ? `${topCompetitor}${topCompetitorReviews ? ` at roughly ${topCompetitorReviews} reviews` : ""} is giving buyers a stronger reason to feel safe sooner.`
+        : `Stronger visible competitors are giving buyers a stronger reason to feel safe sooner.`,
+      `That pushes you into more comparison, more price sensitivity, and weaker leverage inside the deal.`
     ].join(" ");
   }
 
   return [
-    `Right now, you are not generating enough visible proof early in the decision process.`,
-    timingLine,
-    `That means you are being evaluated later, after initial trust has already been assigned elsewhere.`,
-    `The operation may be better than it appears, but the market is not seeing it soon enough.`
+    `Right now, the business is not giving buyers enough proof to trust it early.`,
+    `At roughly ${reviews} reviews, it is still too easy to read this operation as uncertain before the real offer is even considered.`,
+    decisionTiming === "late"
+      ? `That means the business is entering the decision after confidence is already leaning elsewhere.`
+      : `That means the business is being noticed without being strongly prioritized.`,
+    `The issue is not only visibility. The issue is that trust is arriving too late to shape the choice.`
   ].join(" ");
 }
 
@@ -107,29 +105,36 @@ function buildMirrorSummary_(m, diagnosisState, marketTier, decisionTiming) {
  * =========================
  */
 function buildMarketSummary_(m, pressure) {
-  const location = m.city || "your area";
+  const location = buildMarketLabel_(m);
   const compAvg = Math.round(m.comp_avg_reviews || 0);
+  const compMax = Math.round(m.comp_max_reviews || 0);
+  const topCompetitor = safeText_(m.comp_1_name || "a stronger visible competitor");
+  const topCompetitorReviews = Math.round(m.comp_1_reviews || 0);
 
   if (pressure === "High") {
     return [
-      `In ${location}, buyers shortlist quickly.`,
-      `That shortlist is shaped by visible proof — reviews, repetition, and familiarity.`,
-      `Right now, the market is clustering around operators with roughly ${compAvg || "stronger"} review signals.`,
-      `That means trust is being assigned before full comparison even begins.`
+      `In ${location}, buyers are not evaluating every dealership from scratch.`,
+      `They are shortlisting quickly based on who looks safer to buy from before inventory, pricing, or financing gets a full comparison.`,
+      compAvg > 0
+        ? `The visible market average is around ${compAvg} reviews, while stronger operators like ${topCompetitor} are showing closer to ${topCompetitorReviews || compMax}.`
+        : `Stronger operators are already carrying materially heavier public proof.`,
+      `That gives the market a built-in bias before the first serious conversation even starts.`
     ].join(" ");
   }
 
   if (pressure === "Medium") {
     return [
-      `In ${location}, buyers still rely heavily on visible signals to guide decisions.`,
-      `Operators with stronger proof are consistently being evaluated first.`,
-      `That shifts how often other businesses get a fair comparison.`
+      `In ${location}, buyers still lean heavily on visible proof when deciding where to trust first.`,
+      compAvg > 0
+        ? `With the market sitting around ${compAvg} reviews, businesses with stronger proof are more likely to be evaluated first.`
+        : `Businesses with stronger proof are more likely to be evaluated first.`,
+      `That does not guarantee they are better. It means they are being treated as safer earlier.`
     ].join(" ");
   }
 
   return [
-    `In ${location}, the market still responds to visible proof when deciding who to trust.`,
-    `Businesses that reinforce that proof earlier tend to capture attention first.`
+    `In ${location}, visible proof still influences who gets trusted first.`,
+    `Businesses that reinforce trust earlier are more likely to capture the cleaner opportunity before comparison gets crowded.`
   ].join(" ");
 }
 
@@ -139,29 +144,29 @@ function buildMarketSummary_(m, pressure) {
  * =========================
  */
 function buildConsequenceSummary_(m, marketTier, pressure, decisionTiming) {
-  let timingImpact = "";
+  let openingLine = "";
 
   if (decisionTiming === "late") {
-    timingImpact = "You are competing from behind.";
+    openingLine = "You are competing from behind.";
   } else if (decisionTiming === "mid") {
-    timingImpact = "You are competing, but not from a position of strength.";
+    openingLine = "You are competing, but not from the strongest position.";
   } else {
-    timingImpact = "You are competing, but not fully controlling the outcome.";
+    openingLine = "You are competing early, but not locking the outcome cleanly enough.";
   }
 
   if (pressure === "High") {
     return [
-      timingImpact,
-      `That leads to fewer first-choice opportunities, more price-driven conversations, and lower closing leverage.`,
-      `You are not losing because of your offer.`,
-      `You are losing because of when you are being considered.`
+      openingLine,
+      `That means fewer first-choice opportunities, more price-sensitive conversations, and lower closing leverage.`,
+      `The business is not only losing attention.`,
+      `It is losing position inside the sale because trust is being assigned earlier to someone else.`
     ].join(" ");
   }
 
   return [
-    timingImpact,
-    `That reduces how often you are chosen cleanly without comparison.`,
-    `It also increases pressure on pricing and sales conversations.`
+    openingLine,
+    `That reduces how often the business gets chosen cleanly without heavy comparison.`,
+    `It also puts more pressure on pricing, sales conversations, and follow-up to win deals that should feel easier.`
   ].join(" ");
 }
 
@@ -171,22 +176,29 @@ function buildConsequenceSummary_(m, marketTier, pressure, decisionTiming) {
  * =========================
  */
 function buildDirectionSummary_(diagnosisState) {
-
   if (diagnosisState === "Invisible Operator") {
-    return `The priority is to establish enough visible proof that the business is treated as a credible option early in the decision process.`;
+    return `The priority is to stop asking buyers for blind trust and give them enough proof to treat the business as safe to consider early.`;
   }
 
   if (diagnosisState === "Constrained Operator") {
-    return `The priority is to reduce competitive pressure by strengthening early trust signals so the business is not constantly compared from behind.`;
+    return `The priority is to reduce how often the business enters the sale from behind by strengthening trust early enough to change the comparison frame.`;
   }
 
   if (diagnosisState === "Structured but Under-Amplified") {
-    return `The priority is to shift when trust is assigned, so the business moves from being seen to being chosen earlier.`;
+    return `The priority is not more generic presence. It is to shift when trust gets assigned so the business is taken seriously sooner and compared less from the back foot.`;
   }
 
   if (diagnosisState === "Competitive but Not Dominant") {
-    return `The priority is to increase first-choice preference and reduce reliance on comparison.`;
+    return `The priority is to turn credibility into first-choice preference so the business is not forced to keep winning deals through heavier comparison.`;
   }
 
-  return `The priority is to strengthen visible authority so the market assigns more confidence earlier.`;
+  if (diagnosisState === "Under-Leveraged Inventory") {
+    return `The priority is to stop letting operational value arrive too late and make the visible proof strong enough that buyers feel safer earlier in the process.`;
+  }
+
+  if (diagnosisState === "Demand Not Captured") {
+    return `The priority is to close the gap between what the business can support operationally and what the market feels safe buying from early.`;
+  }
+
+  return `The priority is to strengthen visible proof so the market assigns trust earlier and the business stops selling from a weaker position.`;
 }
