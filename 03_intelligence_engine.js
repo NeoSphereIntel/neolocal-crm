@@ -300,7 +300,7 @@ function getDiagnosisDisplayLabel_(diagnosisState, verticalKey) {
   return diagnosisState;
 }
 
-function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
+function buildSnapshotNarrativePackage_LEGACY_(m, scores, diagnosis) {
   const marketPositionSummary = buildMarketPositionSummary_(m, diagnosis.diagnosis_state, {
     basePresenceScore: scores.base_presence_score,
     trustScore: scores.trust_score,
@@ -343,12 +343,18 @@ function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
 
 function buildSnapshotForLeadRow_(lead) {
   const competitorSignals = {
-    comp_avg_reviews: parseFloat(lead.comp_avg_reviews) || 0,
-    comp_max_reviews: parseFloat(lead.comp_max_reviews) || 0,
-    review_gap: parseFloat(lead.review_gap) || 0,
-    gap_ratio: parseFloat(lead.gap_ratio) || 0,
-    market_review_pressure: String(lead.market_review_pressure || "").trim() || "Unknown"
-  };
+	  comp_1_name: String(lead.comp_1_name || ""),
+	  comp_1_reviews: parseInt(lead.comp_1_reviews, 10) || 0,
+	  comp_2_name: String(lead.comp_2_name || ""),
+	  comp_2_reviews: parseInt(lead.comp_2_reviews, 10) || 0,
+	  comp_3_name: String(lead.comp_3_name || ""),
+	  comp_3_reviews: parseInt(lead.comp_3_reviews, 10) || 0,
+	  comp_avg_reviews: parseFloat(lead.comp_avg_reviews) || 0,
+	  comp_max_reviews: parseFloat(lead.comp_max_reviews) || 0,
+	  review_gap: parseFloat(lead.review_gap) || 0,
+	  gap_ratio: parseFloat(lead.gap_ratio) || 0,
+	  market_review_pressure: String(lead.market_review_pressure || "").trim() || "Unknown"
+	};
 
   return generateSnapshot_(lead, competitorSignals);
 }
@@ -610,3 +616,4 @@ function classifyAutoRetailPriority_(m, scores, diagnosisState) {
   if (priorityScore >= 50) return "Medium";
   return "Low";
 }
+
