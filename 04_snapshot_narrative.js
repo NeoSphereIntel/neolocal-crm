@@ -1,9 +1,10 @@
 /**
- * Snapshot Narrative Engine v6.1 — Auto Amplification + Competitor Anchoring
+ * Snapshot Narrative Engine v6.2 — Auto Amplification + Competitor Anchoring Fix
  * Same structure, now with:
  * - controlled competitor anchoring
  * - normalized category casing
  * - diagnosis-specific auto-retail language
+ * - simplified competitor name validation so real competitor names fire reliably
  */
 
 function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
@@ -70,9 +71,6 @@ function hasUsableCompetitorName_(name) {
   const lower = s.toLowerCase();
 
   if (!s) return false;
-  if (lower.indexOf("competitor") !== -1) return false;
-  if (lower.indexOf("visible") !== -1) return false;
-  if (lower.indexOf("stronger") !== -1) return false;
   if (lower === "n/a") return false;
   if (lower === "na") return false;
   if (lower === "unknown") return false;
@@ -131,13 +129,13 @@ function buildMirrorSummary_(m, diagnosisState, marketTier) {
 
   if (diagnosisState === "Constrained Operator") {
     if (isAuto) {
-      if (competitorWithReviews) {
+      if (competitorWithReviews && competitorWithReviews.length > 3) {
         return `This is not a weak store. But it is still losing the early confidence battle to stronger dealerships like ${competitorWithReviews}, and that is forcing it to sell from behind. This is where a good operation still loses ground to stores that simply look more established first.`;
       }
       return `This is not a weak store. But it is still losing the early confidence battle to stronger dealerships, and that is forcing it to sell from behind. This is where a good operation still loses ground to stores that simply look more established first.`;
     }
 
-    if (competitorNameOnly) {
+    if (competitorNameOnly && competitorNameOnly.length > 3) {
       return `You are not a weak operator in this ${category} market. But you should be winning more of these opportunities, and competitors like ${competitorNameOnly} are taking the early position instead. This is where a good operation still ends up losing ground.`;
     }
 
@@ -153,13 +151,13 @@ function buildMirrorSummary_(m, diagnosisState, marketTier) {
 
   if (diagnosisState === "Competitive but Not Dominant") {
     if (isAuto) {
-      if (competitorNameOnly) {
+      if (competitorNameOnly && competitorNameOnly.length > 3) {
         return `This store is already in the serious consideration set. The problem is that it is not the dealership buyers default to first, especially when stores like ${competitorNameOnly} are making the safer first impression. It gets included early, but not strongly enough to shut down comparison.`;
       }
       return `This store is already in the serious consideration set. The problem is that it is not the dealership buyers default to first. It gets included early, but not strongly enough to shut down comparison.`;
     }
 
-    if (competitorNameOnly) {
+    if (competitorNameOnly && competitorNameOnly.length > 3) {
       return `You are already competing at a high level in this ${category} market, but you are not the default choice. Buyers include you early, but operators like ${competitorNameOnly} are still easier for them to choose without comparison.`;
     }
 
@@ -201,13 +199,13 @@ function buildMarketSummary_(m, diagnosisState, pressure) {
 
   if (diagnosisState === "Constrained Operator") {
     if (isAuto) {
-      if (competitorWithReviews) {
+      if (competitorWithReviews && competitorWithReviews.length > 3) {
         return `In ${location}, stronger dealerships like ${competitorWithReviews} are shaping buyer confidence before a shopper ever visits the lot. This is a heavy-proof market where the visible leaders are operating in ${leaderScale}, so by the time this store enters the shopper's real consideration set, stronger stores have often already set the tone.`;
       }
       return `In ${location}, stronger dealerships are shaping buyer confidence before a shopper ever visits the lot. This is a heavy-proof market where the visible leaders are operating in ${leaderScale}, so by the time this store enters the shopper's real consideration set, stronger stores have often already set the tone.`;
     }
 
-    if (competitorNameOnly) {
+    if (competitorNameOnly && competitorNameOnly.length > 3) {
       return `In ${location}, competitors like ${competitorNameOnly} are already shaping buyer confidence early. This is a heavy-proof market where leading operators are working from a stronger trust position before your business fully enters the conversation.`;
     }
 
@@ -223,13 +221,13 @@ function buildMarketSummary_(m, diagnosisState, pressure) {
 
   if (diagnosisState === "Competitive but Not Dominant") {
     if (isAuto) {
-      if (competitorNameOnly) {
+      if (competitorNameOnly && competitorNameOnly.length > 3) {
         return `In ${location}, several dealerships already clear the credibility bar. At that point, buyers are not just looking for a legitimate store — they are leaning toward the one that feels most established, most proven, and easiest to trust without further work. Stores like ${competitorNameOnly} are helping define that bar.`;
       }
       return `In ${location}, several dealerships already clear the credibility bar. At that point, buyers are not just looking for a legitimate store. They are leaning toward the one that feels most established, most proven, and easiest to trust without further work.`;
     }
 
-    if (competitorNameOnly) {
+    if (competitorNameOnly && competitorNameOnly.length > 3) {
       return `In ${location}, several operators already meet the trust threshold. Buyers are not just looking for a credible option — they are leaning toward the one that feels more established, and businesses like ${competitorNameOnly} are helping define that standard.`;
     }
 
