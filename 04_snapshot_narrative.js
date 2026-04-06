@@ -1,10 +1,10 @@
 /**
- * Snapshot Narrative Engine v6.2 — Auto Amplification + Competitor Anchoring Fix
+ * Snapshot Narrative Engine v6.3 — Auto Amplification + Competitor Anchor Compression
  * Same structure, now with:
  * - controlled competitor anchoring
  * - normalized category casing
  * - diagnosis-specific auto-retail language
- * - simplified competitor name validation so real competitor names fire reliably
+ * - lighter second references so full competitor anchors do not repeat heavily
  */
 
 function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
@@ -109,6 +109,16 @@ function getCompetitorPhrase_(m, withReviews) {
   return comp.name;
 }
 
+function getCompetitorShortReference_(m) {
+  const comp = getCompetitorAnchor_(m);
+  if (!comp.has_name) return "stronger stores";
+
+  const words = comp.name.split(/\s+/).filter(Boolean);
+  if (words.length <= 3) return comp.name;
+
+  return words.slice(0, 3).join(" ");
+}
+
 /**
  * =========================
  * MIRROR (TEXTURED + AUTO + LIGHT ANCHORING)
@@ -193,6 +203,7 @@ function buildMarketSummary_(m, diagnosisState, pressure) {
   const isAuto = isAutoRetailCategory_(m);
   const competitorWithReviews = getCompetitorPhrase_(m, true);
   const competitorNameOnly = getCompetitorPhrase_(m, false);
+  const competitorShort = getCompetitorShortReference_(m);
 
   const avgScale = getReviewScaleLabel_(compAvg);
   const leaderScale = getReviewScaleLabel_(compMax);
@@ -200,7 +211,7 @@ function buildMarketSummary_(m, diagnosisState, pressure) {
   if (diagnosisState === "Constrained Operator") {
     if (isAuto) {
       if (competitorWithReviews && competitorWithReviews.length > 3) {
-        return `In ${location}, stronger dealerships like ${competitorWithReviews} are shaping buyer confidence before a shopper ever visits the lot. This is a heavy-proof market where the visible leaders are operating in ${leaderScale}, so by the time this store enters the shopper's real consideration set, stronger stores have often already set the tone.`;
+        return `In ${location}, stronger dealerships like ${competitorWithReviews} are shaping buyer confidence before a shopper ever visits the lot. This is a heavy-proof market where the visible leaders are operating in ${leaderScale}, so by the time this store enters the shopper's real consideration set, operators like ${competitorShort} have often already set the tone.`;
       }
       return `In ${location}, stronger dealerships are shaping buyer confidence before a shopper ever visits the lot. This is a heavy-proof market where the visible leaders are operating in ${leaderScale}, so by the time this store enters the shopper's real consideration set, stronger stores have often already set the tone.`;
     }
