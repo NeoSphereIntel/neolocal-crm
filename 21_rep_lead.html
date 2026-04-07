@@ -305,6 +305,35 @@
           <label for="secondaryAddress">Secondary Address</label>
           <input id="secondaryAddress" type="text" value="<?= lead.secondaryAddress || '' ?>">
 
+          <label for="operatorScaleBand">Operator Scale Band</label>
+          <select id="operatorScaleBand">
+            <option value="" <?= !lead.operatorScaleBand ? 'selected' : '' ?>>—</option>
+            <option value="low" <?= lead.operatorScaleBand === 'low' ? 'selected' : '' ?>>Low</option>
+            <option value="mid" <?= lead.operatorScaleBand === 'mid' ? 'selected' : '' ?>>Mid</option>
+            <option value="high" <?= lead.operatorScaleBand === 'high' ? 'selected' : '' ?>>High</option>
+          </select>
+
+          <label for="operatorBusinessModel">Operator Business Model</label>
+          <select id="operatorBusinessModel">
+            <option value="" <?= !lead.operatorBusinessModel ? 'selected' : '' ?>>—</option>
+            <option value="residential" <?= lead.operatorBusinessModel === 'residential' ? 'selected' : '' ?>>Residential</option>
+            <option value="commercial" <?= lead.operatorBusinessModel === 'commercial' ? 'selected' : '' ?>>Commercial</option>
+            <option value="industrial" <?= lead.operatorBusinessModel === 'industrial' ? 'selected' : '' ?>>Industrial</option>
+            <option value="mixed" <?= lead.operatorBusinessModel === 'mixed' ? 'selected' : '' ?>>Mixed</option>
+          </select>
+
+          <label for="operatorMonthlyVolume">Operator Monthly Volume</label>
+          <input id="operatorMonthlyVolume" type="number" min="0" step="1" value="<?= lead.operatorMonthlyVolume || '' ?>">
+
+          <label for="operatorServiceCapacity">Operator Service Capacity</label>
+          <input id="operatorServiceCapacity" type="number" min="0" step="1" value="<?= lead.operatorServiceCapacity || '' ?>">
+
+          <label for="operatorLocationCount">Operator Location Count</label>
+          <input id="operatorLocationCount" type="number" min="0" step="1" value="<?= lead.operatorLocationCount || '' ?>">
+
+          <label for="operatorContextNotes">Operator Context Notes</label>
+          <input id="operatorContextNotes" type="text" value="<?= lead.operatorContextNotes || '' ?>">
+
           <label for="activeTask">Active Task</label>
           <input id="activeTask" type="text" value="<?= lead.activeTask || '' ?>" placeholder="Add one active task">
 
@@ -510,6 +539,12 @@
         const secondaryContactPhone = document.getElementById('secondaryContactPhone').value;
         const secondaryContactEmail = document.getElementById('secondaryContactEmail').value;
         const secondaryAddress = document.getElementById('secondaryAddress').value;
+        const operatorScaleBand = document.getElementById('operatorScaleBand').value;
+        const operatorBusinessModel = document.getElementById('operatorBusinessModel').value;
+        const operatorMonthlyVolume = document.getElementById('operatorMonthlyVolume').value;
+        const operatorServiceCapacity = document.getElementById('operatorServiceCapacity').value;
+        const operatorLocationCount = document.getElementById('operatorLocationCount').value;
+        const operatorContextNotes = document.getElementById('operatorContextNotes').value;
         const activeTask = document.getElementById('activeTask').value;
         const taskType = document.getElementById('taskType').value;
         const taskDueAt = document.getElementById('taskDueAt').value;
@@ -542,6 +577,12 @@
               document.getElementById('secondaryContactPhone').value = result.secondaryContactPhone || '';
               document.getElementById('secondaryContactEmail').value = result.secondaryContactEmail || '';
               document.getElementById('secondaryAddress').value = result.secondaryAddress || '';
+              document.getElementById('operatorScaleBand').value = result.operatorScaleBand || '';
+              document.getElementById('operatorBusinessModel').value = result.operatorBusinessModel || '';
+              document.getElementById('operatorMonthlyVolume').value = result.operatorMonthlyVolume || '';
+              document.getElementById('operatorServiceCapacity').value = result.operatorServiceCapacity || '';
+              document.getElementById('operatorLocationCount').value = result.operatorLocationCount || '';
+              document.getElementById('operatorContextNotes').value = result.operatorContextNotes || '';
               document.getElementById('activeTask').value = result.activeTask || '';
               document.getElementById('taskType').value = result.taskType || '';
               document.getElementById('taskDueAt').value = result.taskDueAt || '';
@@ -577,7 +618,13 @@
             secondaryContactRole,
             secondaryContactPhone,
             secondaryContactEmail,
-            secondaryAddress
+            secondaryAddress,
+            operatorScaleBand,
+            operatorBusinessModel,
+            operatorMonthlyVolume,
+            operatorServiceCapacity,
+            operatorLocationCount,
+            operatorContextNotes
           );
       }
 
