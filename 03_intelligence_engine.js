@@ -78,7 +78,22 @@ function generateSnapshot_(lead, competitorSignals) {
   };
 }
 
+function getInternalOperatorData_(lead, includeInternal) {
+  if (!includeInternal) return {};
+
+  return {
+    operator_scale_band: String(lead.operator_scale_band || "").trim(),
+    operator_monthly_volume: String(lead.operator_monthly_volume || "").trim(),
+    operator_service_capacity: String(lead.operator_service_capacity || "").trim(),
+    operator_location_count: String(lead.operator_location_count || "").trim(),
+    operator_business_model: String(lead.operator_business_model || "").trim(),
+    operator_context_notes: String(lead.operator_context_notes || "").trim()
+  };
+}
+
 function buildSnapshotMetrics_(lead, competitorSignals) {
+  var operatorDataInternal = getInternalOperatorData_(lead, true);
+	
   return {
     business_name: lead.business_name,
     category: lead.category,
@@ -89,6 +104,7 @@ function buildSnapshotMetrics_(lead, competitorSignals) {
     rating: parseFloat(lead.rating) || 0,
     website_present: String(lead.website_present || "").trim() || (lead.website ? "Yes" : "No"),
     phone_present: String(lead.phone_present || "").trim() || (lead.phone ? "Yes" : "No"),
+	operator_data_internal: getInternalOperatorData,
 
     comp_1_name: String(competitorSignals.comp_1_name || ""),
     comp_1_reviews: parseInt(competitorSignals.comp_1_reviews, 10) || 0,

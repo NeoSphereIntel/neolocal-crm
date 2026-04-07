@@ -168,6 +168,13 @@ function getLeadRecordByLeadId_(leadId) {
         address: getCellByHeader_(row, idx, 'address') || '',
         website: getCellByHeader_(row, idx, 'website') || '',
         placeId: getCellByHeader_(row, idx, 'place_id') || '',
+		
+		operatorScaleBand: getCellByHeader_(row, idx, 'operator_scale_band') || '',
+		operatorBusinessModel: getCellByHeader_(row, idx, 'operator_business_model') || '',
+		operatorMonthlyVolume: getCellByHeader_(row, idx, 'operator_monthly_volume') || '',
+		operatorServiceCapacity: getCellByHeader_(row, idx, 'operator_service_capacity') || '',
+		operatorLocationCount: getCellByHeader_(row, idx, 'operator_location_count') || '',
+		operatorContextNotes: getCellByHeader_(row, idx, 'operator_context_notes') || '',
 
         mainPhone:
           getCellByHeader_(row, idx, 'Main Phone') ||
@@ -308,6 +315,12 @@ function saveManualLead(
   mainEmail,
   contactName,
   contactRole,
+  operatorScaleBand,
+  operatorBusinessModel,
+  operatorMonthlyVolume,
+  operatorServiceCapacity,
+  operatorLocationCount,
+  operatorContextNotes,
   notes,
   activeTask,
   taskType,
@@ -341,6 +354,12 @@ function saveManualLead(
   var finalMainEmail = String(mainEmail || '').trim();
   var finalContactName = String(contactName || '').trim();
   var finalContactRole = String(contactRole || '').trim();
+  var finalOperatorScaleBand = String(operatorScaleBand || '').trim();
+  var finalOperatorBusinessModel = String(operatorBusinessModel || '').trim();
+  var finalOperatorMonthlyVolume = String(operatorMonthlyVolume || '').trim();
+  var finalOperatorServiceCapacity = String(operatorServiceCapacity || '').trim();
+  var finalOperatorLocationCount = String(operatorLocationCount || '').trim();
+  var finalOperatorContextNotes = String(operatorContextNotes || '').trim();
   var finalNotes = String(notes || '').trim();
   var finalActiveTask = String(activeTask || '').trim();
   var finalTaskType = String(taskType || '').trim();
@@ -402,6 +421,12 @@ function saveManualLead(
   leadObj.owner = '';
   leadObj.priority_bucket = '';
   leadObj.lead_signature = leadSignature;
+  leadObj.operator_scale_band = finalOperatorScaleBand;
+  leadObj.operator_business_model = finalOperatorBusinessModel;
+  leadObj.operator_monthly_volume = finalOperatorMonthlyVolume;
+  leadObj.operator_service_capacity = finalOperatorServiceCapacity;
+  leadObj.operator_location_count = finalOperatorLocationCount;
+  leadObj.operator_context_notes = finalOperatorContextNotes;
   leadObj['Assigned To'] = String(rep || '').trim();
   leadObj['Market Mirror URL'] = buildMarketMirrorUrl_(leadId);
   leadObj['Rep Support URL'] = buildRepSupportUrl_(leadId);
@@ -610,7 +635,13 @@ function saveRepLeadUpdate(
   secondaryContactRole,
   secondaryContactPhone,
   secondaryContactEmail,
-  secondaryAddress
+  secondaryAddress,
+  operatorScaleBand,
+  operatorBusinessModel,
+  operatorMonthlyVolume,
+  operatorServiceCapacity,
+  operatorLocationCount,
+  operatorContextNotes
 ) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
@@ -648,6 +679,12 @@ function saveRepLeadUpdate(
       var cleanSecondaryContactPhone = String(secondaryContactPhone || '').trim();
       var cleanSecondaryContactEmail = String(secondaryContactEmail || '').trim();
       var cleanSecondaryAddress = String(secondaryAddress || '').trim();
+	  var cleanOperatorScaleBand = String(operatorScaleBand || '').trim();
+	  var cleanOperatorBusinessModel = String(operatorBusinessModel || '').trim();
+	  var cleanOperatorMonthlyVolume = String(operatorMonthlyVolume || '').trim();
+	  var cleanOperatorServiceCapacity = String(operatorServiceCapacity || '').trim();
+	  var cleanOperatorLocationCount = String(operatorLocationCount || '').trim();
+	  var cleanOperatorContextNotes = String(operatorContextNotes || '').trim();
 
       var notesHeader = hasHeader_(idx, 'crm_notes') ? 'crm_notes' : (hasHeader_(idx, 'notes') ? 'notes' : '');
       var existingNotes = notesHeader ? String(getCellByHeader_(row, idx, notesHeader) || '').trim() : '';
@@ -715,6 +752,30 @@ function saveRepLeadUpdate(
       if (hasHeader_(idx, 'Secondary Address')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Address', cleanSecondaryAddress);
       }
+	  
+	  if (hasHeader_(idx, 'operator_scale_band')) {
+		setCellByHeader_(sheet, r + 1, idx, 'operator_scale_band', cleanOperatorScaleBand);
+	  }
+
+	  if (hasHeader_(idx, 'operator_business_model')) {
+		setCellByHeader_(sheet, r + 1, idx, 'operator_business_model', cleanOperatorBusinessModel);
+	  }
+
+	  if (hasHeader_(idx, 'operator_monthly_volume')) {
+		setCellByHeader_(sheet, r + 1, idx, 'operator_monthly_volume', cleanOperatorMonthlyVolume);
+	  }
+
+	  if (hasHeader_(idx, 'operator_service_capacity')) {
+		setCellByHeader_(sheet, r + 1, idx, 'operator_service_capacity', cleanOperatorServiceCapacity);
+	  }
+
+	  if (hasHeader_(idx, 'operator_location_count')) {
+		setCellByHeader_(sheet, r + 1, idx, 'operator_location_count', cleanOperatorLocationCount);
+	  }
+
+	  if (hasHeader_(idx, 'operator_context_notes')) {
+		setCellByHeader_(sheet, r + 1, idx, 'operator_context_notes', cleanOperatorContextNotes);
+	  }
 
       if (hasHeader_(idx, 'Active Task')) {
         setCellByHeader_(sheet, r + 1, idx, 'Active Task', cleanActiveTask);
@@ -775,7 +836,13 @@ function saveRepLeadUpdate(
         secondaryContactRole: cleanSecondaryContactRole,
         secondaryContactPhone: cleanSecondaryContactPhone,
         secondaryContactEmail: cleanSecondaryContactEmail,
-        secondaryAddress: cleanSecondaryAddress
+        secondaryAddress: cleanSecondaryAddress,
+		operatorScaleBand: cleanOperatorScaleBand,
+		operatorBusinessModel: cleanOperatorBusinessModel,
+		operatorMonthlyVolume: cleanOperatorMonthlyVolume,
+		operatorServiceCapacity: cleanOperatorServiceCapacity,
+		operatorLocationCount: cleanOperatorLocationCount,
+		operatorContextNotes: cleanOperatorContextNotes
       };
     }
   }

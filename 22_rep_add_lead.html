@@ -216,6 +216,50 @@
 
         <div class="grid">
           <div>
+            <label for="operatorScaleBand">Operator Scale Band</label>
+            <select id="operatorScaleBand">
+              <option value="">—</option>
+              <option value="low">Low</option>
+              <option value="mid">Mid</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div>
+            <label for="operatorBusinessModel">Operator Business Model</label>
+            <select id="operatorBusinessModel">
+              <option value="">—</option>
+              <option value="residential">Residential</option>
+              <option value="commercial">Commercial</option>
+              <option value="industrial">Industrial</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="operatorMonthlyVolume">Operator Monthly Volume</label>
+            <input id="operatorMonthlyVolume" type="number" min="0" step="1">
+          </div>
+          <div>
+            <label for="operatorServiceCapacity">Operator Service Capacity</label>
+            <input id="operatorServiceCapacity" type="number" min="0" step="1">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="operatorLocationCount">Operator Location Count</label>
+            <input id="operatorLocationCount" type="number" min="0" step="1">
+          </div>
+          <div>
+            <label for="operatorContextNotes">Operator Context Notes</label>
+            <input id="operatorContextNotes" type="text">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
             <label for="activeTask">Active Task</label>
             <input id="activeTask" type="text" placeholder="Optional first task">
           </div>
@@ -313,6 +357,12 @@
         var mainEmail = document.getElementById('mainEmail').value;
         var contactName = document.getElementById('contactName').value;
         var contactRole = document.getElementById('contactRole').value;
+        var operatorScaleBand = document.getElementById('operatorScaleBand').value;
+        var operatorBusinessModel = document.getElementById('operatorBusinessModel').value;
+        var operatorMonthlyVolume = document.getElementById('operatorMonthlyVolume').value;
+        var operatorServiceCapacity = document.getElementById('operatorServiceCapacity').value;
+        var operatorLocationCount = document.getElementById('operatorLocationCount').value;
+        var operatorContextNotes = document.getElementById('operatorContextNotes').value;
         var notes = document.getElementById('notes').value;
         var activeTask = document.getElementById('activeTask').value;
         var taskType = document.getElementById('taskType').value;
@@ -344,6 +394,12 @@
             mainEmail,
             contactName,
             contactRole,
+            operatorScaleBand,
+            operatorBusinessModel,
+            operatorMonthlyVolume,
+            operatorServiceCapacity,
+            operatorLocationCount,
+            operatorContextNotes,
             notes,
             activeTask,
             taskType,
