@@ -104,7 +104,7 @@ function buildSnapshotMetrics_(lead, competitorSignals) {
     rating: parseFloat(lead.rating) || 0,
     website_present: String(lead.website_present || "").trim() || (lead.website ? "Yes" : "No"),
     phone_present: String(lead.phone_present || "").trim() || (lead.phone ? "Yes" : "No"),
-	operator_data_internal: getInternalOperatorData,
+	operator_data_internal: operatorDataInternal,
 
     comp_1_name: String(competitorSignals.comp_1_name || ""),
     comp_1_reviews: parseInt(competitorSignals.comp_1_reviews, 10) || 0,
@@ -118,6 +118,135 @@ function buildSnapshotMetrics_(lead, competitorSignals) {
     review_gap: parseFloat(competitorSignals.review_gap) || 0,
     gap_ratio: parseFloat(competitorSignals.gap_ratio) || 0,
     market_review_pressure: String(competitorSignals.market_review_pressure || "").trim() || "Unknown"
+  };
+}
+
+function parseOperatorNumber_(value) {
+  var n = parseInt(value, 10);
+  return isNaN(n) ? 0 : n;
+}
+
+function rankDiagnosisState_(state) {
+  switch (String(state || "").trim()) {
+    case "Invisible":
+      return 1;
+    case "Outgunned":
+      return 2;
+    case "Emerging":
+      return 2;
+    case "Undersignaled":
+      return 3;
+    case "Contender":
+      return 4;
+    case "Anchor":
+      return 5;
+    default:
+      return 0;
+  }
+}
+
+function buildOperatorExpectationLayer_(m) {
+  var op = (m && m.operator_data_internal) || {};
+  var scaleBand = String(op.operator_scale_band || "").trim().toLowerCase();
+  var businessModel = String(op.operator_business_model || "").trim().toLowerCase();
+  var monthlyVolume = parseOperatorNumber_(op.operator_monthly_volume);
+  var serviceCapacity = parseOperatorNumber_(op.operator_service_capacity);
+  var locationCount = parseOperatorNumber_(op.operator_location_count);
+
+  var signalsPresent = 0;
+  if (scaleBand) signalsPresent += 1;
+  if (monthlyVolume > 0) signalsPresent += 1;
+  if (serviceCapacity > 0) signalsPresent += 1;
+  if (locationCount > 0) signalsPresent += 1;
+  if (businessModel) signalsPresent += 1;
+
+  if (!signalsPresent) {
+    return {
+      has_operator_data: false,
+      expectation_score: 0,
+      expected_posture: "",
+      confidence: "none",
+      signals_present: 0
+    };
+  }
+
+  var score = 0;
+
+  if (scaleBand === "high") score += 30;
+  else if (scaleBand === "mid") score += 18;
+  else if (scaleBand === "low") score += 8;
+
+  if (monthlyVolume >= 120) score += 24;
+  else if (monthlyVolume >= 60) score += 16;
+  else if (monthlyVolume >= 25) score += 10;
+  else if (monthlyVolume >= 10) score += 5;
+
+  if (serviceCapacity >= 20) score += 18;
+  else if (serviceCapacity >= 10) score += 12;
+  else if (serviceCapacity >= 5) score += 6;
+  else if (serviceCapacity >= 2) score += 3;
+
+  if (locationCount >= 3) score += 18;
+  else if (locationCount === 2) score += 10;
+  else if (locationCount === 1) score += 4;
+
+  if (businessModel === "mixed") score += 8;
+  else if (businessModel === "commercial") score += 6;
+  else if (businessModel === "industrial") score += 6;
+  else if (businessModel === "residential") score += 3;
+
+  var expectedPosture = "Emerging";
+  if (score >= 72) expectedPosture = "Anchor";
+  else if (score >= 46) expectedPosture = "Contender";
+  else if (score >= 24) expectedPosture = "Undersignaled";
+
+  var confidence = "low";
+  if (signalsPresent >= 4) confidence = "high";
+  else if (signalsPresent >= 2) confidence = "medium";
+
+  return {
+    has_operator_data: true,
+    expectation_score: score,
+    expected_posture: expectedPosture,
+    confidence: confidence,
+    signals_present: signalsPresent,
+    scale_band: scaleBand,
+    monthly_volume: monthlyVolume,
+    service_capacity: serviceCapacity,
+    location_count: locationCount,
+    business_model: businessModel
+  };
+}
+
+function detectOperatorMismatch_(m, diagnosisState) {
+  var expectation = buildOperatorExpectationLayer_(m);
+
+  if (!expectation.has_operator_data) {
+    return {
+      has_mismatch: false,
+      severity: "",
+      expected_posture: "",
+      actual_posture: diagnosisState || "",
+      posture_gap: 0,
+      expectation: expectation
+    };
+  }
+
+  var actualRank = rankDiagnosisState_(diagnosisState);
+  var expectedRank = rankDiagnosisState_(expectation.expected_posture);
+  var postureGap = expectedRank - actualRank;
+
+  var hardMismatch =
+    postureGap >= 2 ||
+    (postureGap >= 1 && expectation.confidence === "high" && expectation.expectation_score >= 60);
+
+  return {
+    has_mismatch: postureGap > 0,
+    severity: hardMismatch ? "hard" : (postureGap > 0 ? "soft" : ""),
+    expected_posture: expectation.expected_posture,
+    actual_posture: diagnosisState || "",
+    posture_gap: postureGap,
+    expectation: expectation
   };
 }
 

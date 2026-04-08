@@ -9,26 +9,99 @@
    AUTO RETAIL — FULL CUSTOM SNAPSHOT
 ============================================================================ */
 
+function buildOperatorWeightPhrase_(mismatch) {
+  var exp = (mismatch && mismatch.expectation) || {};
+  var parts = [];
+
+  if (exp.location_count >= 3) {
+    parts.push("this level of footprint");
+  } else if (exp.location_count === 2) {
+    parts.push("a multi-location footprint");
+  }
+
+  if (exp.monthly_volume >= 60) {
+    parts.push("this level of throughput");
+  } else if (exp.monthly_volume >= 25) {
+    parts.push("a meaningful monthly volume");
+  }
+
+  if (exp.service_capacity >= 10) {
+    parts.push("this level of service capacity");
+  } else if (exp.service_capacity >= 5) {
+    parts.push("real operational capacity");
+  }
+
+  if (exp.scale_band === "high") {
+    parts.push("clear operator scale");
+  } else if (exp.scale_band === "mid") {
+    parts.push("solid operator scale");
+  }
+
+  if (!parts.length) {
+    return "this level of operational weight";
+  }
+
+  return parts.slice(0, 2).join(" and ");
+}
+
+function buildAutoRetailOperatorMismatchSummary_(m, diagnosisState, mismatch) {
+  if (!mismatch || !mismatch.has_mismatch) return "";
+
+  var weightPhrase = buildOperatorWeightPhrase_(mismatch);
+
+  if (mismatch.severity === "hard") {
+    return `That is the contradiction.\n\nFor a dealership carrying ${weightPhrase}, the market should not still be reading it at a ${String(diagnosisState || "").toLowerCase()} trust position. The problem is not that the operation is too small to matter. The problem is that real dealership weight is not being translated into buyer confidence early enough, which leaves the store commercially lighter than it should be.`;
+  }
+
+  return `There is also an operator mismatch here.\n\nBased on ${weightPhrase}, the dealership should be reading closer to a stronger competitive posture than it currently does in market. That suggests the issue is not pure capability. It is a failure of translation between what the business can support operationally and what buyers are being shown publicly.`;
+}
+
+function buildGenericOperatorMismatchSummary_(m, diagnosisState, mismatch, profile) {
+  if (!mismatch || !mismatch.has_mismatch) return "";
+
+  var weightPhrase = buildOperatorWeightPhrase_(mismatch);
+  var saferChoice = profile.default_choice_language || "safer local choice";
+
+  if (mismatch.severity === "hard") {
+    return `That creates a clear operator mismatch.\n\nFor a business carrying ${weightPhrase}, the market should not still be reading it this lightly. The issue is not simply that competitors are visible. It is that real operating weight is failing to convert into the level of public trust required to become the ${saferChoice}.`;
+  }
+
+  return `There is a capacity-to-perception gap here.\n\nBased on ${weightPhrase}, the business should be landing in a stronger market posture than it currently holds. That usually means the operation has more substance than the public layer is allowing buyers to feel.`;
+}
+
+function buildOperatorMismatchSummary_(m, diagnosisState, profile) {
+  var mismatch = detectOperatorMismatch_(m, diagnosisState);
+  if (!mismatch.has_mismatch) return "";
+
+  if (profile && profile.template_family === "auto_retail") {
+    return buildAutoRetailOperatorMismatchSummary_(m, diagnosisState, mismatch);
+  }
+
+  return buildGenericOperatorMismatchSummary_(m, diagnosisState, mismatch, profile || {});
+} 
+
 function buildAutoRetailSnapshotNarrativePackage_(m, scores, diagnosis, profile) {
   const verticalKey = determineVerticalType_(m);
   const diagnosisLabel = getDiagnosisDisplayLabel_(diagnosis.diagnosis_state, verticalKey);
 
   const part1 = buildAutoRetailMarketPressureSummary_(m, diagnosis.diagnosis_state, profile);
   const part2 = buildAutoRetailPerceptionGapSummary_(m, diagnosis.diagnosis_state, profile);
+  const mismatchSummary = buildOperatorMismatchSummary_(m, diagnosis.diagnosis_state, profile);
   const part3 = buildAutoRetailCommercialRiskSummary_(m, diagnosis.diagnosis_state, profile);
   const part4 = buildAutoRetailStrategicOpeningSummary_(m, diagnosis.diagnosis_state, profile);
 
   return {
     market_position_summary: part1,
-    strategic_gap_summary: part2,
+    strategic_gap_summary: [part2, mismatchSummary].filter(Boolean).join("\n\n"),
     action_implication_summary: part3,
     snapshot_narrative: [
       diagnosisLabel + ".",
       part1,
       part2,
+      mismatchSummary,
       part3,
       part4
-    ].join("\n\n")
+    ].filter(Boolean).join("\n\n")
   };
 }
 
@@ -289,18 +362,20 @@ function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
 
   const part1 = buildMarketPressureSummary_(m, diagnosis.diagnosis_state, profile);
   const part2 = buildPerceptionGapSummary_(m, diagnosis.diagnosis_state, profile);
+  const mismatchSummary = buildOperatorMismatchSummary_(m, diagnosis.diagnosis_state, profile);
   const part3 = buildCommercialRiskSummary_(m, diagnosis.diagnosis_state, profile);
   const part4 = buildStrategicOpeningSummary_(m, diagnosis.diagnosis_state, profile);
 
   return {
     market_position_summary: part1,
-    strategic_gap_summary: part2,
+    strategic_gap_summary: [part2, mismatchSummary].filter(Boolean).join("\n\n"),
     action_implication_summary: part3,
     snapshot_narrative: [
       part1,
       part2,
+      mismatchSummary,
       part3,
       part4
-    ].join("\n\n")
+    ].filter(Boolean).join("\n\n")
   };
 }
