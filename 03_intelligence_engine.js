@@ -196,9 +196,9 @@ function buildOperatorExpectationLayer_(m) {
   else if (businessModel === "residential") score += 3;
 
   var expectedPosture = "Emerging";
-  if (score >= 72) expectedPosture = "Anchor";
-  else if (score >= 46) expectedPosture = "Contender";
-  else if (score >= 24) expectedPosture = "Undersignaled";
+  if (score >= 65) expectedPosture = "Anchor";
+  else if (score >= 40) expectedPosture = "Contender";
+  else if (score >= 20) expectedPosture = "Undersignaled";
 
   var confidence = "low";
   if (signalsPresent >= 4) confidence = "high";
