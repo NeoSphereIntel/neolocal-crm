@@ -236,13 +236,11 @@ function detectOperatorMismatch_(m, diagnosisState) {
   var expectedRank = rankDiagnosisState_(expectation.expected_posture);
   var postureGap = expectedRank - actualRank;
 
-  var hardMismatch =
-    postureGap >= 2 ||
-    (postureGap >= 1 && expectation.confidence === "high" && expectation.expectation_score >= 60);
+  var hardMismatch = postureGap >= 1;
 
   return {
     has_mismatch: postureGap > 0,
-    severity: hardMismatch ? "hard" : (postureGap > 0 ? "soft" : ""),
+    severity: postureGap >= 1 ? "hard" : "",
     expected_posture: expectation.expected_posture,
     actual_posture: diagnosisState || "",
     posture_gap: postureGap,
