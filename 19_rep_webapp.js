@@ -115,6 +115,8 @@ function getAssignedLeadsForRep_(rep) {
       status: getCellByHeader_(row, idx, 'status'),
       reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
       rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
+      momentumState: getCellByHeader_(row, idx, 'momentum_state') || '',
+      isUndervalued: String(getCellByHeader_(row, idx, 'is_undervalued') || '').toLowerCase() === 'true',
       phone: getCellByHeader_(row, idx, 'phone'),
       email: getCellByHeader_(row, idx, 'email'),
       contactName:
@@ -164,6 +166,8 @@ function getLeadRecordByLeadId_(leadId) {
         status: getCellByHeader_(row, idx, 'status'),
         reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
         rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
+        momentumState: getCellByHeader_(row, idx, 'momentum_state') || '',
+        isUndervalued: String(getCellByHeader_(row, idx, 'is_undervalued') || '').toLowerCase() === 'true',
 
         address: getCellByHeader_(row, idx, 'address') || '',
         website: getCellByHeader_(row, idx, 'website') || '',

@@ -19,7 +19,7 @@
 
       .top {
         display: grid;
-        grid-template-columns: 1.25fr .75fr;
+        grid-template-columns: 1fr;
         gap: 20px;
         align-items: start;
       }
@@ -74,6 +74,28 @@
         background: #111827;
         border-color: #111827;
         color: #fff;
+      }
+
+      .intel-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .intel-pill {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #eef2ff;
+        color: #3730a3;
+      }
+
+      .intel-pill.opportunity {
+        background: #dcfce7;
+        color: #166534;
       }
 
       .activity-line {
@@ -239,6 +261,15 @@
 
           <div class="sub">
             Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
+          </div>
+
+          <div class="intel-strip">
+            <? if (lead.momentumState) { ?>
+              <span class="intel-pill">Momentum: <?= lead.momentumState ?></span>
+            <? } ?>
+            <? if (lead.isUndervalued) { ?>
+              <span class="intel-pill opportunity">Undervalued Opportunity</span>
+            <? } ?>
           </div>
 
           <div class="presentation-links">
@@ -644,14 +675,14 @@
           );
       }
 	  
-			  function copyOutreach() {
-		  var box = document.getElementById('outreachMessage');
-		  box.select();
-		  box.setSelectionRange(0, 99999);
-		  document.execCommand('copy');
+      function copyOutreach() {
+        var box = document.getElementById('outreachMessage');
+        box.select();
+        box.setSelectionRange(0, 99999);
+        document.execCommand('copy');
 
-		  alert('Outreach message copied');
-		}
+        alert('Outreach message copied');
+      }
 
       (function initNotes() {
         var rawNotes = document.getElementById('notesRaw').value || '';

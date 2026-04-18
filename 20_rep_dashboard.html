@@ -104,6 +104,28 @@
         margin-left: 6px;
       }
 
+      .intel-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .pill-intel {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #eef2ff;
+        color: #3730a3;
+      }
+
+      .pill-opportunity {
+        background: #dcfce7;
+        color: #166534;
+      }
+
       .task-open {
         color: #92400e;
         font-weight: 700;
@@ -257,7 +279,9 @@
                    lead.phone || '',
                    lead.email || '',
                    lead.activeTask || '',
-                   lead.taskType || ''
+                   lead.taskType || '',
+                   lead.momentumState || '',
+                   lead.isUndervalued ? 'undervalued' : ''
                  ].join(' ').toLowerCase() ?>">
               <h3><?= lead.businessName || 'Unnamed Lead' ?></h3>
               <div class="meta"><?= lead.city || '—' ?> · <?= lead.category || '—' ?></div>
@@ -265,6 +289,16 @@
                 Lead status: <span class="pill"><?= lead.status || '—' ?></span>
               </div>
               <div class="meta">Rating: <?= lead.rating || 0 ?> · Reviews: <?= lead.reviews || 0 ?></div>
+
+              <div class="intel-row">
+                <? if (lead.momentumState) { ?>
+                  <span class="pill-intel">Momentum: <?= lead.momentumState ?></span>
+                <? } ?>
+                <? if (lead.isUndervalued) { ?>
+                  <span class="pill-intel pill-opportunity">Undervalued</span>
+                <? } ?>
+              </div>
+
               <div class="contact">Contact: <?= lead.contactName || '—' ?></div>
               <div class="contact">Phone: <?= lead.phone || '—' ?></div>
               <div class="contact">Email: <?= lead.email || '—' ?></div>
