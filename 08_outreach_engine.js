@@ -1,7 +1,62 @@
 /**
  * File: 08_outreach_engine.gs
- * Market-position based outreach (non-salesy, non-review-pitch)
+ * Market-position based outreach (angle-based, non-SEO, high-response)
  */
+
+/* ============================================================================
+   ANGLE MAPPER
+============================================================================ */
+
+function getOutreachAngleFromDiagnosis_(diagnosisState) {
+  switch (String(diagnosisState || "").trim()) {
+
+    case "Structured but Under-Amplified":
+      return "You’re stronger than the market is giving you credit for.";
+
+    case "Competitive but Not Dominant":
+    case "Competing But Not Default":
+      return "You’re in the mix, but not controlling the decision.";
+
+    case "Constrained Operator":
+      return "You’re getting beat earlier in the process than you should be.";
+
+    case "Considered But Not Safe":
+      return "You’re being taken seriously, but not trusted first.";
+
+    case "Invisible":
+      return "You should be showing up stronger than you currently are.";
+
+    default:
+      return "Something about how the market is reading your business feels off.";
+  }
+}
+
+/* ============================================================================
+   SIGNATURE HELPER
+============================================================================ */
+
+function getSignatureName_() {
+  try {
+    var email = Session.getActiveUser().getEmail();
+    if (!email) return "Phil";
+
+    var namePart = email.split("@")[0]; // phil.caplo
+    var clean = namePart.replace(/[._-]+/g, " "); // phil caplo
+
+    return clean
+      .split(" ")
+      .map(function (w) {
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      })
+      .join(" ");
+  } catch (e) {
+    return "Phil";
+  }
+}
+
+/* ============================================================================
+   ENTRY POINT
+============================================================================ */
 
 function generateOutreachMessage_(m, diagnosis, scores) {
   const verticalKey = determineVerticalType_(m);
@@ -15,37 +70,22 @@ function generateOutreachMessage_(m, diagnosis, scores) {
 }
 
 /* ============================================================================
-   AUTO RETAIL — MARKET-LED OUTREACH
+   AUTO RETAIL — ANGLE-BASED OUTREACH
 ============================================================================ */
 
 function buildAutoRetailOutreach_(m, diagnosis) {
-  const priority = diagnosis.priority_bucket;
+  const angle = getOutreachAngleFromDiagnosis_(diagnosis.diagnosis_state);
+  const sig = getSignatureName_();
 
-  if (priority === "High") {
-    return `I was looking at how used car dealerships in your market are being perceived, and something stood out.
+  return `Hi,
 
-Some stores seem to be getting treated as the safer place to buy before shoppers even get into serious inventory comparison.
+Quick observation about your dealership —
 
-Your dealership looks like it may be getting less of that early buyer confidence than some of the visible market leaders.
+${angle}
 
-Have you noticed that kind of hesitation on your side, where interest is there but decisions don’t always follow through?`;
-  }
+If you want, I can show you exactly where that’s happening locally.
 
-  if (priority === "Medium") {
-    return `I was reviewing a few dealerships in your area and noticed an interesting pattern.
-
-Some stores seem to feel “safe” to buyers faster than others, even before details are compared.
-
-Your dealership looks close enough to be in the mix, but possibly not yet weighted the same way in terms of buyer confidence.
-
-Is that something you’ve been seeing, or am I off?`;
-  }
-
-  return `I came across your dealership while looking at the local market.
-
-It looks like buyer confidence in your area is being formed pretty quickly, often before shoppers compare details seriously.
-
-Just curious — is building stronger trust early in the buying process something you’re actively focusing on right now?`;
+— ${sig}`;
 }
 
 /* ============================================================================
@@ -53,34 +93,23 @@ Just curious — is building stronger trust early in the buying process somethin
 ============================================================================ */
 
 function buildGenericOutreach_(m, diagnosis, profile) {
-  const priority = diagnosis.priority_bucket;
+  const angle = getOutreachAngleFromDiagnosis_(diagnosis.diagnosis_state);
+  const sig = getSignatureName_();
 
-  if (priority === "High") {
-    return `I was looking at how businesses in your space are being chosen locally, and something stood out.
+  return `Hi,
 
-Some competitors seem to be getting treated as the safer default before buyers really compare options.
+Quick observation about your business —
 
-Your business looks like it may be getting less of that early trust assignment than others in your market.
+${angle}
 
-Have you noticed that kind of pattern on your side?`;
-  }
+If you want, I can show you exactly where that’s happening locally.
 
-  if (priority === "Medium") {
-    return `I was reviewing a few businesses in your area and noticed something interesting.
-
-Some seem to build buyer confidence faster than others, even before details are fully compared.
-
-Your business looks close, but possibly not weighted the same way yet in terms of trust.
-
-Is that something you’ve observed, or am I off?`;
-  }
-
-  return `I came across your business while looking at your local market.
-
-It looks like buyer confidence is being formed quickly in your space.
-
-Just curious — is that something you’re actively working on right now?`;
+— ${sig}`;
 }
+
+/* ============================================================================
+   BULK REBUILD
+============================================================================ */
 
 function rebuildAllOutreachMessages() {
   ensureLeadsColumn_("outreach_message");

@@ -78,6 +78,9 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("Secondary Contact Phone");
   ensureLeadsColumn_("Secondary Contact Email");
   ensureLeadsColumn_("Secondary Address");
+  ensureLeadsColumn_("momentum_score");
+  ensureLeadsColumn_("momentum_state");
+  ensureLeadsColumn_("is_undervalued");
 
   backfillAssignedToAndMarketMirrorUrl();
 
@@ -324,11 +327,11 @@ function setupLeadsMasterSheet_(sheet) {
     "base_presence_score",
     "trust_score",
     "competitive_pressure_score",
-    "opportunity_score",
-    "difficulty_score",
-    "priority_score",
-    "diagnosis_state",
-    "market_position_summary",
+	"opportunity_score",
+	"difficulty_score",
+	"priority_score",
+	"diagnosis_state",
+	"market_position_summary",
     "strategic_gap_summary",
     "action_implication_summary",
     "snapshot_narrative",

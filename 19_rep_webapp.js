@@ -220,7 +220,7 @@ function getLeadRecordByLeadId_(leadId) {
         secondaryAddress:
           getCellByHeader_(row, idx, 'Secondary Address') ||
           '',
-
+		outreachMessage: getCellByHeader_(row, idx, 'outreach_message') || '',
         notes: getCellByHeader_(row, idx, 'crm_notes') || getCellByHeader_(row, idx, 'notes'),
         assignedTo: getCellByHeader_(row, idx, 'Assigned To'),
         marketMirrorUrl: getCellByHeader_(row, idx, 'Market Mirror URL') || '',

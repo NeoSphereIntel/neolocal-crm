@@ -94,7 +94,7 @@ function getInternalOperatorData_(lead, includeInternal) {
 function buildSnapshotMetrics_(lead, competitorSignals) {
   var operatorDataInternal = getInternalOperatorData_(lead, true);
 	
-  return {
+  var baseMetrics = {
     business_name: lead.business_name,
     category: lead.category,
     city: lead.city,
@@ -104,7 +104,7 @@ function buildSnapshotMetrics_(lead, competitorSignals) {
     rating: parseFloat(lead.rating) || 0,
     website_present: String(lead.website_present || "").trim() || (lead.website ? "Yes" : "No"),
     phone_present: String(lead.phone_present || "").trim() || (lead.phone ? "Yes" : "No"),
-	operator_data_internal: operatorDataInternal,
+    operator_data_internal: operatorDataInternal,
 
     comp_1_name: String(competitorSignals.comp_1_name || ""),
     comp_1_reviews: parseInt(competitorSignals.comp_1_reviews, 10) || 0,
@@ -119,6 +119,17 @@ function buildSnapshotMetrics_(lead, competitorSignals) {
     gap_ratio: parseFloat(competitorSignals.gap_ratio) || 0,
     market_review_pressure: String(competitorSignals.market_review_pressure || "").trim() || "Unknown"
   };
+
+  // 🔥 NEW LAYER (SAFE EXTENSION)
+  var compAvgSafe = baseMetrics.comp_avg_reviews || 0;
+  var momentum = computeMomentumSignal_(baseMetrics.reviews_count, compAvgSafe);
+  var isUndervalued = computeUndervalued_(baseMetrics);
+
+  baseMetrics.momentum_score = momentum.momentum_score;
+  baseMetrics.momentum_state = momentum.momentum_state;
+  baseMetrics.is_undervalued = isUndervalued === true;
+
+  return baseMetrics;
 }
 
 function parseOperatorNumber_(value) {
@@ -290,11 +301,11 @@ function determineDiagnosisState_(m, scores) {
 
   let priorityBucket;
 
-if (verticalKey === "auto_retail") {
-  priorityBucket = classifyAutoRetailPriority_(m, scores, diagnosisState);
-} else {
-  priorityBucket = classifyPriorityBucket_(scores.priority_score, diagnosisState);
-}
+  if (verticalKey === "auto_retail") {
+    priorityBucket = classifyAutoRetailPriority_(m, scores, diagnosisState);
+  } else {
+    priorityBucket = classifyPriorityBucket_(scores.priority_score, diagnosisState);
+  }
 
   return {
     market_maturity: marketMaturity,
@@ -395,42 +406,6 @@ function getDiagnosisDisplayLabel_(diagnosisState, verticalKey) {
   return diagnosisState;
 }
 
-function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
-  const marketPositionSummary = buildMarketPositionSummary_(m, diagnosis.diagnosis_state, {
-    basePresenceScore: scores.base_presence_score,
-    trustScore: scores.trust_score,
-    competitivePressureScore: scores.competitive_pressure_score,
-    market_maturity: diagnosis.market_maturity,
-    authority_position: diagnosis.authority_position
-  });
-
-  const strategicGapSummary = buildStrategicGapSummary_(m, diagnosis.diagnosis_state, {
-    basePresenceScore: scores.base_presence_score,
-    trustScore: scores.trust_score,
-    competitivePressureScore: scores.competitive_pressure_score,
-    market_maturity: diagnosis.market_maturity,
-    authority_position: diagnosis.authority_position
-  });
-
-  const actionImplicationSummary = buildActionImplicationSummary_(m, diagnosis.diagnosis_state, {
-    opportunityScore: scores.opportunity_score,
-    difficultyScore: scores.difficulty_score,
-    competitivePressureScore: scores.competitive_pressure_score,
-    market_maturity: diagnosis.market_maturity,
-    authority_position: diagnosis.authority_position
-  });
-
-  return {
-    market_position_summary: marketPositionSummary,
-    strategic_gap_summary: strategicGapSummary,
-    action_implication_summary: actionImplicationSummary,
-    snapshot_narrative: [
-      marketPositionSummary,
-      strategicGapSummary,
-      actionImplicationSummary
-    ].join(" ")
-  };
-}
 
 /* ============================================================================
    BACKWARD-COMPATIBILITY WRAPPERS
@@ -676,4 +651,29 @@ function classifyAutoRetailPriority_(m, scores, diagnosisState) {
   if (priorityScore >= 75) return "High";
   if (priorityScore >= 50) return "Medium";
   return "Low";
+}
+
+function computeMomentumSignal_(reviews, compAvg) {
+  if (!compAvg) {
+    return { momentum_score: 0, momentum_state: "unknown" };
+  }
+
+  const safeReviews = reviews || 0;
+  const ratio = safeReviews / compAvg;
+
+  if (ratio < 0.3) return { momentum_score: 2, momentum_state: "stagnant" };
+  if (ratio < 0.7) return { momentum_score: 4, momentum_state: "slow" };
+  if (ratio < 1.2) return { momentum_score: 7, momentum_state: "active" };
+
+  return { momentum_score: 9, momentum_state: "aggressive" };
+}
+
+function computeUndervalued_(m) {
+  if (!m) return false;
+
+  const strongRating = (m.rating || 0) >= 4.5;
+  const closeToTop = (m.gap_ratio || 0) >= 0.7;
+  const weakMarket = (m.comp_avg_reviews || 0) < 150;
+
+  return strongRating && closeToTop && weakMarket;
 }

@@ -360,6 +360,22 @@
             <option value="Done" <?= lead.taskStatus === 'Done' ? 'selected' : '' ?>>Done</option>
           </select>
 
+			<label for="outreachMessage">Outreach Message</label>
+
+			<textarea id="outreachMessage" readonly style="
+			  min-height: 140px;
+			  background: #f9fafb;
+			  color: #111827;
+			  font-size: 13px;
+			"><?= lead.outreachMessage || '' ?></textarea>
+
+			<button type="button" onclick="copyOutreach()" style="
+			  margin-top: 8px;
+			  background: #374151;
+			">
+			  Copy Outreach Message
+			</button>
+
           <label for="notesHistory">Notes History</label>
           <textarea id="notesHistory" readonly></textarea>
 
@@ -627,6 +643,15 @@
             operatorContextNotes
           );
       }
+	  
+			  function copyOutreach() {
+		  var box = document.getElementById('outreachMessage');
+		  box.select();
+		  box.setSelectionRange(0, 99999);
+		  document.execCommand('copy');
+
+		  alert('Outreach message copied');
+		}
 
       (function initNotes() {
         var rawNotes = document.getElementById('notesRaw').value || '';

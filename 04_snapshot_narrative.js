@@ -236,17 +236,29 @@ function buildMarketPressureSummary_(m, diagnosisState, profile) {
   const proofLanguage = profile.proof_language || "visible public proof";
   const trustDriver = profile.trust_driver || "visible trust and legitimacy";
 
+  let text;
+
   if (compAvg <= 0) {
-    return `In the ${category} market in ${location}, visible trust does not appear deeply established yet.
+    text = `In the ${category} market in ${location}, visible trust does not appear deeply established yet.
 
 That usually means buyers are deciding quickly based on who appears credible fastest. In markets where ${trustDriver} matter, early authority formation becomes especially important.`;
-  }
-
-  return `In the ${category} market in ${location}, buyers are not choosing from a blank slate.
+  } else {
+    text = `In the ${category} market in ${location}, buyers are not choosing from a blank slate.
 
 Visible trust is already consolidating around businesses that project stronger ${proofLanguage}. The visible market average sits around ${compAvg} reviews, while stronger trust anchors such as ${topCompetitor} are already projecting closer to ${topCompetitorReviews || compMax} reviews.
 
 At that point, the market is no longer just comparing offers. It is pre-sorting businesses by perceived safety.`;
+  }
+
+  if (m.momentum_state === "aggressive") {
+    text += `\n\nCompetitors are not just established — they are actively reinforcing their position, which tends to widen the gap over time.`;
+  }
+
+  if (m.momentum_state === "stagnant") {
+    text += `\n\nDespite existing leaders, the market is not aggressively expanding its trust layer right now, which creates more room for repositioning.`;
+  }
+
+  return text;
 }
 
 function buildPerceptionGapSummary_(m, diagnosisState, profile) {
@@ -318,34 +330,35 @@ Once a business becomes competitive, slower proof accumulation can gradually let
 
 function buildStrategicOpeningSummary_(m, diagnosisState, profile) {
   const proofLanguage = profile.proof_language || "visible public proof";
+  let text;
 
   if (diagnosisState === "Invisible") {
-    return `The upside is that this is still highly movable.
+    text = `The upside is that this is still highly movable.
 
 Because the weakness is concentrated in visible trust rather than necessarily in operations, a stronger authority layer and denser ${proofLanguage} can change how the business is read by the market much faster than a full business overhaul would.`;
-  }
-
-  if (diagnosisState === "Outgunned") {
-    return `This is still recoverable, but it requires density, not cosmetic polish.
+  } else if (diagnosisState === "Outgunned") {
+    text = `This is still recoverable, but it requires density, not cosmetic polish.
 
 The business does not simply need more visibility. It needs enough visible proof to close a trust deficit that is already influencing buyer behavior. If that gap is reduced, the business can re-enter serious consideration far more consistently.`;
-  }
-
-  if (diagnosisState === "Undersignaled") {
-    return `This is a high-leverage opening because the problem appears to be translation more than capability.
+  } else if (diagnosisState === "Undersignaled") {
+    text = `This is a high-leverage opening because the problem appears to be translation more than capability.
 
 If existing strengths are converted into denser ${proofLanguage}, the market can begin assigning more of the trust the business may already deserve operationally.`;
-  }
-
-  if (diagnosisState === "Contender") {
-    return `The opening here is precision.
+  } else if (diagnosisState === "Contender") {
+    text = `The opening here is precision.
 
 The business does not need reinvention. It needs enough additional trust reinforcement to stop being merely credible and start feeling like the safer default choice more consistently.`;
-  }
-
-  return `The opportunity now is defensive and expansionary at the same time.
+  } else {
+    text = `The opportunity now is defensive and expansionary at the same time.
 
 Maintaining authority while continuing to widen the visible proof gap is what keeps the business from being normalized back into the competitive pack.`;
+  }
+
+  if (m.is_undervalued) {
+    text += `\n\nYou are closer to the top of this market than it likely appears from the outside. The gap here is driven more by positioning than by actual operational strength.`;
+  }
+
+  return text;
 }
 
 /* ============================================================================
