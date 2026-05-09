@@ -183,6 +183,21 @@
             </div>
           </div>
 
+          <!-- Assigned To (editable) -->
+          <div class="nl-mb-24" style="padding-top:20px;border-top:1px solid var(--nl-off-white-2);">
+            <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Assignment</div>
+            <div class="nl-details-grid">
+              <div class="nl-form-group" style="margin-bottom:0;">
+                <label class="nl-label-field" for="editAssignedTo">Assigned To</label>
+                <input type="text" id="editAssignedTo" class="nl-input" placeholder="Rep name">
+              </div>
+            </div>
+            <div id="assignedMsg" class="nl-alert" style="display:none;margin-top:14px;"></div>
+            <div style="margin-top:16px;">
+              <button id="saveAssignedBtn" class="nl-btn nl-btn-primary nl-btn-sm">Save Assignment</button>
+            </div>
+          </div>
+
           <!-- Read-only sections (JS rendered: Operator Intel, Scores, Task) -->
           <div id="readonlyDetails"></div>
 

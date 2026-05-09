@@ -168,7 +168,7 @@ function getLeadRecordByLeadId_(leadId) {
         businessName: getCellByHeader_(row, idx, 'business_name'),
         city: getCellByHeader_(row, idx, 'city'),
         category: getCellByHeader_(row, idx, 'category'),
-        status: getCellByHeader_(row, idx, 'status'),
+        status: getCellByHeader_(row, idx, 'pipeline_stage') || getCellByHeader_(row, idx, 'status'),
         reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
         rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
         momentumState: getCellByHeader_(row, idx, 'momentum_state') || '',
@@ -656,7 +656,8 @@ function saveRepLeadUpdate(
   operatorServiceCapacity,
   operatorLocationCount,
   operatorContextNotes,
-  category
+  category,
+  assignedTo
 ) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
@@ -683,6 +684,7 @@ function saveRepLeadUpdate(
 
       var cleanBusinessName = String(businessName || '').trim();
       var cleanCategory = String(category || '').trim();
+      var cleanAssignedTo = String(assignedTo || '').trim();
       var cleanAddress = String(address || '').trim();
       var cleanWebsite = String(website || '').trim();
       var cleanMainPhone = String(mainPhone || '').trim();
@@ -716,6 +718,10 @@ function saveRepLeadUpdate(
 
       if (cleanCategory && hasHeader_(idx, 'category')) {
         setCellByHeader_(sheet, r + 1, idx, 'category', cleanCategory);
+      }
+
+      if (cleanAssignedTo && hasHeader_(idx, 'Assigned To')) {
+        setCellByHeader_(sheet, r + 1, idx, 'Assigned To', cleanAssignedTo);
       }
 
       if (cleanAddress && hasHeader_(idx, 'address')) {
@@ -1022,7 +1028,8 @@ function handleJsonPostRequest_(e) {
         body.operator_service_capacity,
         body.operator_location_count,
         body.operator_context_notes,
-        body.category
+        body.category,
+        body.assigned_to
       );
       return jsonSuccess_(result);
     }

@@ -133,6 +133,7 @@ function render(lead) {
   setInput('editSecondaryContactPhone',get(lead, 'secondaryContactPhone'));
   setInput('editSecondaryContactEmail',get(lead, 'secondaryContactEmail'));
   setInput('editSecondaryAddress',     get(lead, 'secondaryAddress', 'address'));
+  setInput('editAssignedTo',           get(lead, 'assignedTo'));
 
   renderReadonlyDetails(lead);
 }
@@ -210,6 +211,7 @@ function buildFullPayload(overrides) {
     secondary_contact_phone: get(base, 'secondaryContactPhone'),
     secondary_contact_email: get(base, 'secondaryContactEmail'),
     secondary_address:       get(base, 'secondaryAddress', 'address'),
+    assigned_to:             get(base, 'assignedTo'),
     ...overrides
   };
   // Strip empty strings — backend guards on non-empty, but this avoids sending noise.
@@ -227,6 +229,13 @@ function showMsg(text, type) {
 
 function showNotesMsg(text, type) {
   const el = document.getElementById('notesMsg');
+  el.textContent   = text;
+  el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
+  el.style.display = text ? '' : 'none';
+}
+
+function showAssignedMsg(text, type) {
+  const el = document.getElementById('assignedMsg');
   el.textContent   = text;
   el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
   el.style.display = text ? '' : 'none';
@@ -307,6 +316,32 @@ async function handleSaveNotes() {
 }
 
 document.getElementById('saveNotesBtn').addEventListener('click', handleSaveNotes);
+
+// --- Save Assignment ---
+
+async function handleSaveAssigned() {
+  const btn = document.getElementById('saveAssignedBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showAssignedMsg('');
+
+  try {
+    await updateLead(buildFullPayload({
+      assigned_to: document.getElementById('editAssignedTo').value
+    }));
+    showAssignedMsg('Assignment saved.', 'success');
+    const updated = await fetchLead(leadId);
+    render(updated);
+  } catch (err) {
+    showAssignedMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+document.getElementById('saveAssignedBtn').addEventListener('click', handleSaveAssigned);
 
 // --- Save Business Info ---
 
