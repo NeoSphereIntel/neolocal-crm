@@ -1,5 +1,8 @@
 function doGet(e) {
   try {
+    var format = e && e.parameter ? (e.parameter.format || '') : '';
+    if (format === 'json') return handleJsonGetRequest_(e);
+
     var rep = e && e.parameter ? (e.parameter.rep || '') : '';
     var leadId = e && e.parameter ? (e.parameter.leadId || '') : '';
     var mode = e && e.parameter ? (e.parameter.mode || '') : '';
@@ -910,4 +913,147 @@ function formatDateTimeForInput_(value) {
   } catch (e) {
     return '';
   }
+}
+
+/* ============================================================================
+   JSON API LAYER
+============================================================================ */
+
+function handleJsonGetRequest_(e) {
+  try {
+    var params = e && e.parameter ? e.parameter : {};
+    var mode = params.mode || '';
+    var rep = params.rep || '';
+    var leadId = params.leadId || '';
+
+    if (mode === 'leads') {
+      if (!rep) return jsonError_('Missing rep parameter.');
+      var leads = getAssignedLeadsForRep_(rep);
+      return jsonSuccess_(leads);
+    }
+
+    if (mode === 'lead') {
+      if (!leadId) return jsonError_('Missing leadId parameter.');
+      var lead = getLeadRecordByLeadId_(leadId);
+      return jsonSuccess_(lead);
+    }
+
+    if (mode === 'market_mirror') {
+      if (!leadId) return jsonError_('Missing leadId parameter.');
+      var mmLead = getLeadRecordByLeadId_(leadId);
+      var input = buildMarketMirrorInputFromLeadRow_(mmLead);
+      var payload = buildMarketMirrorPayload_(input);
+      return jsonSuccess_(payload);
+    }
+
+    return jsonError_('Unknown mode: ' + mode);
+  } catch (err) {
+    return jsonError_(err && err.message ? err.message : String(err));
+  }
+}
+
+function doPost(e) {
+  return handleJsonPostRequest_(e);
+}
+
+function handleJsonPostRequest_(e) {
+  try {
+    var contentType = e && e.postData ? (e.postData.type || '') : '';
+    if (contentType.indexOf('application/json') === -1) {
+      return jsonError_('Content-Type must be application/json.');
+    }
+
+    var body;
+    try {
+      body = JSON.parse(e.postData.contents || '{}');
+    } catch (parseErr) {
+      return jsonError_('Invalid JSON body.');
+    }
+
+    var action = String(body.action || '').trim();
+
+    if (action === 'update_lead') {
+      var result = saveRepLeadUpdate(
+        body.lead_id,
+        body.status,
+        body.new_note,
+        body.rep,
+        body.active_task,
+        body.task_type,
+        body.task_due_at,
+        body.task_status,
+        body.business_name,
+        body.address,
+        body.website,
+        body.main_phone,
+        body.mobile_phone,
+        body.main_email,
+        body.contact_name,
+        body.contact_role,
+        body.secondary_contact_name,
+        body.secondary_contact_role,
+        body.secondary_contact_phone,
+        body.secondary_contact_email,
+        body.secondary_address,
+        body.operator_scale_band,
+        body.operator_business_model,
+        body.operator_monthly_volume,
+        body.operator_service_capacity,
+        body.operator_location_count,
+        body.operator_context_notes
+      );
+      return jsonSuccess_(result);
+    }
+
+    if (action === 'add_lead') {
+      var addResult = saveManualLead(
+        body.rep,
+        body.place_identifier,
+        body.business_name,
+        body.category,
+        body.city,
+        body.address,
+        body.website,
+        body.main_phone,
+        body.main_email,
+        body.contact_name,
+        body.contact_role,
+        body.operator_scale_band,
+        body.operator_business_model,
+        body.operator_monthly_volume,
+        body.operator_service_capacity,
+        body.operator_location_count,
+        body.operator_context_notes,
+        body.notes,
+        body.active_task,
+        body.task_type,
+        body.task_due_at,
+        body.task_status
+      );
+      return jsonSuccess_(addResult);
+    }
+
+    if (action === 'crm_action') {
+      if (!body.lead_id) return jsonError_('Missing lead_id.');
+      if (!body.action_type) return jsonError_('Missing action_type.');
+      runCRMActionFromSidebar(body.action_type, body.lead_id);
+      return jsonSuccess_({ lead_id: body.lead_id, action_type: body.action_type });
+    }
+
+    return jsonError_('Unknown action: ' + action);
+  } catch (err) {
+    return jsonError_(err && err.message ? err.message : String(err));
+  }
+}
+
+function jsonSuccess_(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true, data: data }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonError_(message) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: false, error: message }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
