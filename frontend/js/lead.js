@@ -1,8 +1,10 @@
-import { fetchLead, fetchMarketMirrorUrl, crmAction } from './api.js';
+import { fetchLead, fetchMarketMirrorUrl, crmAction, updateLead } from './api.js';
 
 const params = new URLSearchParams(location.search);
 const leadId = params.get('leadId') || '';
 const rep    = params.get('rep') || '';
+
+let currentLead = null;
 
 document.getElementById('backLink').href = `index.html?rep=${encodeURIComponent(rep)}`;
 
@@ -45,16 +47,26 @@ function get(lead, ...keys) {
   return '';
 }
 
+function escHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function setInput(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value || '';
+}
+
 // --- Render ---
 
 function render(lead) {
+  currentLead = lead;
   document.title = (lead.businessName || 'Lead') + ' — NeoLocal';
 
   // Zone 1
-  document.getElementById('leadName').textContent      = lead.businessName || 'Unnamed Lead';
-  document.getElementById('leadMeta').textContent      = [lead.city, lead.category].filter(Boolean).join(' · ') || '—';
-  document.getElementById('lastTouch').textContent     = fmtDate(lead.lastUpdatedAt);
-  document.getElementById('nextAction').textContent    = lead.activeTask
+  document.getElementById('leadName').textContent   = lead.businessName || 'Unnamed Lead';
+  document.getElementById('leadMeta').textContent   = [lead.city, lead.category].filter(Boolean).join(' · ') || '—';
+  document.getElementById('lastTouch').textContent  = fmtDate(lead.lastUpdatedAt);
+  document.getElementById('nextAction').textContent = lead.activeTask
     ? lead.activeTask + (lead.taskDueAt ? ' · ' + fmtDate(lead.taskDueAt) : '')
     : '—';
 
@@ -104,31 +116,23 @@ function render(lead) {
     logEl.innerHTML = '<li class="nl-text-gray">No activity logged yet.</li>';
   }
 
-  // Zone 6
-  renderDetails(lead);
+  // Zone 6: populate editable contact inputs
+  setInput('editContactName',          get(lead, 'contactName'));
+  setInput('editContactRole',          get(lead, 'contactRole'));
+  setInput('editMainPhone',            get(lead, 'mainPhone', 'phone'));
+  setInput('editMobilePhone',          get(lead, 'mobilePhone'));
+  setInput('editMainEmail',            get(lead, 'mainEmail', 'email'));
+  setInput('editSecondaryContactName', get(lead, 'secondaryContactName'));
+  setInput('editSecondaryContactRole', get(lead, 'secondaryContactRole'));
+  setInput('editSecondaryContactPhone',get(lead, 'secondaryContactPhone'));
+  setInput('editSecondaryContactEmail',get(lead, 'secondaryContactEmail'));
+  setInput('editSecondaryAddress',     get(lead, 'secondaryAddress', 'address'));
+
+  renderReadonlyDetails(lead);
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderDetails(lead) {
+function renderReadonlyDetails(lead) {
   const groups = [
-    {
-      title: 'Contact Info',
-      fields: [
-        ['Contact Name',   get(lead, 'contactName')],
-        ['Contact Role',   get(lead, 'contactRole')],
-        ['Main Phone',     get(lead, 'mainPhone', 'phone')],
-        ['Mobile Phone',   get(lead, 'mobilePhone')],
-        ['Email',          get(lead, 'mainEmail', 'email')],
-        ['Address',        get(lead, 'address')],
-        ['Website',        get(lead, 'website')],
-        ['Secondary Contact', get(lead, 'secondaryContactName')],
-        ['Secondary Phone',   get(lead, 'secondaryContactPhone')],
-        ['Secondary Email',   get(lead, 'secondaryContactEmail')]
-      ]
-    },
     {
       title: 'Operator Intel',
       fields: [
@@ -143,25 +147,25 @@ function renderDetails(lead) {
     {
       title: 'Scores & Signals',
       fields: [
-        ['Reviews',        get(lead, 'reviews', 'reviews_count')],
-        ['Rating',         get(lead, 'rating')],
-        ['Priority',       get(lead, 'priorityBucket', 'priority_bucket')],
-        ['Momentum',       get(lead, 'momentumState', 'momentum_state')],
-        ['Undervalued',    lead.isUndervalued ? 'Yes' : '']
+        ['Reviews',     get(lead, 'reviews', 'reviews_count')],
+        ['Rating',      get(lead, 'rating')],
+        ['Priority',    get(lead, 'priorityBucket', 'priority_bucket')],
+        ['Momentum',    get(lead, 'momentumState', 'momentum_state')],
+        ['Undervalued', lead.isUndervalued ? 'Yes' : '']
       ]
     },
     {
       title: 'Task',
       fields: [
-        ['Active Task',  get(lead, 'activeTask')],
-        ['Task Type',    get(lead, 'taskType')],
-        ['Due At',       lead.taskDueAt ? fmtDate(lead.taskDueAt) : ''],
-        ['Task Status',  get(lead, 'taskStatus')]
+        ['Active Task', get(lead, 'activeTask')],
+        ['Task Type',   get(lead, 'taskType')],
+        ['Due At',      lead.taskDueAt ? fmtDate(lead.taskDueAt) : ''],
+        ['Task Status', get(lead, 'taskStatus')]
       ]
     }
   ];
 
-  document.getElementById('detailsBody').innerHTML = groups.map(g => {
+  document.getElementById('readonlyDetails').innerHTML = groups.map(g => {
     const items = g.fields.filter(([, v]) => v);
     if (!items.length) return '';
     return `
@@ -180,18 +184,56 @@ function renderDetails(lead) {
   }).join('');
 }
 
-// --- CRM actions ---
+// --- Full payload helper (prevents partial overwrites) ---
+
+function buildFullPayload(overrides) {
+  const base = currentLead || {};
+  return {
+    leadId:                currentLead ? (currentLead.leadId || leadId) : leadId,
+    contactName:           get(base, 'contactName'),
+    contactRole:           get(base, 'contactRole'),
+    mainPhone:             get(base, 'mainPhone', 'phone'),
+    mobilePhone:           get(base, 'mobilePhone'),
+    mainEmail:             get(base, 'mainEmail', 'email'),
+    secondaryContactName:  get(base, 'secondaryContactName'),
+    secondaryContactRole:  get(base, 'secondaryContactRole'),
+    secondaryContactPhone: get(base, 'secondaryContactPhone'),
+    secondaryContactEmail: get(base, 'secondaryContactEmail'),
+    secondaryAddress:      get(base, 'secondaryAddress', 'address'),
+    notes:                 get(base, 'notes'),
+    ...overrides
+  };
+}
+
+// --- Message helpers ---
 
 function showMsg(text, type) {
   const el = document.getElementById('actionMsg');
-  el.textContent  = text;
-  el.className    = 'nl-alert' + (type ? ' nl-alert-' + type : '');
+  el.textContent   = text;
+  el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
   el.style.display = text ? '' : 'none';
 }
 
+function showNotesMsg(text, type) {
+  const el = document.getElementById('notesMsg');
+  el.textContent   = text;
+  el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
+  el.style.display = text ? '' : 'none';
+}
+
+function showContactMsg(text, type) {
+  const el = document.getElementById('contactMsg');
+  el.textContent   = text;
+  el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
+  el.style.display = text ? '' : 'none';
+}
+
+// --- CRM actions ---
+
 async function handleCrmAction(actionType, label) {
   const btn = document.querySelector(`[data-action="${actionType}"]`);
-  if (btn) btn.disabled = true;
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
   showMsg('');
 
   try {
@@ -202,7 +244,7 @@ async function handleCrmAction(actionType, label) {
   } catch (err) {
     showMsg('Error: ' + err.message, 'error');
   } finally {
-    if (btn) btn.disabled = false;
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
   }
 }
 
@@ -220,6 +262,70 @@ document.getElementById('copyOutreach').addEventListener('click', function () {
     setTimeout(() => { this.textContent = orig; }, 1500);
   });
 });
+
+// --- Save Notes ---
+
+async function handleSaveNotes() {
+  const btn = document.getElementById('saveNotesBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showNotesMsg('');
+
+  const notesValue = document.getElementById('repNotesInput').value.trim();
+
+  try {
+    await updateLead(buildFullPayload({ notes: notesValue }));
+    showNotesMsg('Notes saved.', 'success');
+    document.getElementById('repNotesInput').value = '';
+    const updated = await fetchLead(leadId);
+    render(updated);
+  } catch (err) {
+    showNotesMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+document.getElementById('saveNotesBtn').addEventListener('click', handleSaveNotes);
+
+// --- Save Contact ---
+
+async function handleSaveContact() {
+  const btn = document.getElementById('saveContactBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showContactMsg('');
+
+  const contactOverrides = {
+    contactName:           document.getElementById('editContactName').value,
+    contactRole:           document.getElementById('editContactRole').value,
+    mainPhone:             document.getElementById('editMainPhone').value,
+    mobilePhone:           document.getElementById('editMobilePhone').value,
+    mainEmail:             document.getElementById('editMainEmail').value,
+    secondaryContactName:  document.getElementById('editSecondaryContactName').value,
+    secondaryContactRole:  document.getElementById('editSecondaryContactRole').value,
+    secondaryContactPhone: document.getElementById('editSecondaryContactPhone').value,
+    secondaryContactEmail: document.getElementById('editSecondaryContactEmail').value,
+    secondaryAddress:      document.getElementById('editSecondaryAddress').value,
+  };
+
+  try {
+    await updateLead(buildFullPayload(contactOverrides));
+    showContactMsg('Contact info saved.', 'success');
+    const updated = await fetchLead(leadId);
+    render(updated);
+  } catch (err) {
+    showContactMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+document.getElementById('saveContactBtn').addEventListener('click', handleSaveContact);
 
 // --- Details toggle ---
 
