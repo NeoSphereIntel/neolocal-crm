@@ -29,7 +29,7 @@ function statusClass(status) {
 }
 
 function taskUrgency(lead) {
-  if (!lead.taskDueAt || lead.taskStatus === 'Done') return 0;
+  if (!lead.taskDueAt || lead.taskStatus === 'Completed') return 0;
   const due = new Date(lead.taskDueAt);
   if (isNaN(due)) return 0;
   const diffDays = (due - Date.now()) / 86400000;

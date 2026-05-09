@@ -1,4 +1,4 @@
-import { fetchLead, fetchMarketMirrorUrl, crmAction, updateLead } from './api.js';
+import { fetchLead, fetchMarketMirrorUrl, crmAction, updateLead, completeTask } from './api.js';
 
 const params = new URLSearchParams(location.search);
 const leadId = params.get('leadId') || '';
@@ -135,6 +135,24 @@ function render(lead) {
   setInput('editSecondaryAddress',     get(lead, 'secondaryAddress', 'address'));
   setInput('editAssignedTo',           get(lead, 'assignedTo'));
 
+  // Zone 4b: task section
+  document.getElementById('currentTaskLabel').textContent = lead.activeTask || '—';
+
+  const tsBadge = document.getElementById('taskStatusBadge');
+  if (lead.taskStatus) {
+    const isOverdue = lead.taskDueAt && new Date(lead.taskDueAt) < Date.now() && lead.taskStatus !== 'Completed';
+    tsBadge.textContent        = isOverdue ? 'Overdue' : lead.taskStatus;
+    tsBadge.style.background   = lead.taskStatus === 'Completed' ? '#1a6640' : isOverdue ? '#bd0e20' : '#5a6378';
+    tsBadge.style.color        = '#fff';
+    tsBadge.style.display      = '';
+  } else {
+    tsBadge.style.display = 'none';
+  }
+
+  const taskTypeSelect = document.getElementById('taskTypeSelect');
+  taskTypeSelect.value = lead.taskType || '';
+  document.getElementById('taskDueAtInput').value = lead.taskDueAt ? lead.taskDueAt.slice(0, 10) : '';
+
   renderReadonlyDetails(lead);
 }
 
@@ -212,6 +230,10 @@ function buildFullPayload(overrides) {
     secondary_contact_email: get(base, 'secondaryContactEmail'),
     secondary_address:       get(base, 'secondaryAddress', 'address'),
     assigned_to:             get(base, 'assignedTo'),
+    active_task:             get(base, 'activeTask'),
+    task_type:               get(base, 'taskType'),
+    task_due_at:             get(base, 'taskDueAt'),
+    task_status:             get(base, 'taskStatus'),
     ...overrides
   };
   // Strip empty strings — backend guards on non-empty, but this avoids sending noise.
@@ -229,6 +251,13 @@ function showMsg(text, type) {
 
 function showNotesMsg(text, type) {
   const el = document.getElementById('notesMsg');
+  el.textContent   = text;
+  el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
+  el.style.display = text ? '' : 'none';
+}
+
+function showTaskMsg(text, type) {
+  const el = document.getElementById('taskMsg');
   el.textContent   = text;
   el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
   el.style.display = text ? '' : 'none';
@@ -316,6 +345,59 @@ async function handleSaveNotes() {
 }
 
 document.getElementById('saveNotesBtn').addEventListener('click', handleSaveNotes);
+
+// --- Task handlers ---
+
+async function handleSetTask() {
+  const taskType = document.getElementById('taskTypeSelect').value;
+  if (!taskType) { showTaskMsg('Select a task type.', 'error'); return; }
+
+  const btn = document.getElementById('setTaskBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showTaskMsg('');
+
+  try {
+    await updateLead(buildFullPayload({
+      active_task:  taskType,
+      task_type:    taskType,
+      task_due_at:  document.getElementById('taskDueAtInput').value,
+      task_status:  'Pending'
+    }));
+    showTaskMsg('Task set.', 'success');
+    const updated = await fetchLead(leadId);
+    render(updated);
+  } catch (err) {
+    showTaskMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+async function handleCompleteTask() {
+  const btn = document.getElementById('completeTaskBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showTaskMsg('');
+
+  try {
+    await completeTask(leadId);
+    showTaskMsg('Task completed.', 'success');
+    const updated = await fetchLead(leadId);
+    render(updated);
+  } catch (err) {
+    showTaskMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+document.getElementById('setTaskBtn').addEventListener('click', handleSetTask);
+document.getElementById('completeTaskBtn').addEventListener('click', handleCompleteTask);
 
 // --- Save Assignment ---
 

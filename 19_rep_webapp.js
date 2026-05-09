@@ -115,7 +115,7 @@ function getAssignedLeadsForRep_(rep) {
       businessName: getCellByHeader_(row, idx, 'business_name'),
       city: getCellByHeader_(row, idx, 'city'),
       category: getCellByHeader_(row, idx, 'category'),
-      status: getCellByHeader_(row, idx, 'status'),
+      status: getCellByHeader_(row, idx, 'pipeline_stage') || getCellByHeader_(row, idx, 'status'),
       reviews: toNumber_(getCellByHeader_(row, idx, 'reviews_count')),
       rating: toNumber_(getCellByHeader_(row, idx, 'rating')),
       momentumState: getCellByHeader_(row, idx, 'momentum_state') || '',
@@ -1060,6 +1060,27 @@ function handleJsonPostRequest_(e) {
         body.task_status
       );
       return jsonSuccess_(addResult);
+    }
+
+    if (action === 'complete_task') {
+      if (!body.lead_id) return jsonError_('Missing lead_id.');
+      var ctSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
+      if (!ctSheet) return jsonError_('Leads Master sheet not found.');
+      var ctValues = ctSheet.getDataRange().getValues();
+      var ctIdx = buildHeaderIndex_(ctValues[0]);
+      var ctLeadId = String(body.lead_id || '').trim();
+      for (var cr = 1; cr < ctValues.length; cr++) {
+        var crLeadId = String(getCellByHeader_(ctValues[cr], ctIdx, 'lead_id') || '').trim();
+        if (crLeadId === ctLeadId) {
+          if (hasHeader_(ctIdx, 'Task Status')) setCellByHeader_(ctSheet, cr + 1, ctIdx, 'Task Status', 'Completed');
+          if (hasHeader_(ctIdx, 'Active Task')) setCellByHeader_(ctSheet, cr + 1, ctIdx, 'Active Task', '');
+          if (hasHeader_(ctIdx, 'Task Type'))   setCellByHeader_(ctSheet, cr + 1, ctIdx, 'Task Type', '');
+          if (hasHeader_(ctIdx, 'Task Due At')) setCellByHeader_(ctSheet, cr + 1, ctIdx, 'Task Due At', '');
+          if (hasHeader_(ctIdx, 'updated_at'))  setCellByHeader_(ctSheet, cr + 1, ctIdx, 'updated_at', new Date());
+          return jsonSuccess_({ lead_id: ctLeadId, task_status: 'Completed' });
+        }
+      }
+      return jsonError_('Lead not found: ' + body.lead_id);
     }
 
     if (action === 'crm_action') {

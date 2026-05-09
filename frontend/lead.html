@@ -91,6 +91,42 @@
         </div>
       </div>
 
+      <!-- Zone 4b: Next Action / Task -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Next Action</div>
+
+        <div style="margin-bottom:16px;">
+          <div class="nl-label-field">Current Task</div>
+          <div id="currentTaskLabel" class="nl-detail-value" style="margin-bottom:6px;">—</div>
+          <span id="taskStatusBadge" class="nl-badge" style="display:none;"></span>
+        </div>
+
+        <div class="nl-details-grid" style="margin-bottom:16px;">
+          <div class="nl-form-group" style="margin-bottom:0;">
+            <label class="nl-label-field" for="taskTypeSelect">Task Type</label>
+            <select id="taskTypeSelect" class="nl-input">
+              <option value="">— Select —</option>
+              <option value="Follow-up Call">Follow-up Call</option>
+              <option value="Send Email">Send Email</option>
+              <option value="Send Market Mirror">Send Market Mirror</option>
+              <option value="Schedule Demo">Schedule Demo</option>
+              <option value="Custom">Custom</option>
+            </select>
+          </div>
+          <div class="nl-form-group" style="margin-bottom:0;">
+            <label class="nl-label-field" for="taskDueAtInput">Due Date</label>
+            <input type="date" id="taskDueAtInput" class="nl-input">
+          </div>
+        </div>
+
+        <div id="taskMsg" class="nl-alert" style="display:none;margin-bottom:12px;"></div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="setTaskBtn" class="nl-btn nl-btn-primary nl-btn-sm">Set Task</button>
+          <button id="completeTaskBtn" class="nl-btn nl-btn-secondary nl-btn-sm">Complete Task</button>
+        </div>
+      </div>
+
       <!-- Zone 5: Activity log -->
       <div class="nl-zone nl-card nl-card-body">
         <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Activity Log</div>

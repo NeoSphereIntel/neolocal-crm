@@ -56,6 +56,11 @@ export function crmAction(leadId, actionType) {
   return apiPost({ action: 'crm_action', lead_id: leadId, action_type: actionType });
 }
 
+/** POST action=complete_task — marks task Completed and clears task fields */
+export function completeTask(leadId) {
+  return apiPost({ action: 'complete_task', lead_id: leadId });
+}
+
 /**
  * POST action=lookup_lead — maps to lookupManualLeadFromSerpApi on the backend.
  * Requires adding a 'lookup_lead' case to handleJsonPostRequest_ in 19_rep_webapp.js.
