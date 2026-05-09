@@ -116,6 +116,12 @@ function render(lead) {
     logEl.innerHTML = '<li class="nl-text-gray">No activity logged yet.</li>';
   }
 
+  // Zone 6: populate editable business inputs
+  setInput('editBusinessName', get(lead, 'businessName'));
+  setInput('editCategory',     get(lead, 'category'));
+  setInput('editAddress',      get(lead, 'address'));
+  setInput('editWebsite',      get(lead, 'website'));
+
   // Zone 6: populate editable contact inputs
   setInput('editContactName',          get(lead, 'contactName'));
   setInput('editContactRole',          get(lead, 'contactRole'));
@@ -190,6 +196,10 @@ function buildFullPayload(overrides) {
   const base = currentLead || {};
   const raw = {
     lead_id:                 currentLead ? (currentLead.leadId || leadId) : leadId,
+    business_name:           get(base, 'businessName'),
+    category:                get(base, 'category'),
+    address:                 get(base, 'address'),
+    website:                 get(base, 'website'),
     contact_name:            get(base, 'contactName'),
     contact_role:            get(base, 'contactRole'),
     main_phone:              get(base, 'mainPhone', 'phone'),
@@ -217,6 +227,13 @@ function showMsg(text, type) {
 
 function showNotesMsg(text, type) {
   const el = document.getElementById('notesMsg');
+  el.textContent   = text;
+  el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
+  el.style.display = text ? '' : 'none';
+}
+
+function showBusinessMsg(text, type) {
+  const el = document.getElementById('businessMsg');
   el.textContent   = text;
   el.className     = 'nl-alert' + (type ? ' nl-alert-' + type : '');
   el.style.display = text ? '' : 'none';
@@ -290,6 +307,37 @@ async function handleSaveNotes() {
 }
 
 document.getElementById('saveNotesBtn').addEventListener('click', handleSaveNotes);
+
+// --- Save Business Info ---
+
+async function handleSaveBusiness() {
+  const btn = document.getElementById('saveBusinessBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showBusinessMsg('');
+
+  const businessOverrides = {
+    business_name: document.getElementById('editBusinessName').value,
+    category:      document.getElementById('editCategory').value,
+    address:       document.getElementById('editAddress').value,
+    website:       document.getElementById('editWebsite').value,
+  };
+
+  try {
+    await updateLead(buildFullPayload(businessOverrides));
+    showBusinessMsg('Business info saved.', 'success');
+    const updated = await fetchLead(leadId);
+    render(updated);
+  } catch (err) {
+    showBusinessMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+document.getElementById('saveBusinessBtn').addEventListener('click', handleSaveBusiness);
 
 // --- Save Contact ---
 
