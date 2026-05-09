@@ -4,7 +4,7 @@ export const API_BASE = 'https://script.google.com/a/macros/neolocal.io/s/AKfycb
 async function apiFetch(url, options = {}) {
   let res;
   try {
-    res = await fetch(url, options);
+    res = await fetch(url, { mode: 'cors', redirect: 'follow', ...options });
   } catch (err) {
     throw new Error('Network failure: ' + err.message);
   }
@@ -14,10 +14,12 @@ async function apiFetch(url, options = {}) {
   return json.data;
 }
 
+// text/plain avoids a CORS preflight — Apps Script doPost does not handle OPTIONS.
+// The backend accepts both text/plain and application/json.
 function apiPost(body) {
   return apiFetch(API_BASE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(body)
   });
 }

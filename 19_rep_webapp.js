@@ -959,8 +959,8 @@ function doPost(e) {
 function handleJsonPostRequest_(e) {
   try {
     var contentType = e && e.postData ? (e.postData.type || '') : '';
-    if (contentType.indexOf('application/json') === -1) {
-      return jsonError_('Content-Type must be application/json.');
+    if (contentType.indexOf('application/json') === -1 && contentType.indexOf('text/plain') === -1) {
+      return jsonError_('Content-Type must be application/json or text/plain.');
     }
 
     var body;
