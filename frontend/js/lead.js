@@ -188,7 +188,7 @@ function renderReadonlyDetails(lead) {
 
 function buildFullPayload(overrides) {
   const base = currentLead || {};
-  return {
+  const raw = {
     lead_id:                 currentLead ? (currentLead.leadId || leadId) : leadId,
     contact_name:            get(base, 'contactName'),
     contact_role:            get(base, 'contactRole'),
@@ -202,6 +202,8 @@ function buildFullPayload(overrides) {
     secondary_address:       get(base, 'secondaryAddress', 'address'),
     ...overrides
   };
+  // Strip empty strings — backend guards on non-empty, but this avoids sending noise.
+  return Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null && v !== ''));
 }
 
 // --- Message helpers ---

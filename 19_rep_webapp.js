@@ -655,7 +655,8 @@ function saveRepLeadUpdate(
   operatorMonthlyVolume,
   operatorServiceCapacity,
   operatorLocationCount,
-  operatorContextNotes
+  operatorContextNotes,
+  category
 ) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
@@ -681,6 +682,7 @@ function saveRepLeadUpdate(
       var cleanTaskStatus = String(taskStatus || '').trim();
 
       var cleanBusinessName = String(businessName || '').trim();
+      var cleanCategory = String(category || '').trim();
       var cleanAddress = String(address || '').trim();
       var cleanWebsite = String(website || '').trim();
       var cleanMainPhone = String(mainPhone || '').trim();
@@ -693,113 +695,125 @@ function saveRepLeadUpdate(
       var cleanSecondaryContactPhone = String(secondaryContactPhone || '').trim();
       var cleanSecondaryContactEmail = String(secondaryContactEmail || '').trim();
       var cleanSecondaryAddress = String(secondaryAddress || '').trim();
-	  var cleanOperatorScaleBand = String(operatorScaleBand || '').trim();
-	  var cleanOperatorBusinessModel = String(operatorBusinessModel || '').trim();
-	  var cleanOperatorMonthlyVolume = String(operatorMonthlyVolume || '').trim();
-	  var cleanOperatorServiceCapacity = String(operatorServiceCapacity || '').trim();
-	  var cleanOperatorLocationCount = String(operatorLocationCount || '').trim();
-	  var cleanOperatorContextNotes = String(operatorContextNotes || '').trim();
+      var cleanOperatorScaleBand = String(operatorScaleBand || '').trim();
+      var cleanOperatorBusinessModel = String(operatorBusinessModel || '').trim();
+      var cleanOperatorMonthlyVolume = String(operatorMonthlyVolume || '').trim();
+      var cleanOperatorServiceCapacity = String(operatorServiceCapacity || '').trim();
+      var cleanOperatorLocationCount = String(operatorLocationCount || '').trim();
+      var cleanOperatorContextNotes = String(operatorContextNotes || '').trim();
 
       var notesHeader = hasHeader_(idx, 'crm_notes') ? 'crm_notes' : (hasHeader_(idx, 'notes') ? 'notes' : '');
       var existingNotes = notesHeader ? String(getCellByHeader_(row, idx, notesHeader) || '').trim() : '';
       var appendedEntry = '';
 
-      setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
+      if (cleanStatus && hasHeader_(idx, 'status')) {
+        setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
+      }
 
-      if (hasHeader_(idx, 'business_name')) {
+      if (cleanBusinessName && hasHeader_(idx, 'business_name')) {
         setCellByHeader_(sheet, r + 1, idx, 'business_name', cleanBusinessName);
       }
 
-      if (hasHeader_(idx, 'address')) {
+      if (cleanCategory && hasHeader_(idx, 'category')) {
+        setCellByHeader_(sheet, r + 1, idx, 'category', cleanCategory);
+      }
+
+      if (cleanAddress && hasHeader_(idx, 'address')) {
         setCellByHeader_(sheet, r + 1, idx, 'address', cleanAddress);
       }
 
-      if (hasHeader_(idx, 'website')) {
+      if (cleanWebsite && hasHeader_(idx, 'website')) {
         setCellByHeader_(sheet, r + 1, idx, 'website', cleanWebsite);
       }
 
-      if (hasHeader_(idx, 'Main Phone')) {
-        setCellByHeader_(sheet, r + 1, idx, 'Main Phone', cleanMainPhone);
-      }
-      if (hasHeader_(idx, 'phone')) {
-        setCellByHeader_(sheet, r + 1, idx, 'phone', cleanMainPhone);
+      if (cleanMainPhone) {
+        if (hasHeader_(idx, 'Main Phone')) {
+          setCellByHeader_(sheet, r + 1, idx, 'Main Phone', cleanMainPhone);
+        }
+        if (hasHeader_(idx, 'phone')) {
+          setCellByHeader_(sheet, r + 1, idx, 'phone', cleanMainPhone);
+        }
       }
 
-      if (hasHeader_(idx, 'Mobile Phone')) {
+      if (cleanMobilePhone && hasHeader_(idx, 'Mobile Phone')) {
         setCellByHeader_(sheet, r + 1, idx, 'Mobile Phone', cleanMobilePhone);
       }
 
-      if (hasHeader_(idx, 'Main Email')) {
-        setCellByHeader_(sheet, r + 1, idx, 'Main Email', cleanMainEmail);
-      }
-      if (hasHeader_(idx, 'email')) {
-        setCellByHeader_(sheet, r + 1, idx, 'email', cleanMainEmail);
-      }
-
-      if (hasHeader_(idx, 'Contact Name')) {
-        setCellByHeader_(sheet, r + 1, idx, 'Contact Name', cleanContactName);
-      }
-      if (hasHeader_(idx, 'contact_name')) {
-        setCellByHeader_(sheet, r + 1, idx, 'contact_name', cleanContactName);
+      if (cleanMainEmail) {
+        if (hasHeader_(idx, 'Main Email')) {
+          setCellByHeader_(sheet, r + 1, idx, 'Main Email', cleanMainEmail);
+        }
+        if (hasHeader_(idx, 'email')) {
+          setCellByHeader_(sheet, r + 1, idx, 'email', cleanMainEmail);
+        }
       }
 
-      if (hasHeader_(idx, 'Contact Role')) {
+      if (cleanContactName) {
+        if (hasHeader_(idx, 'Contact Name')) {
+          setCellByHeader_(sheet, r + 1, idx, 'Contact Name', cleanContactName);
+        }
+        if (hasHeader_(idx, 'contact_name')) {
+          setCellByHeader_(sheet, r + 1, idx, 'contact_name', cleanContactName);
+        }
+      }
+
+      if (cleanContactRole && hasHeader_(idx, 'Contact Role')) {
         setCellByHeader_(sheet, r + 1, idx, 'Contact Role', cleanContactRole);
       }
 
-      if (hasHeader_(idx, 'Secondary Contact Name')) {
+      if (cleanSecondaryContactName && hasHeader_(idx, 'Secondary Contact Name')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Name', cleanSecondaryContactName);
       }
 
-      if (hasHeader_(idx, 'Secondary Contact Role')) {
+      if (cleanSecondaryContactRole && hasHeader_(idx, 'Secondary Contact Role')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Role', cleanSecondaryContactRole);
       }
 
-      if (hasHeader_(idx, 'Secondary Contact Phone')) {
+      if (cleanSecondaryContactPhone && hasHeader_(idx, 'Secondary Contact Phone')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Phone', cleanSecondaryContactPhone);
       }
 
-      if (hasHeader_(idx, 'Secondary Contact Email')) {
+      if (cleanSecondaryContactEmail && hasHeader_(idx, 'Secondary Contact Email')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Contact Email', cleanSecondaryContactEmail);
       }
 
-      if (hasHeader_(idx, 'Secondary Address')) {
+      if (cleanSecondaryAddress && hasHeader_(idx, 'Secondary Address')) {
         setCellByHeader_(sheet, r + 1, idx, 'Secondary Address', cleanSecondaryAddress);
       }
-	  
-	  if (hasHeader_(idx, 'operator_scale_band')) {
-		setCellByHeader_(sheet, r + 1, idx, 'operator_scale_band', cleanOperatorScaleBand);
-	  }
 
-	  if (hasHeader_(idx, 'operator_business_model')) {
-		setCellByHeader_(sheet, r + 1, idx, 'operator_business_model', cleanOperatorBusinessModel);
-	  }
+      if (cleanOperatorScaleBand && hasHeader_(idx, 'operator_scale_band')) {
+        setCellByHeader_(sheet, r + 1, idx, 'operator_scale_band', cleanOperatorScaleBand);
+      }
 
-	  if (hasHeader_(idx, 'operator_monthly_volume')) {
-		setCellByHeader_(sheet, r + 1, idx, 'operator_monthly_volume', cleanOperatorMonthlyVolume);
-	  }
+      if (cleanOperatorBusinessModel && hasHeader_(idx, 'operator_business_model')) {
+        setCellByHeader_(sheet, r + 1, idx, 'operator_business_model', cleanOperatorBusinessModel);
+      }
 
-	  if (hasHeader_(idx, 'operator_service_capacity')) {
-		setCellByHeader_(sheet, r + 1, idx, 'operator_service_capacity', cleanOperatorServiceCapacity);
-	  }
+      if (cleanOperatorMonthlyVolume && hasHeader_(idx, 'operator_monthly_volume')) {
+        setCellByHeader_(sheet, r + 1, idx, 'operator_monthly_volume', cleanOperatorMonthlyVolume);
+      }
 
-	  if (hasHeader_(idx, 'operator_location_count')) {
-		setCellByHeader_(sheet, r + 1, idx, 'operator_location_count', cleanOperatorLocationCount);
-	  }
+      if (cleanOperatorServiceCapacity && hasHeader_(idx, 'operator_service_capacity')) {
+        setCellByHeader_(sheet, r + 1, idx, 'operator_service_capacity', cleanOperatorServiceCapacity);
+      }
 
-	  if (hasHeader_(idx, 'operator_context_notes')) {
-		setCellByHeader_(sheet, r + 1, idx, 'operator_context_notes', cleanOperatorContextNotes);
-	  }
+      if (cleanOperatorLocationCount && hasHeader_(idx, 'operator_location_count')) {
+        setCellByHeader_(sheet, r + 1, idx, 'operator_location_count', cleanOperatorLocationCount);
+      }
 
-      if (hasHeader_(idx, 'Active Task')) {
+      if (cleanOperatorContextNotes && hasHeader_(idx, 'operator_context_notes')) {
+        setCellByHeader_(sheet, r + 1, idx, 'operator_context_notes', cleanOperatorContextNotes);
+      }
+
+      if (cleanActiveTask && hasHeader_(idx, 'Active Task')) {
         setCellByHeader_(sheet, r + 1, idx, 'Active Task', cleanActiveTask);
       }
 
-      if (hasHeader_(idx, 'Task Type')) {
+      if (cleanTaskType && hasHeader_(idx, 'Task Type')) {
         setCellByHeader_(sheet, r + 1, idx, 'Task Type', cleanTaskType);
       }
 
-      if (hasHeader_(idx, 'Task Due At')) {
+      if (cleanTaskDueAt && hasHeader_(idx, 'Task Due At')) {
         setCellByHeader_(sheet, r + 1, idx, 'Task Due At', cleanTaskDueAt);
       }
 
@@ -807,7 +821,7 @@ function saveRepLeadUpdate(
         cleanTaskStatus = 'Open';
       }
 
-      if (hasHeader_(idx, 'Task Status')) {
+      if (cleanTaskStatus && hasHeader_(idx, 'Task Status')) {
         setCellByHeader_(sheet, r + 1, idx, 'Task Status', cleanTaskStatus);
       }
 
@@ -1007,7 +1021,8 @@ function handleJsonPostRequest_(e) {
         body.operator_monthly_volume,
         body.operator_service_capacity,
         body.operator_location_count,
-        body.operator_context_notes
+        body.operator_context_notes,
+        body.category
       );
       return jsonSuccess_(result);
     }
