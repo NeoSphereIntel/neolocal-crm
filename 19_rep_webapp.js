@@ -136,7 +136,9 @@ function getAssignedLeadsForRep_(rep) {
       activeTask: getCellByHeader_(row, idx, 'Active Task') || '',
       taskType: getCellByHeader_(row, idx, 'Task Type') || '',
       taskDueAt: formatDateTimeForInput_(getCellByHeader_(row, idx, 'Task Due At')),
-      taskStatus: getCellByHeader_(row, idx, 'Task Status') || ''
+      taskStatus: getCellByHeader_(row, idx, 'Task Status') || '',
+      diagnosisState: getCellByHeader_(row, idx, 'diagnosis_state') || '',
+      priorityBucket: getCellByHeader_(row, idx, 'priority_bucket') || ''
     });
   }
 
@@ -241,7 +243,12 @@ function getLeadRecordByLeadId_(leadId) {
         activeTask: getCellByHeader_(row, idx, 'Active Task') || '',
         taskType: getCellByHeader_(row, idx, 'Task Type') || '',
         taskDueAt: formatDateTimeForInput_(getCellByHeader_(row, idx, 'Task Due At')),
-        taskStatus: getCellByHeader_(row, idx, 'Task Status') || ''
+        taskStatus: getCellByHeader_(row, idx, 'Task Status') || '',
+        diagnosisState: getCellByHeader_(row, idx, 'diagnosis_state') || '',
+        priorityBucket: getCellByHeader_(row, idx, 'priority_bucket') || '',
+        marketPositionSummary: getCellByHeader_(row, idx, 'market_position_summary') || '',
+        strategicGapSummary: getCellByHeader_(row, idx, 'strategic_gap_summary') || '',
+        replyMessage: getCellByHeader_(row, idx, 'reply_message') || ''
       };
     }
   }
