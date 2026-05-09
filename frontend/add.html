@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoLocal — Add Lead</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <header class="nl-header">
+    <div class="nl-header-inner">
+      <span class="nl-wordmark">NeoLocal</span>
+    </div>
+  </header>
+
+  <div class="nl-container nl-main" style="max-width:720px;">
+
+    <a id="backLink" href="index.html" class="nl-back">← Back to Dashboard</a>
+
+    <h1 class="nl-headline nl-headline-sm nl-mb-24">Add New Lead</h1>
+
+    <!-- Step 1: Look up business -->
+    <div class="nl-card nl-card-body nl-mb-24">
+      <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Look Up Business</div>
+      <p class="nl-text-sm nl-text-gray nl-mb-16">
+        Paste a Google Maps URL or Place ID to pull business details automatically.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="text" id="searchInput" class="nl-input" style="flex:1;min-width:200px;"
+               placeholder="Google Maps URL or Place ID…">
+        <button id="searchBtn" class="nl-btn nl-btn-primary">Look Up</button>
+      </div>
+      <div id="searchMsg" class="nl-alert" style="display:none;margin-top:14px;"></div>
+    </div>
+
+    <!-- Step 2: Result preview -->
+    <div id="resultsPanel" hidden>
+      <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Found</div>
+      <div id="resultsList" class="nl-mb-24"></div>
+    </div>
+
+    <!-- Step 3: Form -->
+    <div id="formSection" hidden>
+      <input type="hidden" id="placeId">
+      <form id="addLeadForm">
+
+        <div class="nl-card nl-card-body nl-mb-16">
+          <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Business Details</div>
+          <div class="nl-input-row">
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="businessName">Business Name *</label>
+              <input type="text" id="businessName" class="nl-input" required>
+            </div>
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="category">Category *</label>
+              <input type="text" id="category" class="nl-input" required>
+            </div>
+          </div>
+          <div class="nl-input-row">
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="city">City *</label>
+              <input type="text" id="city" class="nl-input" required>
+            </div>
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="mainPhone">Phone</label>
+              <input type="text" id="mainPhone" class="nl-input">
+            </div>
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="address">Address</label>
+            <input type="text" id="address" class="nl-input">
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="website">Website</label>
+            <input type="text" id="website" class="nl-input">
+          </div>
+        </div>
+
+        <div class="nl-card nl-card-body nl-mb-16">
+          <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Contact</div>
+          <div class="nl-input-row">
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="contactName">Contact Name</label>
+              <input type="text" id="contactName" class="nl-input">
+            </div>
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="contactRole">Role</label>
+              <input type="text" id="contactRole" class="nl-input">
+            </div>
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="mainEmail">Email</label>
+            <input type="email" id="mainEmail" class="nl-input">
+          </div>
+        </div>
+
+        <div class="nl-card nl-card-body nl-mb-16">
+          <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Operator Intel</div>
+          <div class="nl-input-row">
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="operatorScaleBand">Scale Band</label>
+              <input type="text" id="operatorScaleBand" class="nl-input" placeholder="e.g. SMB, Mid-Market">
+            </div>
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="operatorBusinessModel">Business Model</label>
+              <input type="text" id="operatorBusinessModel" class="nl-input">
+            </div>
+          </div>
+          <div class="nl-input-row">
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="operatorMonthlyVolume">Monthly Volume</label>
+              <input type="text" id="operatorMonthlyVolume" class="nl-input">
+            </div>
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="operatorLocationCount">Locations</label>
+              <input type="text" id="operatorLocationCount" class="nl-input">
+            </div>
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="operatorServiceCapacity">Service Capacity</label>
+            <input type="text" id="operatorServiceCapacity" class="nl-input">
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="operatorContextNotes">Context Notes</label>
+            <textarea id="operatorContextNotes" class="nl-textarea" style="min-height:70px;"></textarea>
+          </div>
+        </div>
+
+        <div class="nl-card nl-card-body nl-mb-16">
+          <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">First Task &amp; Notes</div>
+          <div class="nl-input-row">
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="activeTask">Task</label>
+              <input type="text" id="activeTask" class="nl-input" placeholder="e.g. Send intro email">
+            </div>
+            <div class="nl-form-group">
+              <label class="nl-label-field" for="taskType">Task Type</label>
+              <input type="text" id="taskType" class="nl-input" placeholder="e.g. Outreach">
+            </div>
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="taskDueAt">Due Date</label>
+            <input type="datetime-local" id="taskDueAt" class="nl-input">
+          </div>
+          <div class="nl-form-group">
+            <label class="nl-label-field" for="notes">Notes</label>
+            <textarea id="notes" class="nl-textarea" placeholder="Initial notes about this lead…"></textarea>
+          </div>
+        </div>
+
+        <div id="formMsg" class="nl-alert" style="display:none;margin-bottom:16px;"></div>
+        <button type="submit" id="submitBtn" class="nl-btn nl-btn-primary nl-btn-lg">Add Lead</button>
+
+      </form>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/add.js"></script>
+</body>
+</html>

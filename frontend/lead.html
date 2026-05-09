@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoLocal — Lead</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <header class="nl-header">
+    <div class="nl-header-inner">
+      <span class="nl-wordmark">NeoLocal</span>
+    </div>
+  </header>
+
+  <div class="nl-container nl-main" style="max-width:900px;">
+
+    <a id="backLink" href="index.html" class="nl-back">← Back to Dashboard</a>
+
+    <div id="loading" class="nl-loading">
+      <div class="nl-spinner"></div>
+      <span>Loading lead…</span>
+    </div>
+
+    <div id="content" style="display:none;">
+
+      <!-- Zone 1: Status bar -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-status-bar-grid">
+          <div class="nl-status-bar-left">
+            <div class="nl-lead-title" id="leadName"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+              <span class="nl-badge nl-badge-undersignaled" id="diagnosisBadge" hidden></span>
+              <span class="nl-badge nl-status-new" id="statusBadge"></span>
+            </div>
+            <div class="nl-text-sm nl-text-gray" id="leadMeta"></div>
+          </div>
+          <div class="nl-status-bar-right">
+            <div>Last touch: <strong id="lastTouch"></strong></div>
+            <div class="nl-mt-4">Next: <strong id="nextAction"></strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone 2: Market position -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Market Position</div>
+        <div class="nl-market-position" id="marketPositionSummary"></div>
+        <div class="nl-gap-summary" id="strategicGapSummary"></div>
+      </div>
+
+      <!-- Zone 3: Market Mirror -->
+      <div class="nl-zone nl-card nl-card-navy nl-card-body" style="text-align:center;padding:36px 24px;">
+        <div class="nl-label nl-mb-8" style="color:rgba(255,255,255,0.55);letter-spacing:3px;">Market Intelligence</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:#fff;margin-bottom:20px;">
+          View the Full Market Mirror Report
+        </div>
+        <a id="mirrorBtn" href="#" target="_blank" rel="noopener" class="nl-btn nl-btn-primary nl-btn-lg">
+          View Market Mirror
+        </a>
+      </div>
+
+      <!-- Zone 4: Outreach -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Outreach Message</div>
+        <div class="nl-outreach-box" id="outreachMsg"></div>
+        <button id="copyOutreach" class="nl-btn nl-btn-secondary nl-btn-sm">Copy to Clipboard</button>
+
+        <div id="replySection" style="margin-top:24px;" hidden>
+          <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Reply Message</div>
+          <div class="nl-outreach-box" id="replyMsg"></div>
+        </div>
+
+        <div id="actionMsg" class="nl-alert" style="display:none;margin-top:16px;"></div>
+        <div class="nl-action-row">
+          <button class="nl-btn nl-btn-primary nl-btn-sm"    data-action="contacted"   data-label="Contacted">Mark Contacted</button>
+          <button class="nl-btn nl-btn-secondary nl-btn-sm"  data-action="replied"     data-label="Replied">Mark Replied</button>
+          <button class="nl-btn nl-btn-secondary nl-btn-sm"  data-action="qualified"   data-label="Qualified">Mark Qualified</button>
+          <button class="nl-btn nl-btn-secondary nl-btn-sm"  data-action="call_booked" data-label="Call Booked">Book Call</button>
+        </div>
+      </div>
+
+      <!-- Zone 5: Activity log -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Activity Log</div>
+        <ul class="nl-activity-log" id="activityLog"></ul>
+      </div>
+
+      <!-- Zone 6: Details (collapsed) -->
+      <div class="nl-zone nl-card nl-card-body">
+        <button class="nl-details-toggle" id="detailsToggle">
+          More Details <span class="nl-toggle-icon">▼</span>
+        </button>
+        <div class="nl-details-body" id="detailsBody"></div>
+      </div>
+
+    </div><!-- /#content -->
+  </div>
+
+  <script type="module" src="js/lead.js"></script>
+</body>
+</html>

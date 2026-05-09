@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoLocal — Dashboard</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <header class="nl-header">
+    <div class="nl-header-inner">
+      <span class="nl-wordmark">NeoLocal</span>
+      <span class="nl-header-rep" id="repName"></span>
+    </div>
+  </header>
+
+  <div class="nl-container nl-main">
+
+    <div id="loading" class="nl-loading">
+      <div class="nl-spinner"></div>
+      <span>Loading leads…</span>
+    </div>
+
+    <div id="errorMsg" class="nl-alert nl-alert-error nl-mb-24" style="display:none;"></div>
+
+    <div id="content" style="display:none;">
+
+      <!-- Stats bar -->
+      <div id="statsBar" class="nl-stats-bar"></div>
+
+      <!-- Action queue -->
+      <section class="nl-section">
+        <h2 class="nl-section-title">Action Queue</h2>
+        <div id="actionQueue" class="nl-action-queue"></div>
+      </section>
+
+      <!-- Full list -->
+      <section class="nl-section">
+        <div class="nl-list-controls">
+          <input type="text" id="searchInput" class="nl-search-input" placeholder="Search by name, city, or category…">
+          <a href="add.html" id="addLeadLink" class="nl-btn nl-btn-primary nl-btn-sm">+ Add Lead</a>
+        </div>
+        <div id="tableWrap"></div>
+      </section>
+
+    </div>
+  </div>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
