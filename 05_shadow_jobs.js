@@ -133,25 +133,64 @@ function buildShadowMarketHook_(lead) {
   const reviews = parseInt(lead.reviews_count, 10) || 0;
   const compAvg = parseInt(lead.comp_avg_reviews, 10) || 0;
   const city = lead.city || "their market";
-  return "In " + city + ", visible competitors appear to average around " + compAvg + " reviews while this business sits closer to " + reviews + ".";
+  const momentumState = String(lead.momentum_state || "").trim();
+
+  let base = "In " + city + ", visible competitors appear to average around " + compAvg + " reviews while this business sits closer to " + reviews + ".";
+
+  if (momentumState === "aggressive") {
+    base += " The stronger operators do not just look ahead — they appear to be reinforcing that lead.";
+  } else if (momentumState === "stagnant") {
+    base += " The upside is that the trust layer does not appear to be accelerating aggressively right now.";
+  } else if (momentumState === "active") {
+    base += " This looks like a market where trust gaps can widen quickly once momentum starts compounding.";
+  }
+
+  return base;
 }
 
 function buildShadowGapAngle_(lead) {
   const state = String(lead.diagnosis_state || "");
-  if (state === "Invisible") return "The business is being filtered out before buyers compare real value.";
-  if (state === "Emerging") return "The business is visible, but still too early-stage in public authority.";
-  if (state === "Undersignaled") return "The likely problem is weak proof translation, not weak capability.";
-  if (state === "Outgunned") return "Competitors appear to own the trust layer that drives default selection.";
-  if (state === "Contender") return "The business is close, but still lacks enough proof to feel like the safest first choice.";
-  return "The business has room to harden and defend its current lead.";
+  const isUndervalued = lead.is_undervalued === true || String(lead.is_undervalued || "").toLowerCase() === "true";
+
+  let base = "";
+
+  if (state === "Invisible") base = "The business is being filtered out before buyers compare real value.";
+  else if (state === "Emerging") base = "The business is visible, but still too early-stage in public authority.";
+  else if (state === "Undersignaled") base = "The likely problem is weak proof translation, not weak capability.";
+  else if (state === "Outgunned") base = "Competitors appear to own the trust layer that drives default selection.";
+  else if (state === "Contender") base = "The business is close, but still lacks enough proof to feel like the safest first choice.";
+  else base = "The business has room to harden and defend its current lead.";
+
+  if (isUndervalued) {
+    base += " It also looks closer to the top of the market than its current public weighting suggests.";
+  }
+
+  return base;
 }
 
 function buildShadowActionAngle_(lead) {
   const state = String(lead.diagnosis_state || "");
-  if (state === "Invisible") return "Use proof-building and visible trust accumulation to stop being skipped.";
-  if (state === "Emerging") return "Use authority-building assets to move from noticed to chosen.";
-  if (state === "Undersignaled") return "Translate real-world work into visible market proof.";
-  if (state === "Outgunned") return "Counter incumbent momentum with denser trust and stronger authority signaling.";
-  if (state === "Contender") return "Close the final authority gap and move into default-choice territory.";
-  return "Defend position and compound leadership signals.";
+  const momentumState = String(lead.momentum_state || "").trim();
+  const isUndervalued = lead.is_undervalued === true || String(lead.is_undervalued || "").toLowerCase() === "true";
+
+  let base = "";
+
+  if (state === "Invisible") base = "Use proof-building and visible trust accumulation to stop being skipped.";
+  else if (state === "Emerging") base = "Use authority-building assets to move from noticed to chosen.";
+  else if (state === "Undersignaled") base = "Translate real-world work into visible market proof.";
+  else if (state === "Outgunned") base = "Counter incumbent momentum with denser trust and stronger authority signaling.";
+  else if (state === "Contender") base = "Close the final authority gap and move into default-choice territory.";
+  else base = "Defend position and compound leadership signals.";
+
+  if (momentumState === "aggressive") {
+    base += " The angle should carry more urgency because delay likely makes the gap harder to close.";
+  } else if (momentumState === "stagnant") {
+    base += " The angle should emphasize that this is still a timing window, not just a long-term grind.";
+  }
+
+  if (isUndervalued) {
+    base += " The angle should also stress that the business is closer than it appears, which makes the opportunity feel immediately actionable.";
+  }
+
+  return base;
 }

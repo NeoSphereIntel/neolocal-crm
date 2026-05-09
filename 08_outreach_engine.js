@@ -26,9 +26,89 @@ function getOutreachAngleFromDiagnosis_(diagnosisState) {
     case "Invisible":
       return "You should be showing up stronger than you currently are.";
 
+    case "Outgunned":
+      return "Stronger visible competitors are shaping trust before buyers really compare options.";
+
+    case "Undersignaled":
+      return "The business looks lighter in public than it likely is in reality.";
+
+    case "Contender":
+      return "You’re closer to controlling the decision than it probably looks from the outside.";
+
     default:
       return "Something about how the market is reading your business feels off.";
   }
+}
+
+/* ============================================================================
+   SIGNAL HELPERS
+============================================================================ */
+
+function getMomentumOutreachLine_(m) {
+  var momentum = String(m.momentum_state || "").trim();
+
+  if (momentum === "aggressive") {
+    return "The gap is not just there — it is being reinforced.";
+  }
+
+  if (momentum === "stagnant") {
+    return "The good news is the market is not widening that trust gap aggressively right now.";
+  }
+
+  if (momentum === "slow") {
+    return "This still looks winnable, but the opening won’t stay soft forever.";
+  }
+
+  if (momentum === "active") {
+    return "This is the kind of market where small trust gaps compound faster than they look on paper.";
+  }
+
+  return "";
+}
+
+function getUndervaluedOutreachLine_(m) {
+  if (m.is_undervalued === true || String(m.is_undervalued || "").toLowerCase() === "true") {
+    return "What stood out is that you look closer to the top of the market than your current public position suggests.";
+  }
+  return "";
+}
+
+function getMarketContextLine_(m, diagnosis, profile) {
+  var city = String(m.city || "your market").trim();
+  var businessName = String(m.business_name || "your business").trim();
+  var compAvg = Math.round(Number(m.comp_avg_reviews || 0));
+  var reviews = Math.round(Number(m.reviews_count || 0));
+  var category = String(m.category || profile.label || "business").trim();
+
+  if (profile.template_family === "auto_retail") {
+    if (compAvg > 0) {
+      return "In " + city + ", stores with stronger visible trust are often getting read as safer before vehicles are seriously compared.";
+    }
+    return "In " + city + ", buyers are still making fast trust decisions before inventory gets a fair comparison.";
+  }
+
+  if (compAvg > 0) {
+    return "In " + city + ", visible competitors appear to be clustering around roughly " + compAvg + " reviews, while " + businessName + " is sitting closer to " + reviews + ".";
+  }
+
+  return "In " + city + ", buyers are making fast trust decisions in the " + category + " market.";
+}
+
+function buildOutreachBodyLines_(m, diagnosis, profile) {
+  var lines = [];
+  var diagnosisLine = getOutreachAngleFromDiagnosis_(diagnosis.diagnosis_state);
+  var marketLine = getMarketContextLine_(m, diagnosis, profile);
+  var momentumLine = getMomentumOutreachLine_(m);
+  var undervaluedLine = getUndervaluedOutreachLine_(m);
+
+  if (marketLine) lines.push(marketLine);
+  if (diagnosisLine) lines.push(diagnosisLine);
+  if (momentumLine) lines.push(momentumLine);
+  if (undervaluedLine) lines.push(undervaluedLine);
+
+  return lines.filter(function(line) {
+    return String(line || "").trim() !== "";
+  });
 }
 
 /* ============================================================================
@@ -40,8 +120,8 @@ function getSignatureName_() {
     var email = Session.getActiveUser().getEmail();
     if (!email) return "Phil";
 
-    var namePart = email.split("@")[0]; // phil.caplo
-    var clean = namePart.replace(/[._-]+/g, " "); // phil caplo
+    var namePart = email.split("@")[0];
+    var clean = namePart.replace(/[._-]+/g, " ");
 
     return clean
       .split(" ")
@@ -63,7 +143,7 @@ function generateOutreachMessage_(m, diagnosis, scores) {
   const profile = getVerticalProfile_(verticalKey);
 
   if (profile.template_family === "auto_retail") {
-    return buildAutoRetailOutreach_(m, diagnosis);
+    return buildAutoRetailOutreach_(m, diagnosis, profile);
   }
 
   return buildGenericOutreach_(m, diagnosis, profile);
@@ -73,19 +153,21 @@ function generateOutreachMessage_(m, diagnosis, scores) {
    AUTO RETAIL — ANGLE-BASED OUTREACH
 ============================================================================ */
 
-function buildAutoRetailOutreach_(m, diagnosis) {
-  const angle = getOutreachAngleFromDiagnosis_(diagnosis.diagnosis_state);
+function buildAutoRetailOutreach_(m, diagnosis, profile) {
   const sig = getSignatureName_();
+  const lines = buildOutreachBodyLines_(m, diagnosis, profile);
 
-  return `Hi,
-
-Quick observation about your dealership —
-
-${angle}
-
-If you want, I can show you exactly where that’s happening locally.
-
-— ${sig}`;
+  return [
+    "Hi,",
+    "",
+    "Quick observation about your dealership —",
+    "",
+    lines.join(" "),
+    "",
+    "If you want, I can show you exactly where that is happening locally and why stronger stores are getting trusted earlier.",
+    "",
+    "— " + sig
+  ].join("\n");
 }
 
 /* ============================================================================
@@ -93,18 +175,20 @@ If you want, I can show you exactly where that’s happening locally.
 ============================================================================ */
 
 function buildGenericOutreach_(m, diagnosis, profile) {
-  const angle = getOutreachAngleFromDiagnosis_(diagnosis.diagnosis_state);
   const sig = getSignatureName_();
+  const lines = buildOutreachBodyLines_(m, diagnosis, profile);
 
-  return `Hi,
-
-Quick observation about your business —
-
-${angle}
-
-If you want, I can show you exactly where that’s happening locally.
-
-— ${sig}`;
+  return [
+    "Hi,",
+    "",
+    "Quick observation about your business —",
+    "",
+    lines.join(" "),
+    "",
+    "If you want, I can show you exactly where that is happening locally.",
+    "",
+    "— " + sig
+  ].join("\n");
 }
 
 /* ============================================================================
@@ -121,10 +205,15 @@ function rebuildAllOutreachMessages() {
   const headers = data[0];
 
   const idx = {
+    business_name: headers.indexOf("business_name"),
+    city: headers.indexOf("city"),
+    category: headers.indexOf("category"),
     reviews: headers.indexOf("reviews_count"),
     comp_avg: headers.indexOf("comp_avg_reviews"),
     comp_1_name: headers.indexOf("comp_1_name"),
     comp_1_reviews: headers.indexOf("comp_1_reviews"),
+    momentum_state: headers.indexOf("momentum_state"),
+    is_undervalued: headers.indexOf("is_undervalued"),
     diagnosis: headers.indexOf("diagnosis_state"),
     priority: headers.indexOf("priority_bucket"),
     output: headers.indexOf("outreach_message")
@@ -134,15 +223,20 @@ function rebuildAllOutreachMessages() {
     const row = data[i];
 
     const m = {
-      reviews_count: row[idx.reviews],
-      comp_avg_reviews: row[idx.comp_avg],
-      comp_1_name: row[idx.comp_1_name],
-      comp_1_reviews: row[idx.comp_1_reviews]
+      business_name: idx.business_name > -1 ? row[idx.business_name] : "",
+      city: idx.city > -1 ? row[idx.city] : "",
+      category: idx.category > -1 ? row[idx.category] : "",
+      reviews_count: idx.reviews > -1 ? row[idx.reviews] : 0,
+      comp_avg_reviews: idx.comp_avg > -1 ? row[idx.comp_avg] : 0,
+      comp_1_name: idx.comp_1_name > -1 ? row[idx.comp_1_name] : "",
+      comp_1_reviews: idx.comp_1_reviews > -1 ? row[idx.comp_1_reviews] : 0,
+      momentum_state: idx.momentum_state > -1 ? row[idx.momentum_state] : "",
+      is_undervalued: idx.is_undervalued > -1 ? row[idx.is_undervalued] : false
     };
 
     const diagnosis = {
-      diagnosis_state: row[idx.diagnosis],
-      priority_bucket: row[idx.priority]
+      diagnosis_state: idx.diagnosis > -1 ? row[idx.diagnosis] : "",
+      priority_bucket: idx.priority > -1 ? row[idx.priority] : ""
     };
 
     const message = generateOutreachMessage_(m, diagnosis, {});
