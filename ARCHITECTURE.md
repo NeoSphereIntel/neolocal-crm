@@ -180,7 +180,7 @@ Editor-only test runners for Market Mirror.
 ### `19_rep_webapp.js`
 Web app entry point and API layer.
 - `doGet(e)` — routes to 5 modes: rep dashboard, lead detail, add lead, Market Mirror report, rep support sheet
-- Server functions called from HTML via `google.script.run`: `getAssignedLeadsForRep_`, `getLeadRecordByLeadId_`, `lookupManualLeadFromSerpApi`, `saveManualLead`, `saveRepLeadUpdate`
+- Server functions called from HTML via `google.script.run`: `lookupManualLeadFromSerpApi`, `saveManualLead`, `saveRepLeadUpdate`
 - Also: `fetchSerpApiPlaceByPlaceId_`, `normalizeSerpApiPlaceDetails_`, `buildMarketMirrorInputFromLeadRow_`, `parseMapsIdentifier_`
 - Local header utilities (parallel to 06, normalized keys): `buildHeaderIndex_`, `normalizeHeaderKey_`, `getCellByHeader_`, `setCellByHeader_`, `hasHeader_`
 
@@ -366,10 +366,11 @@ No Anthropic API key found — all narrative generation is rule-based string con
 | `?mode=rep_support&leadId=X` | Rep support sheet | rendered HTML (17) |
 
 ### `google.script.run` functions (called from HTML)
+
+> **Note:** `20_rep_dashboard.html` and `21_rep_lead.html` are server-rendered templates. Data is injected at render time inside `doGet` via `template.leads = getAssignedLeadsForRep_(rep)` and `template.lead = getLeadRecordByLeadId_(leadId)`. Neither function is exposed to the browser or callable via `google.script.run`.
+
 | Function | File | Called from |
 |---|---|---|
-| `getAssignedLeadsForRep_` | 19 | 20 |
-| `getLeadRecordByLeadId_` | 19 | 21 |
 | `lookupManualLeadFromSerpApi` | 19 | 22 |
 | `saveManualLead` | 19 | 22 |
 | `saveRepLeadUpdate` | 19 | 21 |
