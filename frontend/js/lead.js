@@ -189,18 +189,17 @@ function renderReadonlyDetails(lead) {
 function buildFullPayload(overrides) {
   const base = currentLead || {};
   return {
-    leadId:                currentLead ? (currentLead.leadId || leadId) : leadId,
-    contactName:           get(base, 'contactName'),
-    contactRole:           get(base, 'contactRole'),
-    mainPhone:             get(base, 'mainPhone', 'phone'),
-    mobilePhone:           get(base, 'mobilePhone'),
-    mainEmail:             get(base, 'mainEmail', 'email'),
-    secondaryContactName:  get(base, 'secondaryContactName'),
-    secondaryContactRole:  get(base, 'secondaryContactRole'),
-    secondaryContactPhone: get(base, 'secondaryContactPhone'),
-    secondaryContactEmail: get(base, 'secondaryContactEmail'),
-    secondaryAddress:      get(base, 'secondaryAddress', 'address'),
-    notes:                 get(base, 'notes'),
+    lead_id:                 currentLead ? (currentLead.leadId || leadId) : leadId,
+    contact_name:            get(base, 'contactName'),
+    contact_role:            get(base, 'contactRole'),
+    main_phone:              get(base, 'mainPhone', 'phone'),
+    mobile_phone:            get(base, 'mobilePhone'),
+    main_email:              get(base, 'mainEmail', 'email'),
+    secondary_contact_name:  get(base, 'secondaryContactName'),
+    secondary_contact_role:  get(base, 'secondaryContactRole'),
+    secondary_contact_phone: get(base, 'secondaryContactPhone'),
+    secondary_contact_email: get(base, 'secondaryContactEmail'),
+    secondary_address:       get(base, 'secondaryAddress', 'address'),
     ...overrides
   };
 }
@@ -275,7 +274,7 @@ async function handleSaveNotes() {
   const notesValue = document.getElementById('repNotesInput').value.trim();
 
   try {
-    await updateLead(buildFullPayload({ notes: notesValue }));
+    await updateLead(buildFullPayload({ new_note: notesValue }));
     showNotesMsg('Notes saved.', 'success');
     document.getElementById('repNotesInput').value = '';
     const updated = await fetchLead(leadId);
@@ -300,16 +299,16 @@ async function handleSaveContact() {
   showContactMsg('');
 
   const contactOverrides = {
-    contactName:           document.getElementById('editContactName').value,
-    contactRole:           document.getElementById('editContactRole').value,
-    mainPhone:             document.getElementById('editMainPhone').value,
-    mobilePhone:           document.getElementById('editMobilePhone').value,
-    mainEmail:             document.getElementById('editMainEmail').value,
-    secondaryContactName:  document.getElementById('editSecondaryContactName').value,
-    secondaryContactRole:  document.getElementById('editSecondaryContactRole').value,
-    secondaryContactPhone: document.getElementById('editSecondaryContactPhone').value,
-    secondaryContactEmail: document.getElementById('editSecondaryContactEmail').value,
-    secondaryAddress:      document.getElementById('editSecondaryAddress').value,
+    contact_name:            document.getElementById('editContactName').value,
+    contact_role:            document.getElementById('editContactRole').value,
+    main_phone:              document.getElementById('editMainPhone').value,
+    mobile_phone:            document.getElementById('editMobilePhone').value,
+    main_email:              document.getElementById('editMainEmail').value,
+    secondary_contact_name:  document.getElementById('editSecondaryContactName').value,
+    secondary_contact_role:  document.getElementById('editSecondaryContactRole').value,
+    secondary_contact_phone: document.getElementById('editSecondaryContactPhone').value,
+    secondary_contact_email: document.getElementById('editSecondaryContactEmail').value,
+    secondary_address:       document.getElementById('editSecondaryAddress').value,
   };
 
   try {
