@@ -1040,6 +1040,12 @@ function handleJsonPostRequest_(e) {
       return jsonSuccess_({ lead_id: body.lead_id, action_type: body.action_type });
     }
 
+    if (action === 'lookup_lead') {
+      if (!body.place_identifier) return jsonError_('Missing place_identifier.');
+      var lookup = lookupManualLeadFromSerpApi(body.place_identifier);
+      return jsonSuccess_(lookup);
+    }
+
     return jsonError_('Unknown action: ' + action);
   } catch (err) {
     return jsonError_(err && err.message ? err.message : String(err));
