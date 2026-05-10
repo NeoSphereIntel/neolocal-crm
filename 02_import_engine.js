@@ -527,7 +527,7 @@ function fetchSerpApiPlaceDetails_(identifier) {
   const params = {
     engine: "google_maps",
     type: "place",
-    data_id: identifier,
+    data: identifier,
     api_key: apiKey
   };
   const url = "https://serpapi.com/search.json?" + toQueryString_(params);
