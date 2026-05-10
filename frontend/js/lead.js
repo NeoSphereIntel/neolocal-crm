@@ -135,6 +135,26 @@ function render(lead) {
   setInput('editSecondaryAddress',     get(lead, 'secondaryAddress', 'address'));
   setInput('editAssignedTo',           get(lead, 'assignedTo'));
 
+  // Zone 1: assigned-to chip
+  const assignedVal = get(lead, 'assignedTo');
+  const chipRow = document.getElementById('assignedChipRow');
+  if (assignedVal) {
+    document.getElementById('assignedToChip').textContent = assignedVal;
+    chipRow.style.display = '';
+  } else {
+    chipRow.style.display = 'none';
+  }
+
+  // Rep Support button
+  const repSupportBtn = document.getElementById('repSupportBtn');
+  const repSupportUrl = get(lead, 'repSupportUrl');
+  if (repSupportUrl) {
+    repSupportBtn.href = repSupportUrl;
+    repSupportBtn.style.display = '';
+  } else {
+    repSupportBtn.style.display = 'none';
+  }
+
   // Zone 4b: task section
   document.getElementById('currentTaskLabel').textContent = lead.activeTask || '—';
 
@@ -179,15 +199,6 @@ function renderReadonlyDetails(lead) {
         ['Undervalued', lead.isUndervalued ? 'Yes' : '']
       ]
     },
-    {
-      title: 'Task',
-      fields: [
-        ['Active Task', get(lead, 'activeTask')],
-        ['Task Type',   get(lead, 'taskType')],
-        ['Due At',      lead.taskDueAt ? fmtDate(lead.taskDueAt) : ''],
-        ['Task Status', get(lead, 'taskStatus')]
-      ]
-    }
   ];
 
   document.getElementById('readonlyDetails').innerHTML = groups.map(g => {
@@ -492,14 +503,6 @@ async function handleSaveContact() {
 }
 
 document.getElementById('saveContactBtn').addEventListener('click', handleSaveContact);
-
-// --- Details toggle ---
-
-document.getElementById('detailsToggle').addEventListener('click', function () {
-  const body = document.getElementById('detailsBody');
-  const open = body.classList.toggle('open');
-  this.querySelector('.nl-toggle-icon').textContent = open ? '▲' : '▼';
-});
 
 // --- Init ---
 

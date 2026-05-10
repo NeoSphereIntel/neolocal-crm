@@ -677,6 +677,45 @@ body {
 .nl-w-full       { width: 100%; }
 
 /* ============================================================
+   TWO-COLUMN LEAD LAYOUT
+============================================================ */
+.nl-two-col {
+  display: -webkit-flex;
+  display: flex;
+  gap: 24px;
+  -webkit-align-items: flex-start;
+  align-items: flex-start;
+}
+
+.nl-col-left {
+  -webkit-flex: 7;
+  flex: 7;
+  min-width: 0;
+  max-width: 700px;
+}
+
+.nl-col-right {
+  -webkit-flex: 5;
+  flex: 5;
+  min-width: 0;
+  max-width: 500px;
+}
+
+@media (max-width: 768px) {
+  .nl-two-col {
+    -webkit-flex-direction: column;
+    flex-direction: column;
+  }
+  .nl-col-left,
+  .nl-col-right {
+    max-width: 100%;
+    width: 100%;
+    -webkit-flex: none;
+    flex: none;
+  }
+}
+
+/* ============================================================
    RESPONSIVE
 ============================================================ */
 @media (max-width: 900px) {

@@ -14,7 +14,7 @@
     </div>
   </header>
 
-  <div class="nl-container nl-main" style="max-width:900px;">
+  <div class="nl-container nl-main">
 
     <a id="backLink" href="index.html" class="nl-back">← Back to Dashboard</a>
 
@@ -35,6 +35,10 @@
               <span class="nl-badge nl-status-new" id="statusBadge"></span>
             </div>
             <div class="nl-text-sm nl-text-gray" id="leadMeta"></div>
+            <div id="assignedChipRow" style="margin-top:6px;display:none;">
+              <span class="nl-label-field" style="display:inline;">Assigned: </span>
+              <span id="assignedToChip" class="nl-badge" style="background:var(--nl-navy);color:#fff;"></span>
+            </div>
           </div>
           <div class="nl-status-bar-right">
             <div>Last touch: <strong id="lastTouch"></strong></div>
@@ -43,133 +47,72 @@
         </div>
       </div>
 
-      <!-- Zone 2: Market position -->
-      <div class="nl-zone nl-card nl-card-body">
-        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Market Position</div>
-        <div class="nl-market-position" id="marketPositionSummary"></div>
-        <div class="nl-gap-summary" id="strategicGapSummary"></div>
-      </div>
+      <!-- Two-column layout -->
+      <div class="nl-two-col">
 
-      <!-- Zone 3: Market Mirror -->
-      <div class="nl-zone nl-card nl-card-navy nl-card-body" style="text-align:center;padding:36px 24px;">
-        <div class="nl-label nl-mb-8" style="color:rgba(255,255,255,0.55);letter-spacing:3px;">Market Intelligence</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:#fff;margin-bottom:20px;">
-          View the Full Market Mirror Report
-        </div>
-        <a id="mirrorBtn" href="#" target="_blank" rel="noopener" class="nl-btn nl-btn-primary nl-btn-lg">
-          View Market Mirror
-        </a>
-      </div>
+        <!-- Left column -->
+        <div class="nl-col-left">
 
-      <!-- Zone 4: Outreach + CRM actions + Rep Notes -->
-      <div class="nl-zone nl-card nl-card-body">
-        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Outreach Message</div>
-        <div class="nl-outreach-box" id="outreachMsg"></div>
-        <button id="copyOutreach" class="nl-btn nl-btn-secondary nl-btn-sm">Copy to Clipboard</button>
-
-        <div id="replySection" style="margin-top:24px;" hidden>
-          <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Reply Message</div>
-          <div class="nl-outreach-box" id="replyMsg"></div>
-        </div>
-
-        <div id="actionMsg" class="nl-alert" style="display:none;margin-top:16px;"></div>
-        <div class="nl-action-row">
-          <button class="nl-btn nl-btn-primary nl-btn-sm"   data-action="contacted"   data-label="Contacted">Mark Contacted</button>
-          <button class="nl-btn nl-btn-secondary nl-btn-sm" data-action="replied"     data-label="Replied">Mark Replied</button>
-          <button class="nl-btn nl-btn-secondary nl-btn-sm" data-action="qualified"   data-label="Qualified">Mark Qualified</button>
-          <button class="nl-btn nl-btn-secondary nl-btn-sm" data-action="call_booked" data-label="Call Booked">Book Call</button>
-        </div>
-
-        <!-- Rep Notes -->
-        <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--nl-off-white-2);">
-          <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Rep Notes</div>
-          <textarea id="repNotesInput" class="nl-textarea" placeholder="Add a note about this lead…" style="min-height:80px;"></textarea>
-          <div id="notesMsg" class="nl-alert" style="display:none;margin-top:10px;"></div>
-          <div class="nl-mt-10" style="margin-top:10px;">
-            <button id="saveNotesBtn" class="nl-btn nl-btn-secondary nl-btn-sm">Save Notes</button>
+          <!-- Market Position -->
+          <div class="nl-zone nl-card nl-card-body">
+            <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Market Position</div>
+            <div class="nl-market-position" id="marketPositionSummary"></div>
+            <div class="nl-gap-summary" id="strategicGapSummary"></div>
           </div>
-        </div>
-      </div>
 
-      <!-- Zone 4b: Next Action / Task -->
-      <div class="nl-zone nl-card nl-card-body">
-        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Next Action</div>
-
-        <div style="margin-bottom:16px;">
-          <div class="nl-label-field">Current Task</div>
-          <div id="currentTaskLabel" class="nl-detail-value" style="margin-bottom:6px;">—</div>
-          <span id="taskStatusBadge" class="nl-badge" style="display:none;"></span>
-        </div>
-
-        <div class="nl-details-grid" style="margin-bottom:16px;">
-          <div class="nl-form-group" style="margin-bottom:0;">
-            <label class="nl-label-field" for="taskTypeSelect">Task Type</label>
-            <select id="taskTypeSelect" class="nl-input">
-              <option value="">— Select —</option>
-              <option value="Follow-up Call">Follow-up Call</option>
-              <option value="Send Email">Send Email</option>
-              <option value="Send Market Mirror">Send Market Mirror</option>
-              <option value="Schedule Demo">Schedule Demo</option>
-              <option value="Custom">Custom</option>
-            </select>
-          </div>
-          <div class="nl-form-group" style="margin-bottom:0;">
-            <label class="nl-label-field" for="taskDueAtInput">Due Date</label>
-            <input type="date" id="taskDueAtInput" class="nl-input">
-          </div>
-        </div>
-
-        <div id="taskMsg" class="nl-alert" style="display:none;margin-bottom:12px;"></div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="setTaskBtn" class="nl-btn nl-btn-primary nl-btn-sm">Set Task</button>
-          <button id="completeTaskBtn" class="nl-btn nl-btn-secondary nl-btn-sm">Complete Task</button>
-        </div>
-      </div>
-
-      <!-- Zone 5: Activity log -->
-      <div class="nl-zone nl-card nl-card-body">
-        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Activity Log</div>
-        <ul class="nl-activity-log" id="activityLog"></ul>
-      </div>
-
-      <!-- Zone 6: Details (collapsed) -->
-      <div class="nl-zone nl-card nl-card-body">
-        <button class="nl-details-toggle" id="detailsToggle">
-          More Details <span class="nl-toggle-icon">▼</span>
-        </button>
-
-        <div class="nl-details-body" id="detailsBody">
-
-          <!-- Business Info (editable) -->
-          <div class="nl-mb-24">
-            <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Business Info</div>
-            <div class="nl-details-grid">
-              <div class="nl-form-group" style="margin-bottom:0;">
-                <label class="nl-label-field" for="editBusinessName">Business Name</label>
-                <input type="text" id="editBusinessName" class="nl-input">
-              </div>
-              <div class="nl-form-group" style="margin-bottom:0;">
-                <label class="nl-label-field" for="editCategory">Category</label>
-                <input type="text" id="editCategory" class="nl-input">
-              </div>
-              <div class="nl-form-group" style="margin-bottom:0;">
-                <label class="nl-label-field" for="editAddress">Address</label>
-                <input type="text" id="editAddress" class="nl-input">
-              </div>
-              <div class="nl-form-group" style="margin-bottom:0;">
-                <label class="nl-label-field" for="editWebsite">Website</label>
-                <input type="url" id="editWebsite" class="nl-input">
-              </div>
+          <!-- Market Intelligence -->
+          <div class="nl-zone nl-card nl-card-navy nl-card-body" style="padding:28px 24px;">
+            <div class="nl-label nl-mb-8" style="color:rgba(255,255,255,0.55);letter-spacing:3px;">Market Intelligence</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;margin-bottom:16px;">
+              View the Full Market Mirror Report
             </div>
-            <div id="businessMsg" class="nl-alert" style="display:none;margin-top:14px;"></div>
-            <div style="margin-top:16px;">
-              <button id="saveBusinessBtn" class="nl-btn nl-btn-primary nl-btn-sm">Save Business Info</button>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <a id="mirrorBtn" href="#" target="_blank" rel="noopener" class="nl-btn nl-btn-primary nl-btn-lg" style="flex:1;text-align:center;justify-content:center;">
+                View Market Mirror
+              </a>
+              <a id="repSupportBtn" href="#" target="_blank" rel="noopener" class="nl-btn nl-btn-ghost nl-btn-lg" style="flex:1;text-align:center;justify-content:center;display:none;">
+                Rep Support
+              </a>
             </div>
           </div>
+
+          <!-- Outreach + CRM actions -->
+          <div class="nl-zone nl-card nl-card-body">
+            <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Outreach Message</div>
+            <div class="nl-outreach-box" id="outreachMsg"></div>
+            <button id="copyOutreach" class="nl-btn nl-btn-secondary nl-btn-sm">Copy to Clipboard</button>
+
+            <div id="replySection" style="margin-top:24px;" hidden>
+              <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Reply Message</div>
+              <div class="nl-outreach-box" id="replyMsg"></div>
+            </div>
+
+            <div id="actionMsg" class="nl-alert" style="display:none;margin-top:16px;"></div>
+            <div class="nl-action-row">
+              <button class="nl-btn nl-btn-primary nl-btn-sm"   data-action="contacted"   data-label="Contacted">Mark Contacted</button>
+              <button class="nl-btn nl-btn-secondary nl-btn-sm" data-action="replied"     data-label="Replied">Mark Replied</button>
+              <button class="nl-btn nl-btn-secondary nl-btn-sm" data-action="qualified"   data-label="Qualified">Mark Qualified</button>
+              <button class="nl-btn nl-btn-secondary nl-btn-sm" data-action="call_booked" data-label="Call Booked">Book Call</button>
+            </div>
+          </div>
+
+          <!-- Rep Notes -->
+          <div class="nl-zone nl-card nl-card-body">
+            <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Rep Notes</div>
+            <textarea id="repNotesInput" class="nl-textarea" placeholder="Add a note about this lead…" style="min-height:80px;"></textarea>
+            <div id="notesMsg" class="nl-alert" style="display:none;margin-top:10px;"></div>
+            <div style="margin-top:10px;">
+              <button id="saveNotesBtn" class="nl-btn nl-btn-secondary nl-btn-sm">Save Notes</button>
+            </div>
+          </div>
+
+        </div><!-- /.nl-col-left -->
+
+        <!-- Right column -->
+        <div class="nl-col-right">
 
           <!-- Contact Info (editable) -->
-          <div class="nl-mb-24">
+          <div class="nl-zone nl-card nl-card-body">
             <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Contact Info</div>
             <div class="nl-details-grid">
               <div class="nl-form-group" style="margin-bottom:0;">
@@ -219,14 +162,44 @@
             </div>
           </div>
 
-          <!-- Assigned To (editable) -->
-          <div class="nl-mb-24" style="padding-top:20px;border-top:1px solid var(--nl-off-white-2);">
-            <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Assignment</div>
+          <!-- Business Info (editable) -->
+          <div class="nl-zone nl-card nl-card-body">
+            <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Business Info</div>
             <div class="nl-details-grid">
               <div class="nl-form-group" style="margin-bottom:0;">
-                <label class="nl-label-field" for="editAssignedTo">Assigned To</label>
-                <input type="text" id="editAssignedTo" class="nl-input" placeholder="Rep name">
+                <label class="nl-label-field" for="editBusinessName">Business Name</label>
+                <input type="text" id="editBusinessName" class="nl-input">
               </div>
+              <div class="nl-form-group" style="margin-bottom:0;">
+                <label class="nl-label-field" for="editCategory">Category</label>
+                <input type="text" id="editCategory" class="nl-input">
+              </div>
+              <div class="nl-form-group" style="margin-bottom:0;">
+                <label class="nl-label-field" for="editAddress">Address</label>
+                <input type="text" id="editAddress" class="nl-input">
+              </div>
+              <div class="nl-form-group" style="margin-bottom:0;">
+                <label class="nl-label-field" for="editWebsite">Website</label>
+                <input type="url" id="editWebsite" class="nl-input">
+              </div>
+            </div>
+            <div id="businessMsg" class="nl-alert" style="display:none;margin-top:14px;"></div>
+            <div style="margin-top:16px;">
+              <button id="saveBusinessBtn" class="nl-btn nl-btn-primary nl-btn-sm">Save Business Info</button>
+            </div>
+          </div>
+
+          <!-- Operator Intel + Scores (JS-rendered) -->
+          <div class="nl-zone nl-card nl-card-body">
+            <div id="readonlyDetails"></div>
+          </div>
+
+          <!-- Assignment -->
+          <div class="nl-zone nl-card nl-card-body">
+            <div class="nl-label nl-mb-16" style="color:var(--nl-navy);">Assignment</div>
+            <div class="nl-form-group" style="margin-bottom:0;">
+              <label class="nl-label-field" for="editAssignedTo">Assigned To</label>
+              <input type="text" id="editAssignedTo" class="nl-input" placeholder="Rep name">
             </div>
             <div id="assignedMsg" class="nl-alert" style="display:none;margin-top:14px;"></div>
             <div style="margin-top:16px;">
@@ -234,10 +207,52 @@
             </div>
           </div>
 
-          <!-- Read-only sections (JS rendered: Operator Intel, Scores, Task) -->
-          <div id="readonlyDetails"></div>
+        </div><!-- /.nl-col-right -->
 
+      </div><!-- /.nl-two-col -->
+
+      <!-- Zone 3: Full width — Task + Activity -->
+
+      <!-- Next Action / Task -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Next Action</div>
+
+        <div style="margin-bottom:16px;">
+          <div class="nl-label-field">Current Task</div>
+          <div id="currentTaskLabel" class="nl-detail-value" style="margin-bottom:6px;">—</div>
+          <span id="taskStatusBadge" class="nl-badge" style="display:none;"></span>
         </div>
+
+        <div class="nl-details-grid" style="margin-bottom:16px;">
+          <div class="nl-form-group" style="margin-bottom:0;">
+            <label class="nl-label-field" for="taskTypeSelect">Task Type</label>
+            <select id="taskTypeSelect" class="nl-input">
+              <option value="">— Select —</option>
+              <option value="Follow-up Call">Follow-up Call</option>
+              <option value="Send Email">Send Email</option>
+              <option value="Send Market Mirror">Send Market Mirror</option>
+              <option value="Schedule Demo">Schedule Demo</option>
+              <option value="Custom">Custom</option>
+            </select>
+          </div>
+          <div class="nl-form-group" style="margin-bottom:0;">
+            <label class="nl-label-field" for="taskDueAtInput">Due Date</label>
+            <input type="date" id="taskDueAtInput" class="nl-input">
+          </div>
+        </div>
+
+        <div id="taskMsg" class="nl-alert" style="display:none;margin-bottom:12px;"></div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="setTaskBtn" class="nl-btn nl-btn-primary nl-btn-sm">Set Task</button>
+          <button id="completeTaskBtn" class="nl-btn nl-btn-secondary nl-btn-sm">Complete Task</button>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="nl-zone nl-card nl-card-body">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Activity Log</div>
+        <ul class="nl-activity-log" id="activityLog"></ul>
       </div>
 
     </div><!-- /#content -->
