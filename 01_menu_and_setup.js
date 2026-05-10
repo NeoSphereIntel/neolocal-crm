@@ -58,6 +58,8 @@ function buildNeoLocalSalesEngineV23() {
   formatAllSheets();
 
   ensureLeadsColumn_("outreach_message");
+  ensureLeadsColumn_("outreach_dm");
+  ensureLeadsColumn_("outreach_followup");
   ensureLeadsColumn_("inbound_reply");
   ensureLeadsColumn_("reply_type");
   ensureLeadsColumn_("reply_message");
@@ -81,6 +83,42 @@ function buildNeoLocalSalesEngineV23() {
   ensureLeadsColumn_("momentum_score");
   ensureLeadsColumn_("momentum_state");
   ensureLeadsColumn_("is_undervalued");
+  ensureLeadsColumn_("data_id");
+  ensureLeadsColumn_("enrichment_status");
+  ensureLeadsColumn_("description");
+  ensureLeadsColumn_("service_options");
+  ensureLeadsColumn_("extensions");
+  ensureLeadsColumn_("has_booking_link");
+  ensureLeadsColumn_("categories_full");
+  ensureLeadsColumn_("similar_places");
+  ensureLeadsColumn_("also_search_for");
+  ensureLeadsColumn_("photo_count");
+  ensureLeadsColumn_("thumbnail_url");
+  ensureLeadsColumn_("review_topics");
+  ensureLeadsColumn_("owner_response_count");
+  ensureLeadsColumn_("reviews_sampled");
+  ensureLeadsColumn_("owner_response_rate");
+  ensureLeadsColumn_("latest_review_date");
+  ensureLeadsColumn_("latest_response_date");
+  ensureLeadsColumn_("recent_avg_rating");
+  ensureLeadsColumn_("rating_trend");
+  ensureLeadsColumn_("total_photos");
+  ensureLeadsColumn_("photo_categories");
+  ensureLeadsColumn_("owner_photos");
+  ensureLeadsColumn_("latest_photo_date");
+  ensureLeadsColumn_("peer_avg_reviews");
+  ensureLeadsColumn_("peer_avg_rating");
+  ensureLeadsColumn_("peer_avg_photos");
+  ensureLeadsColumn_("peer_count");
+  ensureLeadsColumn_("leader_avg_reviews");
+  ensureLeadsColumn_("leader_avg_photos");
+  ensureLeadsColumn_("discovery_position_score");
+  ensureLeadsColumn_("profile_authority_score");
+  ensureLeadsColumn_("trust_surface_score");
+  ensureLeadsColumn_("owner_engagement_score");
+  ensureLeadsColumn_("competitive_displacement_score");
+  ensureLeadsColumn_("market_capture_score");
+  ensureLeadsColumn_("operator_fit_score");
 
   backfillAssignedToAndMarketMirrorUrl();
 
@@ -341,11 +379,49 @@ function setupLeadsMasterSheet_(sheet) {
     "shadow_job_created_at",
     "notes",
     "outreach_message",
+    "outreach_dm",
+    "outreach_followup",
     "inbound_reply",
     "reply_type",
     "reply_message",
 	"Assigned To",
 	"Market Mirror URL",
+	"data_id",
+	"enrichment_status",
+	"description",
+	"service_options",
+	"extensions",
+	"has_booking_link",
+	"categories_full",
+	"similar_places",
+	"also_search_for",
+	"photo_count",
+	"thumbnail_url",
+	"review_topics",
+	"owner_response_count",
+	"reviews_sampled",
+	"owner_response_rate",
+	"latest_review_date",
+	"latest_response_date",
+	"recent_avg_rating",
+	"rating_trend",
+	"total_photos",
+	"photo_categories",
+	"owner_photos",
+	"latest_photo_date",
+	"peer_avg_reviews",
+	"peer_avg_rating",
+	"peer_avg_photos",
+	"peer_count",
+	"leader_avg_reviews",
+	"leader_avg_photos",
+	"discovery_position_score",
+	"profile_authority_score",
+	"trust_surface_score",
+	"owner_engagement_score",
+	"competitive_displacement_score",
+	"market_capture_score",
+	"operator_fit_score",
 	"Active Task",
 	"Task Type",
 	"Task Due At",
@@ -377,7 +453,9 @@ function setupImportLogSheet_(sheet) {
     "inserted_count",
     "updated_count",
     "status",
-    "message"
+    "message",
+    "lead_id",
+    "error_field"
   ];
 
   setHeadersIfNeeded_(sheet, headers);

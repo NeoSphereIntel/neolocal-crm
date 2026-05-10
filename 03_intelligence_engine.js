@@ -680,3 +680,438 @@ function computeUndervalued_(m) {
 
   return strongRating && closeToTop && weakMarket;
 }
+
+/* ============================================================================
+   PEER BAND CALCULATOR
+============================================================================ */
+
+/**
+ * Calculates peer band averages for a target lead against the full import batch.
+ * @returns {Object} peer_avg_reviews, peer_avg_rating, peer_avg_photos, peer_count,
+ *                   leader_avg_reviews, leader_avg_photos
+ */
+function calculatePeerBand_(leads, targetLead) {
+  const isAutoRetail = determineVerticalType_(targetLead) === "auto_retail";
+  const scaleBand = estimateScaleBand_(targetLead, isAutoRetail);
+  const peerRange = getPeerReviewRange_(targetLead, scaleBand);
+
+  // Direct peers: exclude self, filter to review range
+  const peers = leads.filter(l => {
+    if (l.lead_signature === targetLead.lead_signature) return false;
+    const r = parseInt(l.reviews_count, 10) || 0;
+    return r >= peerRange.min && r <= peerRange.max;
+  });
+
+  // Market leaders: top 3 by maps_position (position 1 = best rank)
+  const leaders = leads
+    .filter(l => l.lead_signature !== targetLead.lead_signature)
+    .filter(l => parseInt(l.maps_position, 10) > 0)
+    .sort((a, b) => (parseInt(a.maps_position, 10) || 99) - (parseInt(b.maps_position, 10) || 99))
+    .slice(0, 3);
+
+  const peerReviews = peers.map(p => parseInt(p.reviews_count, 10) || 0);
+  const peerRatings = peers.map(p => parseFloat(p.rating) || 0).filter(v => v > 0);
+  const peerPhotos  = peers.map(p => parseInt(p.photo_count, 10) || 0);
+
+  const leaderReviews = leaders.map(l => parseInt(l.reviews_count, 10) || 0);
+  const leaderPhotos  = leaders.map(l => parseInt(l.photo_count, 10) || 0);
+
+  return {
+    peer_avg_reviews: peerReviews.length ? round1_(avg_(peerReviews)) : 0,
+    peer_avg_rating:  peerRatings.length ? round2_(avg_(peerRatings)) : 0,
+    peer_avg_photos:  peerPhotos.length  ? round1_(avg_(peerPhotos))  : 0,
+    peer_count:       peers.length,
+    leader_avg_reviews: leaderReviews.length ? round1_(avg_(leaderReviews)) : 0,
+    leader_avg_photos:  leaderPhotos.length  ? round1_(avg_(leaderPhotos))  : 0
+  };
+}
+
+/**
+ * Returns estimated scale band label for peer band determination.
+ * Uses locked operator_scale_band when present; falls back to review heuristic.
+ * Auto-retail thresholds are 3x higher than general trades per SCORING-SPEC §4.
+ */
+function estimateScaleBand_(lead, isAutoRetail) {
+  const operatorBand = safeText_(lead.operator_scale_band).toLowerCase();
+  if (operatorBand) return operatorBand;
+
+  const reviews = parseInt(lead.reviews_count, 10) || 0;
+  const m = isAutoRetail ? 3 : 1;
+
+  if (reviews < 30  * m) return "small";
+  if (reviews < 150 * m) return "mid-size";
+  if (reviews < 500 * m) return "large";
+  return "multi-location";
+}
+
+/**
+ * Returns {min, max} review count range for direct peer filtering.
+ * Locked ranges come from operator_scale_band; estimated uses ±3x review volume.
+ */
+function getPeerReviewRange_(lead, scaleBand) {
+  const operatorBand = safeText_(lead.operator_scale_band).toLowerCase();
+
+  if (operatorBand === "solo")           return { min: 0,   max: 20 };
+  if (operatorBand === "small team")     return { min: 10,  max: 60 };
+  if (operatorBand === "mid-size")       return { min: 40,  max: 200 };
+  if (operatorBand === "large")          return { min: 150, max: 600 };
+  if (operatorBand === "multi-location") return { min: 400, max: Infinity };
+
+  // Estimated: ±3x review volume
+  const reviews = parseInt(lead.reviews_count, 10) || 0;
+  if (!reviews) return { min: 0, max: 30 };
+  return { min: Math.floor(reviews / 3), max: reviews * 3 };
+}
+
+/* ============================================================================
+   DIMENSION SCORERS — SHARED HELPERS
+============================================================================ */
+
+/**
+ * Returns whole days elapsed since an ISO date string. Returns Infinity if missing/invalid.
+ */
+function daysSince_(isoDateStr) {
+  if (!isoDateStr) return Infinity;
+  const d = new Date(isoDateStr);
+  if (isNaN(d.getTime())) return Infinity;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+/**
+ * Parses the review_topics JSON string (stored by enrichment pipeline).
+ * Returns empty array on missing or malformed input.
+ */
+function parseReviewTopics_(topicsJson) {
+  if (!topicsJson) return [];
+  try {
+    const parsed = JSON.parse(topicsJson);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Orchestrates all five dimension scorers for a single lead.
+ * @returns {Object} five score fields, each 0–100 integer
+ */
+function calculateDimensionScores_(lead, peerBand) {
+  return {
+    discovery_position_score:       scoreDiscoveryPosition_(parseInt(lead.maps_position, 10) || 0),
+    profile_authority_score:        scoreProfileAuthority_(lead),
+    trust_surface_score:            scoreTrustSurface_(lead, peerBand),
+    owner_engagement_score:         scoreOwnerEngagement_(lead),
+    competitive_displacement_score: scoreCompetitiveDisplacement_(lead, peerBand)
+  };
+}
+
+/* ============================================================================
+   DIMENSION SCORER — DISCOVERY POSITION
+   Weight: 30% of Market Capture score.
+   Measures where the business appears in the local search results surface.
+============================================================================ */
+
+/**
+ * Scores discovery position from maps_position (1 = top of results).
+ * Returns 0 for unranked leads. SCORING-SPEC §5.1 lookup table.
+ */
+function scoreDiscoveryPosition_(mapsPosition) {
+  const pos = parseInt(mapsPosition, 10) || 0;
+  if (pos <= 0) return 0;
+  switch (pos) {
+    case 1:  return 100;
+    case 2:  return 95;
+    case 3:  return 88;
+    case 4:  return 78;
+    case 5:  return 70;
+    case 6:  return 62;
+    case 7:  return 55;
+    case 8:  return 45;
+    case 9:  return 38;
+    case 10: return 30;
+    default:
+      if (pos <= 15) return 20;
+      if (pos <= 20) return 10;
+      return 0;
+  }
+}
+
+/* ============================================================================
+   DIMENSION SCORER — PROFILE AUTHORITY
+   Weight: 20% of Market Capture score.
+   Additive signal set — measures how completely the business has built its
+   discoverable profile footprint. All signals from Place Details enrichment.
+============================================================================ */
+
+/**
+ * Scores profile completeness/authority from enriched lead fields.
+ * Maximum possible: 100. Missing enrichment fields score 0 for that signal.
+ */
+function scoreProfileAuthority_(lead) {
+  let score = 0;
+
+  // Owner photos (0–20)
+  const ownerPhotos = parseInt(lead.owner_photos, 10) || 0;
+  if (ownerPhotos >= 30)      score += 20;
+  else if (ownerPhotos >= 16) score += 15;
+  else if (ownerPhotos >= 6)  score += 10;
+  else if (ownerPhotos >= 1)  score += 5;
+
+  // Total photos (0–15)
+  const totalPhotos = parseInt(lead.total_photos, 10) || 0;
+  if (totalPhotos >= 100)     score += 15;
+  else if (totalPhotos >= 31) score += 11;
+  else if (totalPhotos >= 11) score += 7;
+  else if (totalPhotos >= 1)  score += 3;
+
+  // Description / editorial summary present (0–10)
+  if (safeText_(lead.description)) score += 10;
+
+  // Hours filled (0–10)
+  if (safeText_(lead.hours)) score += 10;
+
+  // Service options declared (0–10)
+  if (safeText_(lead.service_options)) score += 10;
+
+  // Category breadth (0–10)
+  const cats = safeText_(lead.categories_full)
+    .split(",").map(s => s.trim()).filter(Boolean);
+  if (cats.length >= 3)       score += 10;
+  else if (cats.length === 2) score += 6;
+  else if (cats.length === 1) score += 3;
+
+  // Website present (0–10)
+  if (safeText_(lead.website_present).toLowerCase() === "yes") score += 10;
+
+  // Booking link present (0–5)
+  if (safeText_(lead.has_booking_link).toLowerCase() === "yes") score += 5;
+
+  // Extensions / highlights present (0–5)
+  if (safeText_(lead.extensions)) score += 5;
+
+  // Phone present (0–5)
+  if (safeText_(lead.phone_present).toLowerCase() === "yes") score += 5;
+
+  return clamp_(Math.round(score), 0, 100);
+}
+
+/* ============================================================================
+   DIMENSION SCORER — TRUST SURFACE
+   Weight: 20% of Market Capture score.
+   Peer-adjusted — compares review volume to peer band average, not raw market.
+   Uses review intelligence fields from the Reviews API enrichment.
+============================================================================ */
+
+/**
+ * Scores trust signals relative to peer band. Never uses raw review counts alone.
+ * Five components: volume ratio (0–30), rating (0–25), recency (0–20),
+ * topic diversity (0–15), rating trend (0–10). Max 100.
+ */
+function scoreTrustSurface_(lead, peerBand) {
+  let score = 0;
+
+  // Review volume vs peer avg (0–30)
+  const peerAvgReviews = parseFloat((peerBand || {}).peer_avg_reviews) || 0;
+  const reviews = parseInt(lead.reviews_count, 10) || 0;
+  if (peerAvgReviews > 0) {
+    const ratio = reviews / peerAvgReviews;
+    if (ratio >= 2.0)      score += 30;
+    else if (ratio >= 1.5) score += 25;
+    else if (ratio >= 1.0) score += 20;
+    else if (ratio >= 0.7) score += 14;
+    else if (ratio >= 0.4) score += 8;
+    else                   score += 3;
+  } else {
+    score += 10; // no peer baseline — neutral
+  }
+
+  // Rating strength (0–25)
+  const rating = parseFloat(lead.rating) || 0;
+  if (rating >= 4.7)      score += 25;
+  else if (rating >= 4.5) score += 22;
+  else if (rating >= 4.2) score += 18;
+  else if (rating >= 4.0) score += 14;
+  else if (rating >= 3.5) score += 8;
+  else if (rating > 0)    score += 3;
+
+  // Review recency (0–20)
+  const reviewAge = daysSince_(safeText_(lead.latest_review_date));
+  if (reviewAge < 7)        score += 20;
+  else if (reviewAge < 30)  score += 16;
+  else if (reviewAge < 90)  score += 10;
+  else if (reviewAge < 180) score += 5;
+
+  // Topic diversity — topics with ≥ 3 mentions (0–15)
+  const topics = parseReviewTopics_(lead.review_topics);
+  const richTopics = topics.filter(t => (parseInt(t.mentions, 10) || 0) >= 3).length;
+  if (richTopics >= 5)      score += 15;
+  else if (richTopics >= 3) score += 10;
+  else if (richTopics >= 1) score += 5;
+
+  // Rating trend (0–10)
+  const trend = safeText_(lead.rating_trend).toLowerCase();
+  if (trend === "improving")      score += 10;
+  else if (trend === "stable")    score += 6;
+  else if (trend === "declining") score += 2;
+  else                            score += 5; // no data — neutral middle
+
+  return clamp_(Math.round(score), 0, 100);
+}
+
+/* ============================================================================
+   DIMENSION SCORER — OWNER ENGAGEMENT
+   Weight: 15% of Market Capture score.
+   Measures how actively the owner manages their discovery presence.
+============================================================================ */
+
+/**
+ * Scores owner engagement from response rate, review recency, and rating trend.
+ * Response rate (0–40) + recency (0–35) + trend (0–25) = max 100.
+ */
+function scoreOwnerEngagement_(lead) {
+  let score = 0;
+
+  // Owner response rate (0–40)
+  const responseRate = parseFloat(lead.owner_response_rate) || 0;
+  if (responseRate >= 0.8)      score += 40;
+  else if (responseRate >= 0.6) score += 32;
+  else if (responseRate >= 0.4) score += 22;
+  else if (responseRate >= 0.2) score += 12;
+  else if (responseRate > 0)    score += 5;
+
+  // Latest review date recency — proxy for ongoing customer activity (0–35)
+  const reviewAge = daysSince_(safeText_(lead.latest_review_date));
+  if (reviewAge < 7)        score += 35;
+  else if (reviewAge < 30)  score += 28;
+  else if (reviewAge < 90)  score += 18;
+  else if (reviewAge < 180) score += 8;
+
+  // Rating trend (0–25)
+  const trend = safeText_(lead.rating_trend).toLowerCase();
+  if (trend === "improving")      score += 25;
+  else if (trend === "stable")    score += 15;
+  else if (trend === "declining") score += 5;
+  else                            score += 10; // no data — neutral middle
+
+  return clamp_(Math.round(score), 0, 100);
+}
+
+/* ============================================================================
+   COMPOSITE CALCULATOR — MARKET CAPTURE
+============================================================================ */
+
+/**
+ * Computes the weighted Market Capture composite score, diagnosis state, and
+ * optional operator fit. Pure function — reads inputs, returns object, no side effects.
+ *
+ * Weights: Discovery 30%, Trust 25%, Displacement 20%, Authority 15%, Engagement 10%.
+ *
+ * @param {Object} dimensionScores  Five dimension score fields (0–100 each)
+ * @param {Object} operatorContext  Lead fields used for operator fit; may be empty/null
+ * @returns {{ market_capture_score, diagnosis, operator_fit, dimension_scores }}
+ */
+function calculateMarketCapture_(dimensionScores, operatorContext) {
+  const d = dimensionScores || {};
+  const discovery    = clamp_(parseInt(d.discovery_position_score,       10) || 0, 0, 100);
+  const trust        = clamp_(parseInt(d.trust_surface_score,            10) || 0, 0, 100);
+  const displacement = clamp_(parseInt(d.competitive_displacement_score, 10) || 0, 0, 100);
+  const authority    = clamp_(parseInt(d.profile_authority_score,        10) || 0, 0, 100);
+  const engagement   = clamp_(parseInt(d.owner_engagement_score,         10) || 0, 0, 100);
+
+  const marketCaptureScore = clamp_(Math.round(
+    discovery    * 0.30 +
+    trust        * 0.25 +
+    displacement * 0.20 +
+    authority    * 0.15 +
+    engagement   * 0.10
+  ), 0, 100);
+
+  let diagnosis;
+  if (marketCaptureScore >= 80)      diagnosis = "Anchor";
+  else if (marketCaptureScore >= 60) diagnosis = "Contender";
+  else if (marketCaptureScore >= 40) diagnosis = "Underdog";
+  else if (marketCaptureScore >= 20) diagnosis = "Outgunned";
+  else                               diagnosis = "Ghost";
+
+  // Operator fit — null when no operator context fields are present
+  const ctx = operatorContext || {};
+  const hasOperatorContext = !!(
+    safeText_(ctx.operator_scale_band) ||
+    safeText_(ctx.operator_monthly_volume) ||
+    safeText_(ctx.operator_business_model)
+  );
+
+  let operatorFit = null;
+  if (hasOperatorContext) {
+    const peerAvgReviews = parseFloat(ctx.peer_avg_reviews) || 0;
+    const reviews        = parseInt(ctx.reviews_count, 10) || 0;
+    // Neutral ratio of 1.0 when no peer baseline exists yet
+    const reviewRatio    = peerAvgReviews > 0 ? reviews / peerAvgReviews : 1.0;
+
+    const rawFit = (
+      reviewRatio          * 0.40 +
+      (authority  / 100)   * 0.30 +
+      (engagement / 100)   * 0.30
+    ) * 100;
+
+    operatorFit = clamp_(Math.round(rawFit), 0, 100);
+  }
+
+  return {
+    market_capture_score: marketCaptureScore,
+    diagnosis:            diagnosis,
+    operator_fit:         operatorFit,
+    dimension_scores: {
+      discovery_position_score:       discovery,
+      trust_surface_score:            trust,
+      competitive_displacement_score: displacement,
+      profile_authority_score:        authority,
+      owner_engagement_score:         engagement
+    }
+  };
+}
+
+/* ============================================================================
+   DIMENSION SCORER — COMPETITIVE DISPLACEMENT
+   Weight: 20% of Market Capture score.
+   Higher score = LESS displaced (better position). Directionally consistent
+   with other dimensions — higher is always better. SCORING-SPEC §5.5 note.
+============================================================================ */
+
+/**
+ * Scores competitive position from maps_position and review volume vs market leaders.
+ * Position component (0–50) + leader review ratio component (0–50) = max 100.
+ */
+function scoreCompetitiveDisplacement_(lead, peerBand) {
+  let score = 0;
+
+  // Maps position component (0–50)
+  const pos = parseInt(lead.maps_position, 10) || 0;
+  if (pos === 1)      score += 50;
+  else if (pos === 2) score += 44;
+  else if (pos === 3) score += 38;
+  else if (pos === 4) score += 30;
+  else if (pos === 5) score += 24;
+  else if (pos === 6) score += 18;
+  else if (pos === 7) score += 13;
+  else if (pos <= 10) score += 8;
+  else if (pos <= 15) score += 4;
+  else if (pos > 15)  score += 1;
+
+  // Review volume vs market leaders (0–50)
+  const leaderAvg = parseFloat((peerBand || {}).leader_avg_reviews) || 0;
+  const reviews = parseInt(lead.reviews_count, 10) || 0;
+  if (leaderAvg > 0) {
+    const ratio = reviews / leaderAvg;
+    if (ratio >= 2.0)      score += 50;
+    else if (ratio >= 1.5) score += 43;
+    else if (ratio >= 1.0) score += 35;
+    else if (ratio >= 0.7) score += 25;
+    else if (ratio >= 0.4) score += 15;
+    else                   score += 5;
+  } else {
+    score += 25; // no leader baseline — neutral middle
+  }
+
+  return clamp_(Math.round(score), 0, 100);
+}

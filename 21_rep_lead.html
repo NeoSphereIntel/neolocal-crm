@@ -3,9 +3,12 @@
   <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
       body {
-        font-family: Arial, sans-serif;
+        font-family: 'Barlow', Arial, sans-serif;
         margin: 0;
         background: #f6f7fb;
         color: #1f2937;
@@ -242,6 +245,131 @@
           grid-template-columns: 1fr;
         }
       }
+
+      /* ── Market Intelligence Panel ───────────────────────────────────── */
+
+      .nl-intel-panel {
+        background: #000e38;
+        border-radius: 8px;
+        padding: 18px 20px 14px;
+        margin: 16px 0 0;
+      }
+
+      .nl-score-row {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: flex-end;
+        align-items: flex-end;
+        gap: 16px;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+
+      .nl-score-label {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: 2px;
+      }
+
+      .nl-score-number {
+        font-family: 'Bebas Neue', Arial, sans-serif !important;
+        font-size: 80px;
+        line-height: 1;
+        color: #fff;
+        letter-spacing: 2px;
+      }
+
+      .nl-diagnosis-badge {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        padding: 6px 14px;
+        border-radius: 3px;
+        -webkit-align-self: center;
+        align-self: center;
+      }
+
+      .nl-diag-anchor      { background: #1a6640; color: #fff; }
+      .nl-diag-contender   { background: #00195c; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+      .nl-diag-underdog    { background: #ed8220; color: #fff; }
+      .nl-diag-outgunned   { background: #bd0e20; color: #fff; }
+      .nl-diag-ghost       { background: #5a6378; color: #fff; }
+
+      .nl-dims {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 14px;
+      }
+
+      .nl-dim-row {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nl-dim-label {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.5);
+        width: 108px;
+        -webkit-flex-shrink: 0;
+        flex-shrink: 0;
+      }
+
+      .nl-dim-track {
+        -webkit-flex: 1;
+        flex: 1;
+        height: 5px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .nl-dim-fill {
+        height: 100%;
+        border-radius: 3px;
+      }
+
+      .nl-dim-score {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        width: 26px;
+        text-align: right;
+        -webkit-flex-shrink: 0;
+        flex-shrink: 0;
+      }
+
+      .nl-operator-fit {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: rgba(255,255,255,0.75);
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 12px;
+        margin-top: 4px;
+      }
+
+      .nl-operator-fit strong {
+        color: #ed8220;
+      }
     </style>
   </head>
 
@@ -263,12 +391,50 @@
             Rating: <?= lead.rating ?> · Reviews: <?= lead.reviews ?>
           </div>
 
-          <div class="intel-strip">
-            <? if (lead.momentumState) { ?>
-              <span class="intel-pill">Momentum: <?= lead.momentumState ?></span>
-            <? } ?>
-            <? if (lead.isUndervalued) { ?>
-              <span class="intel-pill opportunity">Undervalued Opportunity</span>
+          <div class="nl-intel-panel">
+            <div class="nl-score-row">
+              <div>
+                <div class="nl-score-label">Market Capture</div>
+                <div class="nl-score-number"><?= Math.round(lead.marketCaptureScore || 0) ?></div>
+              </div>
+              <? if (lead.diagnosisState) {
+                   var diagKey = String(lead.diagnosisState).toLowerCase();
+                   var diagClass = 'nl-diag-' + diagKey; ?>
+                <span class="nl-diagnosis-badge <?= diagClass ?>"><?= lead.diagnosisState ?></span>
+              <? } ?>
+            </div>
+
+            <div class="nl-dims">
+              <?
+                function dimFillColor(score) {
+                  return score >= 70 ? '#1a6640' : (score >= 40 ? '#ed8220' : '#bd0e20');
+                }
+                var dimDefs = [
+                  ['Discovery',     lead.discoveryPositionScore],
+                  ['Profile Auth',  lead.profileAuthorityScore],
+                  ['Trust Surface', lead.trustSurfaceScore],
+                  ['Engagement',    lead.ownerEngagementScore],
+                  ['Displacement',  lead.competitiveDisplacementScore]
+                ];
+                for (var d = 0; d < dimDefs.length; d++) {
+                  var dimLabel = dimDefs[d][0];
+                  var dimScore = Math.round(dimDefs[d][1] || 0);
+                  var dimColor = dimFillColor(dimScore);
+              ?>
+                <div class="nl-dim-row">
+                  <div class="nl-dim-label"><?= dimLabel ?></div>
+                  <div class="nl-dim-track">
+                    <div class="nl-dim-fill" style="width:<?= dimScore ?>%;background:<?= dimColor ?>;"></div>
+                  </div>
+                  <div class="nl-dim-score"><?= dimScore ?></div>
+                </div>
+              <? } ?>
+            </div>
+
+            <? if (lead.operatorFitScore) { ?>
+              <div class="nl-operator-fit">
+                Operator Fit &nbsp;·&nbsp; <strong><?= Math.round(lead.operatorFitScore) ?></strong>
+              </div>
             <? } ?>
           </div>
 

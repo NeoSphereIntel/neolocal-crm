@@ -3,9 +3,12 @@
   <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
       body {
-        font-family: Arial, sans-serif;
+        font-family: 'Barlow', Arial, sans-serif;
         margin: 0;
         background: #f5f7fb;
         color: #1f2937;
@@ -228,6 +231,79 @@
         text-align: center;
         color: #6b7280;
       }
+
+      /* ── Diagnosis Distribution Strip ───────────────────────────────── */
+
+      .nl-diag-strip {
+        background: #000e38;
+        border-radius: 8px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        gap: 6px;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+      }
+
+      .nl-diag-strip-label {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.45);
+        margin-right: 8px;
+      }
+
+      .nl-diag-count {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 4px 12px;
+        border-radius: 3px;
+        white-space: nowrap;
+      }
+
+      .nl-count-anchor    { background: #1a6640; color: #fff; }
+      .nl-count-contender { background: #00195c; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+      .nl-count-underdog  { background: #ed8220; color: #fff; }
+      .nl-count-outgunned { background: #bd0e20; color: #fff; }
+      .nl-count-ghost     { background: #5a6378; color: #fff; }
+
+      /* ── Card diagnosis badge ────────────────────────────────────────── */
+
+      .nl-card-badge {
+        font-family: 'Barlow Condensed', Arial, sans-serif !important;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .nl-badge-anchor    { background: #1a6640; color: #fff; }
+      .nl-badge-contender { background: #00195c; color: #fff; }
+      .nl-badge-underdog  { background: #ed8220; color: #fff; }
+      .nl-badge-outgunned { background: #bd0e20; color: #fff; }
+      .nl-badge-ghost     { background: #5a6378; color: #fff; }
+
+      .nl-mcs {
+        font-family: 'Bebas Neue', Arial, sans-serif !important;
+        font-size: 28px;
+        color: #000e38;
+        line-height: 1;
+        display: inline-block;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
@@ -263,9 +339,33 @@
 
       <? if (!leads || !leads.length) { ?>
         <div class="empty">No leads assigned.</div>
-      <? } else { ?>
+      <? } else {
+           var diagOrder = ['Anchor','Contender','Underdog','Outgunned','Ghost'];
+           var diagCounts = {};
+           for (var di = 0; di < diagOrder.length; di++) { diagCounts[diagOrder[di]] = 0; }
+           for (var ci = 0; ci < leads.length; ci++) {
+             var ds = String(leads[ci].diagnosisState || '');
+             if (diagCounts.hasOwnProperty(ds)) diagCounts[ds]++;
+           }
+      ?>
+        <div class="nl-diag-strip" id="diagStrip">
+          <span class="nl-diag-strip-label">Pipeline</span>
+          <? for (var di = 0; di < diagOrder.length; di++) {
+               var dKey = diagOrder[di];
+               var dCount = diagCounts[dKey];
+               if (!dCount) continue;
+               var dClass = 'nl-count-' + dKey.toLowerCase();
+          ?>
+            <span class="nl-diag-count <?= dClass ?>"><?= dKey ?> · <?= dCount ?></span>
+          <? } ?>
+        </div>
+
         <div class="grid" id="leadGrid">
-          <? for (var i = 0; i < leads.length; i++) { var lead = leads[i]; ?>
+          <? for (var i = 0; i < leads.length; i++) { var lead = leads[i];
+               var cardDiagKey = String(lead.diagnosisState || '').toLowerCase();
+               var cardBadgeClass = cardDiagKey ? 'nl-badge-' + cardDiagKey : '';
+               var cardMcs = Math.round(lead.marketCaptureScore || 0);
+          ?>
             <div class="card"
                  data-status="<?= lead.status || '' ?>"
                  data-task-status="<?= lead.taskStatus || '' ?>"
@@ -280,24 +380,22 @@
                    lead.email || '',
                    lead.activeTask || '',
                    lead.taskType || '',
-                   lead.momentumState || '',
-                   lead.isUndervalued ? 'undervalued' : ''
+                   lead.diagnosisState || ''
                  ].join(' ').toLowerCase() ?>">
-              <h3><?= lead.businessName || 'Unnamed Lead' ?></h3>
+              <h3>
+                <?= lead.businessName || 'Unnamed Lead' ?>
+                <? if (lead.diagnosisState && cardBadgeClass) { ?>
+                  <span class="nl-card-badge <?= cardBadgeClass ?>"><?= lead.diagnosisState ?></span>
+                <? } ?>
+              </h3>
               <div class="meta"><?= lead.city || '—' ?> · <?= lead.category || '—' ?></div>
               <div class="statusline">
                 Lead status: <span class="pill"><?= lead.status || '—' ?></span>
+                <? if (cardMcs) { ?>
+                  &nbsp;<span class="nl-mcs"><?= cardMcs ?></span>
+                <? } ?>
               </div>
               <div class="meta">Rating: <?= lead.rating || 0 ?> · Reviews: <?= lead.reviews || 0 ?></div>
-
-              <div class="intel-row">
-                <? if (lead.momentumState) { ?>
-                  <span class="pill-intel">Momentum: <?= lead.momentumState ?></span>
-                <? } ?>
-                <? if (lead.isUndervalued) { ?>
-                  <span class="pill-intel pill-opportunity">Undervalued</span>
-                <? } ?>
-              </div>
 
               <div class="contact">Contact: <?= lead.contactName || '—' ?></div>
               <div class="contact">Phone: <?= lead.phone || '—' ?></div>

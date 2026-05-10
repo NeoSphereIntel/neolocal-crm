@@ -50,10 +50,10 @@ function buildAutoRetailOperatorMismatchSummary_(m, diagnosisState, mismatch) {
   var weightPhrase = buildOperatorWeightPhrase_(mismatch);
 
   if (mismatch.severity === "hard") {
-    return `That is the contradiction.\n\nFor a dealership carrying ${weightPhrase}, the market should not still be reading it at a ${String(diagnosisState || "").toLowerCase()} trust position. The problem is not that the operation is too small to matter. The problem is that real dealership weight is not being translated into buyer confidence early enough, which leaves the store commercially lighter than it should be.`;
+    return "That is the contradiction.\n\nFor a dealership carrying " + weightPhrase + ", the market should not still be reading it at a " + String(diagnosisState || "").toLowerCase() + " trust position. The problem is not that the operation is too small to matter. The problem is that real dealership weight is not being translated into buyer confidence early enough, which leaves the store commercially lighter than it should be.";
   }
 
-  return `There is also an operator mismatch here.\n\nBased on ${weightPhrase}, the dealership should be reading closer to a stronger competitive posture than it currently does in market. That suggests the issue is not pure capability. It is a failure of translation between what the business can support operationally and what buyers are being shown publicly.`;
+  return "There is also an operator mismatch here.\n\nBased on " + weightPhrase + ", the dealership should be reading closer to a stronger competitive posture than it currently does in market. That suggests the issue is not pure capability. It is a failure of translation between what the business can support operationally and what buyers are being shown publicly.";
 }
 
 function buildGenericOperatorMismatchSummary_(m, diagnosisState, mismatch, profile) {
@@ -63,10 +63,10 @@ function buildGenericOperatorMismatchSummary_(m, diagnosisState, mismatch, profi
   var saferChoice = profile.default_choice_language || "safer local choice";
 
   if (mismatch.severity === "hard") {
-    return `That creates a clear operator mismatch.\n\nFor a business carrying ${weightPhrase}, the market should not still be reading it this lightly. The issue is not simply that competitors are visible. It is that real operating weight is failing to convert into the level of public trust required to become the ${saferChoice}.`;
+    return "That creates a clear operator mismatch.\n\nFor a business carrying " + weightPhrase + ", the market should not still be reading it this lightly. The issue is not simply that competitors are visible. It is that real operating weight is failing to convert into the level of public trust required to become the " + saferChoice + ".";
   }
 
-  return `There is a capacity-to-perception gap here.\n\nBased on ${weightPhrase}, the business should be landing in a stronger market posture than it currently holds. That usually means the operation has more substance than the public layer is allowing buyers to feel.`;
+  return "There is a capacity-to-perception gap here.\n\nBased on " + weightPhrase + ", the business should be landing in a stronger market posture than it currently holds. That usually means the operation has more substance than the public layer is allowing buyers to feel.";
 }
 
 function buildOperatorMismatchSummary_(m, diagnosisState, profile) {
@@ -208,7 +208,7 @@ The dealership does not simply need more visibility. It needs enough visible pro
   if (diagnosisState === "Undersignaled") {
     return `This is a high-leverage opening because the gap appears to be translation more than capability.
 
-If the dealership’s real strengths are converted into denser public proof, the market can start assigning more of the confidence the business may already deserve operationally.`;
+If the dealership's real strengths are converted into denser public proof, the market can start assigning more of the confidence the business may already deserve operationally.`;
   }
 
   if (diagnosisState === "Contender") {
@@ -391,4 +391,151 @@ function buildSnapshotNarrativePackage_(m, scores, diagnosis) {
       part4
     ].filter(Boolean).join("\n\n")
   };
+}
+
+/* ============================================================================
+   MARKET INTELLIGENCE NARRATIVE ENGINE (v2)
+   Shadow — runs alongside old templates until verified. Overrides the four
+   narrative columns in the import pass after the old snapshot completes.
+   Inputs: calculateMarketCapture_() output + competitorSignals + peerBand.
+   Voice: discovery surface, verified footprint, visibility signals.
+          Never leads with review counts. Operator-to-operator tone.
+============================================================================ */
+
+/**
+ * Builds the three-section market intelligence narrative package.
+ */
+function buildMarketIntelligenceNarrative_(lead, marketCapture, competitorSignals, peerBand) {
+  const mc   = marketCapture    || {};
+  const cs   = competitorSignals || {};
+  const pb   = peerBand         || {};
+  const dims = mc.dimension_scores || {};
+
+  const businessName = safeText_(lead.business_name) || "This business";
+  const city         = safeText_(lead.city)           || "this market";
+  const category     = safeText_(lead.category)       || "this category";
+  const diagnosis    = safeText_(mc.diagnosis)        || "";
+  const mcs          = clamp_(parseInt(mc.market_capture_score, 10) || 0, 0, 100);
+  const operatorFit  = (mc.operator_fit !== null && mc.operator_fit !== undefined)
+    ? parseInt(mc.operator_fit, 10)
+    : null;
+
+  const marketPositionSummary    = buildMIPositionSummary_(businessName, city, category, diagnosis, mcs);
+  const strategicGapSummary      = buildMIGapSummary_(dims, lead, city, category, businessName, operatorFit);
+  const actionImplicationSummary = buildMIDisplacementInsight_(lead, mc, cs, pb, businessName, city, category);
+
+  return {
+    market_position_summary:    marketPositionSummary,
+    strategic_gap_summary:      strategicGapSummary,
+    action_implication_summary: actionImplicationSummary,
+    snapshot_narrative: [
+      marketPositionSummary,
+      strategicGapSummary,
+      actionImplicationSummary
+    ].filter(Boolean).join("\n\n")
+  };
+}
+
+/* --- Section 1: Market Position Summary — one sentence, score + diagnosis label --- */
+
+function buildMIPositionSummary_(businessName, city, category, diagnosis, mcs) {
+  switch (diagnosis) {
+    case "Anchor":
+      return `${businessName} leads ${city}'s ${category} discovery surface with a Market Capture score of ${mcs}/100 — projecting stronger visibility signals than the competitive set across every dimension measured.`;
+    case "Contender":
+      return `${businessName} is actively competitive in ${city}'s ${category} discovery surface (${mcs}/100) — within striking distance of the operators currently controlling top positions.`;
+    case "Underdog":
+      return `${businessName} holds a developing presence in ${city}'s ${category} discovery surface (${mcs}/100) — visible enough to be found, not yet weighted enough to be the default choice.`;
+    case "Outgunned":
+      return `${businessName} is present in ${city}'s ${category} discovery surface but is being outranked by operators projecting stronger verified footprints across every signal dimension (${mcs}/100).`;
+    case "Ghost":
+      return `${businessName} does not currently appear in the primary discovery surface for ${category} in ${city} — available market signal in this space is being captured entirely by other operators.`;
+    default:
+      return `${businessName} holds a Market Capture score of ${mcs}/100 in ${city}'s ${category} discovery surface.`;
+  }
+}
+
+/* --- Section 2: Dimensional Breakdown — lowest 2–3 dimensions, opportunity framing --- */
+
+function buildMIGapSummary_(dims, lead, city, category, businessName, operatorFit) {
+  const ranked = [
+    { key: "discovery_position_score",      score: clamp_(parseInt(dims.discovery_position_score,      10) || 0, 0, 100) },
+    { key: "profile_authority_score",        score: clamp_(parseInt(dims.profile_authority_score,        10) || 0, 0, 100) },
+    { key: "trust_surface_score",            score: clamp_(parseInt(dims.trust_surface_score,            10) || 0, 0, 100) },
+    { key: "owner_engagement_score",         score: clamp_(parseInt(dims.owner_engagement_score,         10) || 0, 0, 100) },
+    { key: "competitive_displacement_score", score: clamp_(parseInt(dims.competitive_displacement_score, 10) || 0, 0, 100) }
+  ].sort((a, b) => a.score - b.score);
+
+  // Pull bottom 3 when the weakest is below 50; bottom 2 otherwise
+  const gapCount = ranked[0].score < 50 ? 3 : 2;
+  const sentences = ranked
+    .slice(0, gapCount)
+    .map(g => buildMIDimensionGapSentence_(g.key, lead, city, category))
+    .filter(Boolean);
+
+  let text = sentences.join(" ");
+
+  if (operatorFit !== null) {
+    const fitLine = buildMIOperatorFitLine_(operatorFit, businessName);
+    if (fitLine) text += "\n\n" + fitLine;
+  }
+
+  return text;
+}
+
+function buildMIDimensionGapSentence_(key, lead, city, category) {
+  const pos = parseInt(lead.maps_position, 10) || 0;
+  switch (key) {
+    case "discovery_position_score":
+      return pos > 0
+        ? `There is significant discovery surface open above position ${pos} that better-ranked operators are currently capturing in ${city}.`
+        : `This business is not yet appearing in the primary ${category} discovery surface in ${city} — the available visibility is being captured by operators with stronger signal density.`;
+    case "profile_authority_score":
+      return `The business profile has undeclared visibility signals — service options, category depth, and verified presence elements that determine which businesses search surfaces surface first and in what order.`;
+    case "trust_surface_score":
+      return `The verified footprint relative to ${city}'s ${category} peer band is thinner than the operation's actual activity likely justifies — creating an opening for the right proof signals to close that gap quickly.`;
+    case "owner_engagement_score":
+      return `The profile reads as unmanaged to search surfaces — recent activity signals are weak, and the market has limited public evidence that this operation is actively translating its work into verified presence.`;
+    case "competitive_displacement_score":
+      return `${category} discovery in ${city} is competitive — operators with denser signal footprints are controlling the positions buyers filter from, and the current presence isn't yet pushing above that pack.`;
+    default:
+      return "";
+  }
+}
+
+function buildMIOperatorFitLine_(operatorFit, businessName) {
+  const fit = parseInt(operatorFit, 10);
+  if (isNaN(fit)) return "";
+  if (fit >= 80) return `Based on the operator profile on file, ${businessName} is outperforming what similar operations typically achieve in this market — the discovery gap is a positioning issue, not a capability one.`;
+  if (fit >= 60) return `The operator profile points to a solid operational foundation — the market position is below where this level of operation typically lands, which suggests a translation gap between actual activity and public visibility signals.`;
+  if (fit >= 40) return `Based on the operator profile, there is a meaningful gap between the business's operational weight and what its current discovery presence communicates to the market.`;
+  return `The operator profile indicates this business is running well below the discovery capture rate typical for its scale — a significant amount of potential market presence is going unrealised.`;
+}
+
+/* --- Section 3: Competitive Displacement Insight — one observation, uses competitor names --- */
+
+function buildMIDisplacementInsight_(lead, mc, cs, pb, businessName, city, category) {
+  const pos       = parseInt(lead.maps_position, 10) || 0;
+  const peerCount = parseInt(pb.peer_count, 10)      || 0;
+  const mcs       = parseInt(mc.market_capture_score, 10) || 0;
+  const comp1     = safeText_(cs.comp_1_name || "");
+  const comp2     = safeText_(cs.comp_2_name || "");
+
+  const competitorRef = comp1 && comp2
+    ? `${comp1} and ${comp2}`
+    : (comp1 || "the leading operators in this space");
+
+  if (pos === 1) {
+    return `${businessName} holds the top position in ${city}'s ${category} discovery surface — the task now is compounding that signal advantage as ${competitorRef} continue building their footprints.`;
+  }
+  if (pos >= 2 && pos <= 5) {
+    return `${competitorRef} currently rank above ${businessName} in ${city}'s ${category} results — the gap is closeable, but requires raising signal density across the dimensions that drive discovery rank.`;
+  }
+  if (pos > 5) {
+    return `${businessName} is ranked at position ${pos} in a ${city} ${category} discovery surface that ${competitorRef} are controlling from the top — closing this gap requires a multi-dimensional signal lift, not a single-element fix.`;
+  }
+  if (peerCount > 0) {
+    return `Against ${peerCount} direct peers in the ${city} ${category} market, ${businessName} has a Market Capture score of ${mcs}/100 — the gap to operators currently controlling discovery positions is addressable across the dimensions flagged above.`;
+  }
+  return `The ${category} market in ${city} is still developing — there is discovery surface available that a stronger signal footprint can capture before operators establish dominant positions.`;
 }

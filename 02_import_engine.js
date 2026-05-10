@@ -101,7 +101,7 @@ function importOneSearchConfig_(config, leadsSheet, importLogSheet) {
 
   try {
     const apiResults = fetchSerpApiLocalResults_(query, config.max_results, config.language);
-    const normalizedResults = normalizeLocalResults_(apiResults, config, searchId);
+    const normalizedResults = normalizeLocalResults_(apiResults, config, searchId, importLogSheet);
     const existing = buildLeadIndex_(leadsSheet);
 
     let inserted = 0;
@@ -176,23 +176,45 @@ function fetchSerpApiLocalResults_(query, maxResults, language) {
   return localResults.slice(0, maxResults || APP.MAX_RESULTS_PER_SEARCH);
 }
 
-function normalizeLocalResults_(localResults, config, searchId) {
-  const normalizedLeads = localResults.map((r, i) =>
-    buildNormalizedLeadObject_(r, i, config, searchId)
-  );
+function normalizeLocalResults_(localResults, config, searchId, importLogSheet) {
+  const normalizedLeads = localResults.map((r, i) => {
+    const lead = buildNormalizedLeadObject_(r, i, config, searchId);
+    const leadId = generateLeadId_(lead, searchId);
+    const enrichment = enrichLeadWithApiData_(lead, leadId, searchId, importLogSheet);
+    return Object.assign({}, lead, { lead_id: leadId }, enrichment);
+  });
 
   const marketContext = buildMarketContext_(normalizedLeads);
 
   return normalizedLeads.map(lead => {
+	const peerBand        = calculatePeerBand_(normalizedLeads, lead);
+	const dimensionScores = calculateDimensionScores_(lead, peerBand);
 	const competitorSignals = calculateCompetitorSignals_(lead, marketContext);
-	const snapshot = generateSnapshot_(lead, competitorSignals);
-	const leadId = generateLeadId_(lead, searchId);
+	const snapshot        = generateSnapshot_(lead, competitorSignals);
+	const marketCapture   = calculateMarketCapture_(dimensionScores, {
+		operator_scale_band:    lead.operator_scale_band,
+		operator_monthly_volume: lead.operator_monthly_volume,
+		operator_business_model: lead.operator_business_model,
+		reviews_count:          lead.reviews_count,
+		peer_avg_reviews:       peerBand.peer_avg_reviews
+	});
+	const marketIntelNarrative = buildMarketIntelligenceNarrative_(lead, marketCapture, competitorSignals, peerBand);
+	const miOutreach           = generateMarketIntelOutreach_(lead, marketCapture, peerBand);
 
-	return Object.assign({}, lead, competitorSignals, snapshot, {
-		lead_id: leadId,
+	return Object.assign({}, lead, peerBand, dimensionScores, competitorSignals, snapshot, {
+		market_capture_score:       marketCapture.market_capture_score,
+		diagnosis_state:            marketCapture.diagnosis,
+		operator_fit_score:         marketCapture.operator_fit !== null ? marketCapture.operator_fit : "",
+		market_position_summary:    marketIntelNarrative.market_position_summary,
+		strategic_gap_summary:      marketIntelNarrative.strategic_gap_summary,
+		action_implication_summary: marketIntelNarrative.action_implication_summary,
+		snapshot_narrative:         marketIntelNarrative.snapshot_narrative,
+		outreach_message:           miOutreach.cold_email,
+		outreach_dm:                miOutreach.dm,
+		outreach_followup:          miOutreach.follow_up,
 		"Assigned To": "",
-		"Market Mirror URL": buildMarketMirrorUrl_(leadId),
-		"Rep Support URL": buildRepSupportUrl_(leadId)
+		"Market Mirror URL": buildMarketMirrorUrl_(lead.lead_id),
+		"Rep Support URL":   buildRepSupportUrl_(lead.lead_id)
 	});
 });
 }
@@ -211,6 +233,7 @@ function buildNormalizedLeadObject_(r, i, config, searchId) {
   const reviews = parseInt(r.reviews, 10) || 0;
   const position = parseInt(r.position, 10) || (i + 1);
   const placeId = safeText_(r.place_id);
+  const dataId = safeText_(r.data_id);
   const gps = buildGpsString_(r.gps_coordinates);
   const hours = normalizeHours_(r.hours);
   const reviewText = safeText_(r.description || r.snippet || "No snippet returned");
@@ -235,6 +258,7 @@ function buildNormalizedLeadObject_(r, i, config, searchId) {
     phone: phone,
     address: address,
     place_id: placeId,
+    data_id: dataId,
     gps: gps,
     hours: hours,
     website_present: website ? "Yes" : "No",
@@ -276,6 +300,42 @@ function updateExistingLeadFromImport_(sheet, rowNumber, newData) {
     lead_signature: newData.lead_signature,
     website_present: newData.website_present,
     phone_present: newData.phone_present,
+    data_id: newData.data_id,
+    description: newData.description,
+    service_options: newData.service_options,
+    extensions: newData.extensions,
+    has_booking_link: newData.has_booking_link,
+    categories_full: newData.categories_full,
+    similar_places: newData.similar_places,
+    also_search_for: newData.also_search_for,
+    photo_count: newData.photo_count,
+    thumbnail_url: newData.thumbnail_url,
+    review_topics: newData.review_topics,
+    owner_response_count: newData.owner_response_count,
+    reviews_sampled: newData.reviews_sampled,
+    owner_response_rate: newData.owner_response_rate,
+    latest_review_date: newData.latest_review_date,
+    latest_response_date: newData.latest_response_date,
+    recent_avg_rating: newData.recent_avg_rating,
+    rating_trend: newData.rating_trend,
+    total_photos: newData.total_photos,
+    photo_categories: newData.photo_categories,
+    owner_photos: newData.owner_photos,
+    latest_photo_date: newData.latest_photo_date,
+    enrichment_status: newData.enrichment_status,
+    peer_avg_reviews: newData.peer_avg_reviews,
+    peer_avg_rating: newData.peer_avg_rating,
+    peer_avg_photos: newData.peer_avg_photos,
+    peer_count: newData.peer_count,
+    leader_avg_reviews: newData.leader_avg_reviews,
+    leader_avg_photos: newData.leader_avg_photos,
+    discovery_position_score: newData.discovery_position_score,
+    profile_authority_score: newData.profile_authority_score,
+    trust_surface_score: newData.trust_surface_score,
+    owner_engagement_score: newData.owner_engagement_score,
+    competitive_displacement_score: newData.competitive_displacement_score,
+    market_capture_score: newData.market_capture_score,
+    operator_fit_score: newData.operator_fit_score,
     comp_1_name: newData.comp_1_name,
     comp_1_reviews: newData.comp_1_reviews,
     comp_2_name: newData.comp_2_name,
@@ -300,6 +360,9 @@ function updateExistingLeadFromImport_(sheet, rowNumber, newData) {
     strategic_gap_summary: newData.strategic_gap_summary,
     action_implication_summary: newData.action_implication_summary,
     snapshot_narrative: newData.snapshot_narrative,
+    outreach_message: newData.outreach_message,
+    outreach_dm: newData.outreach_dm,
+    outreach_followup: newData.outreach_followup,
 	snapshot_version: newData.snapshot_version,
 	priority_bucket: newData.priority_bucket || row.priority_bucket || "",
 	"Assigned To": row["Assigned To"] || "",
@@ -398,4 +461,270 @@ function writeBackSearchConfigRunMeta_(rowNumber, config, searchId, count) {
   sheet.getRange(rowNumber, 11).setNumberFormat("@");
   sheet.getRange(rowNumber, 12).setNumberFormat("@");
   sheet.getRange(rowNumber, 13).setNumberFormat("0");
+}
+
+/* ============================================================================
+   ENRICHMENT PIPELINE
+============================================================================ */
+
+function enrichLeadWithApiData_(lead, leadId, searchId, importLogSheet) {
+  const identifier = lead.data_id || lead.place_id;
+
+  if (!identifier) {
+    logEnrichmentError_(importLogSheet, searchId, leadId, "all", new Error("No place_id or data_id available"));
+    return Object.assign(
+      emptyPlaceDetailsFields_(),
+      emptyReviewIntelligenceFields_(),
+      emptyPhotoIntelligenceFields_(),
+      { enrichment_status: "error" }
+    );
+  }
+
+  let placeFields = null;
+  let reviewFields = null;
+  let photoFields = null;
+
+  try {
+    const placeJson = fetchSerpApiPlaceDetails_(identifier);
+    placeFields = extractPlaceDetailsFields_(placeJson);
+  } catch (err) {
+    logEnrichmentError_(importLogSheet, searchId, leadId, "place_details", err);
+  }
+
+  if (lead.data_id) {
+    try {
+      const reviewJson = fetchSerpApiReviewsData_(lead.data_id);
+      reviewFields = extractReviewIntelligenceFields_(reviewJson);
+    } catch (err) {
+      logEnrichmentError_(importLogSheet, searchId, leadId, "reviews", err);
+    }
+
+    try {
+      const photoJson = fetchSerpApiPhotosData_(lead.data_id);
+      photoFields = extractPhotoIntelligenceFields_(photoJson);
+    } catch (err) {
+      logEnrichmentError_(importLogSheet, searchId, leadId, "photos", err);
+    }
+  } else {
+    logEnrichmentError_(importLogSheet, searchId, leadId, "reviews", new Error("No data_id — reviews skipped"));
+    logEnrichmentError_(importLogSheet, searchId, leadId, "photos", new Error("No data_id — photos skipped"));
+  }
+
+  const successCount = (placeFields ? 1 : 0) + (reviewFields ? 1 : 0) + (photoFields ? 1 : 0);
+  const enrichmentStatus = successCount === 3 ? "ok" : (successCount > 0 ? "partial" : "error");
+
+  return Object.assign(
+    {},
+    placeFields || emptyPlaceDetailsFields_(),
+    reviewFields || emptyReviewIntelligenceFields_(),
+    photoFields || emptyPhotoIntelligenceFields_(),
+    { enrichment_status: enrichmentStatus }
+  );
+}
+
+function fetchSerpApiPlaceDetails_(identifier) {
+  const apiKey = getScriptPropertyOrThrow_("SERPAPI_KEY");
+  const params = {
+    engine: "google_maps",
+    type: "place",
+    data_id: identifier,
+    api_key: apiKey
+  };
+  const url = "https://serpapi.com/search.json?" + toQueryString_(params);
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  const code = response.getResponseCode();
+  if (code < 200 || code >= 300) {
+    throw new Error("SerpAPI Place Details HTTP " + code + ": " + response.getContentText().slice(0, 200));
+  }
+  return JSON.parse(response.getContentText());
+}
+
+function fetchSerpApiReviewsData_(dataId) {
+  const apiKey = getScriptPropertyOrThrow_("SERPAPI_KEY");
+  const params = {
+    engine: "google_maps_reviews",
+    data_id: dataId,
+    api_key: apiKey
+  };
+  const url = "https://serpapi.com/search.json?" + toQueryString_(params);
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  const code = response.getResponseCode();
+  if (code < 200 || code >= 300) {
+    throw new Error("SerpAPI Reviews HTTP " + code + ": " + response.getContentText().slice(0, 200));
+  }
+  return JSON.parse(response.getContentText());
+}
+
+function fetchSerpApiPhotosData_(dataId) {
+  const apiKey = getScriptPropertyOrThrow_("SERPAPI_KEY");
+  const params = {
+    engine: "google_maps_photos",
+    data_id: dataId,
+    api_key: apiKey
+  };
+  const url = "https://serpapi.com/search.json?" + toQueryString_(params);
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  const code = response.getResponseCode();
+  if (code < 200 || code >= 300) {
+    throw new Error("SerpAPI Photos HTTP " + code + ": " + response.getContentText().slice(0, 200));
+  }
+  return JSON.parse(response.getContentText());
+}
+
+function extractPlaceDetailsFields_(json) {
+  const p = json.place_results || {};
+
+  const serviceOpts = p.service_options || {};
+  const serviceOptStr = Object.keys(serviceOpts)
+    .filter(k => serviceOpts[k] === true)
+    .map(k => k.replace(/_/g, " "))
+    .join(", ");
+
+  const images = Array.isArray(p.images) ? p.images : [];
+  const types = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+
+  const similarPlaces = Array.isArray(p.similar_places_nearby) ? p.similar_places_nearby : [];
+  const alsoSearch = Array.isArray(p.people_also_search_for) ? p.people_also_search_for : [];
+
+  const similarStr = similarPlaces.length
+    ? similarPlaces.length + ": " + similarPlaces.slice(0, 5).map(s => safeText_(s.name || s)).join(", ")
+    : "0";
+
+  const alsoStr = alsoSearch.length
+    ? alsoSearch.length + ": " + alsoSearch.slice(0, 5).map(s => safeText_(s.name || s)).join(", ")
+    : "0";
+
+  return {
+    description: safeText_(p.description || p.editorial_summary || ""),
+    service_options: serviceOptStr,
+    extensions: p.extensions ? truncate_(JSON.stringify(p.extensions), 500) : "",
+    has_booking_link: p.booking_link ? "Yes" : "No",
+    categories_full: types.join(", "),
+    similar_places: similarStr,
+    also_search_for: alsoStr,
+    photo_count: images.length,
+    thumbnail_url: safeText_(p.thumbnail || "")
+  };
+}
+
+function extractReviewIntelligenceFields_(json) {
+  const reviews = Array.isArray(json.reviews) ? json.reviews : [];
+  const topics = Array.isArray(json.topics) ? json.topics : [];
+
+  const topicsFormatted = topics.length
+    ? JSON.stringify(topics.slice(0, 20).map(t => ({
+        keyword: safeText_(t.keyword || t.topic || ""),
+        mentions: parseInt(t.reviews || t.mentions || 0, 10)
+      })))
+    : "";
+
+  if (!reviews.length) {
+    return {
+      review_topics: topicsFormatted,
+      owner_response_count: 0,
+      reviews_sampled: 0,
+      owner_response_rate: 0,
+      latest_review_date: "",
+      latest_response_date: "",
+      recent_avg_rating: 0,
+      rating_trend: ""
+    };
+  }
+
+  const ownerResponses = reviews.filter(r => r.response && r.response.snippet);
+  const ownerResponseCount = ownerResponses.length;
+  const reviewsSampled = reviews.length;
+  const ownerResponseRate = round2_(ownerResponseCount / reviewsSampled);
+
+  const reviewDates = reviews.map(r => safeText_(r.iso_date || "")).filter(Boolean).sort().reverse();
+  const latestReviewDate = reviewDates[0] || "";
+
+  const responseDates = ownerResponses
+    .map(r => safeText_(r.response.iso_date || ""))
+    .filter(Boolean)
+    .sort()
+    .reverse();
+  const latestResponseDate = responseDates[0] || "";
+
+  const ratings = reviews.map(r => parseFloat(r.rating) || 0).filter(v => v > 0);
+  const recentAvgRating = ratings.length ? round2_(avg_(ratings)) : 0;
+
+  let ratingTrend = "";
+  if (ratings.length >= 4) {
+    const mid = Math.floor(ratings.length / 2);
+    // SerpAPI returns reviews newest-first — slice(0, mid) = most recent half
+    const recentAvg = avg_(ratings.slice(0, mid));
+    const olderAvg = avg_(ratings.slice(mid));
+    const diff = recentAvg - olderAvg;
+    ratingTrend = diff >= 0.1 ? "improving" : (diff <= -0.1 ? "declining" : "stable");
+  }
+
+  return {
+    review_topics: topicsFormatted,
+    owner_response_count: ownerResponseCount,
+    reviews_sampled: reviewsSampled,
+    owner_response_rate: ownerResponseRate,
+    latest_review_date: latestReviewDate,
+    latest_response_date: latestResponseDate,
+    recent_avg_rating: recentAvgRating,
+    rating_trend: ratingTrend
+  };
+}
+
+function extractPhotoIntelligenceFields_(json) {
+  const photos = Array.isArray(json.photos) ? json.photos : [];
+  const categoriesRaw = Array.isArray(json.categories) ? json.categories : [];
+
+  const categoryTitles = categoriesRaw.map(c => safeText_(c.title || c.name || "")).filter(Boolean);
+  let ownerPhotos = 0;
+
+  categoriesRaw.forEach(cat => {
+    const title = safeText_(cat.title || cat.name || "").toLowerCase();
+    if (title.includes("owner")) {
+      ownerPhotos = Array.isArray(cat.photos) ? cat.photos.length : (parseInt(cat.count, 10) || 0);
+    }
+  });
+
+  return {
+    total_photos: photos.length,
+    photo_categories: categoryTitles.join(", "),
+    owner_photos: ownerPhotos,
+    latest_photo_date: ""
+  };
+}
+
+function emptyPlaceDetailsFields_() {
+  return {
+    description: "", service_options: "", extensions: "", has_booking_link: "",
+    categories_full: "", similar_places: "", also_search_for: "", photo_count: "", thumbnail_url: ""
+  };
+}
+
+function emptyReviewIntelligenceFields_() {
+  return {
+    review_topics: "", owner_response_count: "", reviews_sampled: "", owner_response_rate: "",
+    latest_review_date: "", latest_response_date: "", recent_avg_rating: "", rating_trend: ""
+  };
+}
+
+function emptyPhotoIntelligenceFields_() {
+  return { total_photos: "", photo_categories: "", owner_photos: "", latest_photo_date: "" };
+}
+
+function logEnrichmentError_(importLogSheet, searchId, leadId, errorField, err) {
+  if (!importLogSheet) return;
+  const headers = getHeaders_(importLogSheet);
+  const message = String(err && err.message ? err.message : err);
+  const row = headers.map(h => {
+    switch (h) {
+      case "run_at":       return nowStr_();
+      case "search_id":   return searchId || "";
+      case "status":      return "ENRICH_ERROR";
+      case "message":     return message;
+      case "lead_id":     return leadId || "";
+      case "error_field": return errorField || "";
+      default:            return "";
+    }
+  });
+  importLogSheet.appendRow(row);
 }

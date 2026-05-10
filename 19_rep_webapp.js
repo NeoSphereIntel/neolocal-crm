@@ -138,7 +138,8 @@ function getAssignedLeadsForRep_(rep) {
       taskDueAt: formatDateTimeForInput_(getCellByHeader_(row, idx, 'Task Due At')),
       taskStatus: getCellByHeader_(row, idx, 'Task Status') || '',
       diagnosisState: getCellByHeader_(row, idx, 'diagnosis_state') || '',
-      priorityBucket: getCellByHeader_(row, idx, 'priority_bucket') || ''
+      priorityBucket: getCellByHeader_(row, idx, 'priority_bucket') || '',
+      marketCaptureScore: toNumber_(getCellByHeader_(row, idx, 'market_capture_score'))
     });
   }
 
@@ -248,6 +249,15 @@ function getLeadRecordByLeadId_(leadId) {
         taskStatus: getCellByHeader_(row, idx, 'Task Status') || '',
         diagnosisState: getCellByHeader_(row, idx, 'diagnosis_state') || '',
         priorityBucket: getCellByHeader_(row, idx, 'priority_bucket') || '',
+        marketCaptureScore: toNumber_(getCellByHeader_(row, idx, 'market_capture_score')),
+        discoveryPositionScore: toNumber_(getCellByHeader_(row, idx, 'discovery_position_score')),
+        profileAuthorityScore: toNumber_(getCellByHeader_(row, idx, 'profile_authority_score')),
+        trustSurfaceScore: toNumber_(getCellByHeader_(row, idx, 'trust_surface_score')),
+        ownerEngagementScore: toNumber_(getCellByHeader_(row, idx, 'owner_engagement_score')),
+        competitiveDisplacementScore: toNumber_(getCellByHeader_(row, idx, 'competitive_displacement_score')),
+        operatorFitScore: toNumber_(getCellByHeader_(row, idx, 'operator_fit_score')),
+        outreachDm: getCellByHeader_(row, idx, 'outreach_dm') || '',
+        outreachFollowup: getCellByHeader_(row, idx, 'outreach_followup') || '',
         marketPositionSummary: getCellByHeader_(row, idx, 'market_position_summary') || '',
         strategicGapSummary: getCellByHeader_(row, idx, 'strategic_gap_summary') || '',
         replyMessage: getCellByHeader_(row, idx, 'reply_message') || ''
