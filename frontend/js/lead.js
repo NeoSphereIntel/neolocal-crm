@@ -110,10 +110,20 @@ function render(lead) {
   const logEl  = document.getElementById('activityLog');
   const logRaw = get(lead, 'lastActivityLog', 'last_activity_log', 'notes');
   if (logRaw) {
-    const entries = String(logRaw).split('\n').filter(l => l.trim());
-    logEl.innerHTML = entries.map(e => `<li>${escHtml(e)}</li>`).join('') || '<li class="nl-text-gray">No activity yet.</li>';
+    const ENTRY = /^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] ([^:]+): (.+)$/;
+    const entries = String(logRaw).split('\n').filter(l => l.trim()).reverse();
+    logEl.innerHTML = entries.map(e => {
+      const m = e.match(ENTRY);
+      if (m) {
+        return `<li>
+          <div class="nl-activity-meta">${escHtml(m[1])} &middot; ${escHtml(m[2].trim())}</div>
+          <div>${escHtml(m[3].trim())}</div>
+        </li>`;
+      }
+      return `<li>${escHtml(e)}</li>`;
+    }).join('') || '<li class="nl-text-gray">No activity yet.</li>';
   } else {
-    logEl.innerHTML = '<li class="nl-text-gray">No activity logged yet.</li>';
+    logEl.innerHTML = '<li class="nl-text-gray">No activity yet.</li>';
   }
 
   // Zone 6: populate editable business inputs
