@@ -117,10 +117,13 @@ function render(lead) {
   }
 
   // Zone 6: populate editable business inputs
-  setInput('editBusinessName', get(lead, 'businessName'));
-  setInput('editCategory',     get(lead, 'category'));
-  setInput('editAddress',      get(lead, 'address'));
-  setInput('editWebsite',      get(lead, 'website'));
+  setInput('editBusinessName',  get(lead, 'businessName'));
+  setInput('editCategory',      get(lead, 'category'));
+  setInput('editAddress',       get(lead, 'address'));
+  setInput('editCity',          get(lead, 'city'));
+  setInput('editProvinceState', get(lead, 'provinceState', 'province_state'));
+  setInput('editCountry',       get(lead, 'country'));
+  setInput('editWebsite',       get(lead, 'website'));
 
   // Zone 6: populate editable contact inputs
   setInput('editContactName',          get(lead, 'contactName'));
@@ -229,6 +232,9 @@ function buildFullPayload(overrides) {
     business_name:           get(base, 'businessName'),
     category:                get(base, 'category'),
     address:                 get(base, 'address'),
+    city:                    get(base, 'city'),
+    province_state:          get(base, 'provinceState', 'province_state'),
+    country:                 get(base, 'country'),
     website:                 get(base, 'website'),
     contact_name:            get(base, 'contactName'),
     contact_role:            get(base, 'contactRole'),
@@ -446,10 +452,13 @@ async function handleSaveBusiness() {
   showBusinessMsg('');
 
   const businessOverrides = {
-    business_name: document.getElementById('editBusinessName').value,
-    category:      document.getElementById('editCategory').value,
-    address:       document.getElementById('editAddress').value,
-    website:       document.getElementById('editWebsite').value,
+    business_name:  document.getElementById('editBusinessName').value,
+    category:       document.getElementById('editCategory').value,
+    address:        document.getElementById('editAddress').value,
+    city:           document.getElementById('editCity').value,
+    province_state: document.getElementById('editProvinceState').value,
+    country:        document.getElementById('editCountry').value,
+    website:        document.getElementById('editWebsite').value,
   };
 
   try {

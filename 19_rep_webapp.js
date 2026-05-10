@@ -175,6 +175,8 @@ function getLeadRecordByLeadId_(leadId) {
         isUndervalued: String(getCellByHeader_(row, idx, 'is_undervalued') || '').toLowerCase() === 'true',
 
         address: getCellByHeader_(row, idx, 'address') || '',
+        provinceState: getCellByHeader_(row, idx, 'province_state') || '',
+        country: getCellByHeader_(row, idx, 'country') || '',
         website: getCellByHeader_(row, idx, 'website') || '',
         placeId: getCellByHeader_(row, idx, 'place_id') || '',
 		
@@ -657,7 +659,10 @@ function saveRepLeadUpdate(
   operatorLocationCount,
   operatorContextNotes,
   category,
-  assignedTo
+  assignedTo,
+  city,
+  provinceState,
+  country
 ) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
   if (!sheet) throw new Error('Leads Master sheet not found.');
@@ -685,6 +690,9 @@ function saveRepLeadUpdate(
       var cleanBusinessName = String(businessName || '').trim();
       var cleanCategory = String(category || '').trim();
       var cleanAssignedTo = String(assignedTo || '').trim();
+      var cleanCity = String(city || '').trim();
+      var cleanProvinceState = String(provinceState || '').trim();
+      var cleanCountry = String(country || '').trim();
       var cleanAddress = String(address || '').trim();
       var cleanWebsite = String(website || '').trim();
       var cleanMainPhone = String(mainPhone || '').trim();
@@ -726,6 +734,18 @@ function saveRepLeadUpdate(
 
       if (cleanAddress && hasHeader_(idx, 'address')) {
         setCellByHeader_(sheet, r + 1, idx, 'address', cleanAddress);
+      }
+
+      if (cleanCity && hasHeader_(idx, 'city')) {
+        setCellByHeader_(sheet, r + 1, idx, 'city', cleanCity);
+      }
+
+      if (cleanProvinceState && hasHeader_(idx, 'province_state')) {
+        setCellByHeader_(sheet, r + 1, idx, 'province_state', cleanProvinceState);
+      }
+
+      if (cleanCountry && hasHeader_(idx, 'country')) {
+        setCellByHeader_(sheet, r + 1, idx, 'country', cleanCountry);
       }
 
       if (cleanWebsite && hasHeader_(idx, 'website')) {
@@ -876,7 +896,10 @@ function saveRepLeadUpdate(
 		operatorMonthlyVolume: cleanOperatorMonthlyVolume,
 		operatorServiceCapacity: cleanOperatorServiceCapacity,
 		operatorLocationCount: cleanOperatorLocationCount,
-		operatorContextNotes: cleanOperatorContextNotes
+		operatorContextNotes: cleanOperatorContextNotes,
+        city: cleanCity,
+        provinceState: cleanProvinceState,
+        country: cleanCountry
       };
     }
   }
@@ -1029,7 +1052,10 @@ function handleJsonPostRequest_(e) {
         body.operator_location_count,
         body.operator_context_notes,
         body.category,
-        body.assigned_to
+        body.assigned_to,
+        body.city,
+        body.province_state,
+        body.country
       );
       return jsonSuccess_(result);
     }
