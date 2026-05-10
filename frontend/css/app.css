@@ -691,14 +691,12 @@ body {
   -webkit-flex: 7;
   flex: 7;
   min-width: 0;
-  max-width: 700px;
 }
 
 .nl-col-right {
   -webkit-flex: 5;
   flex: 5;
   min-width: 0;
-  max-width: 500px;
 }
 
 @media (max-width: 768px) {
