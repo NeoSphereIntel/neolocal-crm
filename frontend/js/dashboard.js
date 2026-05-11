@@ -297,7 +297,6 @@ function bulkMsg(text, color) {
   if (!el) return;
   el.textContent = text;
   el.style.color = color || '#fff';
-  if (text) setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
 document.getElementById('bulkApplyBtn').addEventListener('click', async () => {
