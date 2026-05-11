@@ -15,7 +15,7 @@ const APP = {
   TOP_COMPETITOR_COUNT: 5,
   SNAPSHOT_VERSION: "Snapshot Intelligence Engine v2.3 (Realigned)",
   LEAD_STATUS_DEFAULT: "New Lead",
-  MARKET_MIRROR_WEBAPP_URL: "https://script.google.com/a/macros/neolocal.io/s/AKfycbzThwPEcoIYy5IuV6Nm-X39g50jPToB3kXACsqpKtiq7W0LPSkzxGZgl69M9Inwtjo/exec",
+  MARKET_MIRROR_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbz1aWRhzzbOTFE-48Ahc7paftg1b4_Bu01ElTJzBrcVjhcRJ8H6qbZInA-D1aCchDJr/exec",
   COUNTRIES: [
     "Canada",
     "United States"
