@@ -292,23 +292,36 @@ document.getElementById('searchInput').addEventListener('input', () => renderTab
 
 // --- Bulk assign ---
 
+function bulkMsg(text, color) {
+  const el = document.getElementById('bulkMsg');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || '#fff';
+  if (text) setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
 document.getElementById('bulkApplyBtn').addEventListener('click', async () => {
   const status     = document.getElementById('bulkStatusSelect').value;
   const assignedTo = document.getElementById('bulkRepInput').value.trim();
-  if (!status && !assignedTo) { alert('Set a stage or a rep name before applying.'); return; }
+  if (!status && !assignedTo) { bulkMsg('Set a stage or rep name first.', '#ed8220'); return; }
   const ids = [...selectedIds];
+  if (!ids.length) { bulkMsg('No leads selected.', '#ed8220'); return; }
   const btn = document.getElementById('bulkApplyBtn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
+  bulkMsg('');
   try {
-    await bulkAssignLeadStatus(ids, status, assignedTo);
+    const result = await bulkAssignLeadStatus(ids, status, assignedTo);
+    const count = result && result.updated != null ? result.updated : ids.length;
+    bulkMsg(count + ' lead' + (count === 1 ? '' : 's') + ' updated.', '#1a6640');
     selectedIds.clear();
     allLeads = await fetchLeads(rep);
     renderStats(computeStats(allLeads));
     renderActionQueue(allLeads);
     renderTable(filteredLeads());
   } catch (err) {
-    alert('Bulk assign failed: ' + err.message);
+    bulkMsg('Error: ' + err.message, '#bd0e20');
+    console.error('Bulk assign error:', err);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Apply';
