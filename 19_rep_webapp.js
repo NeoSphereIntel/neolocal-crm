@@ -1132,10 +1132,49 @@ function handleJsonPostRequest_(e) {
       return jsonSuccess_(lookup);
     }
 
+    if (action === 'bulk_assign') {
+      if (!Array.isArray(body.lead_ids) || !body.lead_ids.length) return jsonError_('Missing lead_ids.');
+      if (!body.status) return jsonError_('Missing status.');
+      var baResult = bulkAssignLeadStatus(body.lead_ids, body.status);
+      return jsonSuccess_(baResult);
+    }
+
     return jsonError_('Unknown action: ' + action);
   } catch (err) {
     return jsonError_(err && err.message ? err.message : String(err));
   }
+}
+
+function bulkAssignLeadStatus(leadIds, status) {
+  var allowed = ['New Lead', 'Contacted', 'Replied', 'Conversation', 'Qualified', 'Call Booked', 'Closed Won', 'Closed Lost'];
+  var cleanStatus = String(status || '').trim();
+  if (allowed.indexOf(cleanStatus) < 0) throw new Error('Invalid status: ' + cleanStatus);
+
+  var ids = Array.isArray(leadIds) ? leadIds : [];
+  if (!ids.length) return { updated: 0 };
+
+  var idSet = {};
+  ids.forEach(function(id) { idSet[String(id || '').trim()] = true; });
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads Master');
+  if (!sheet) throw new Error('Leads Master sheet not found.');
+
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) return { updated: 0 };
+
+  var headers = values[0];
+  var idx = buildHeaderIndex_(headers);
+  if (!hasHeader_(idx, 'status')) throw new Error('Status column not found.');
+
+  var updated = 0;
+  for (var r = 1; r < values.length; r++) {
+    var rowId = String(getCellByHeader_(values[r], idx, 'lead_id') || '').trim();
+    if (!idSet[rowId]) continue;
+    setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
+    updated++;
+  }
+
+  return { updated: updated };
 }
 
 function jsonSuccess_(data) {

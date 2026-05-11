@@ -47,6 +47,22 @@
     </div>
   </div>
 
+  <!-- Bulk action bar — fixed bottom, shown when rows are selected -->
+  <div id="bulkBar" class="nl-bulk-bar" style="display:none;">
+    <span id="bulkCount" class="nl-bulk-count"></span>
+    <select id="bulkStatusSelect" class="nl-bulk-select">
+      <option value="">— Set Stage —</option>
+      <option value="Contacted">Contacted</option>
+      <option value="Replied">Replied</option>
+      <option value="Qualified">Qualified</option>
+      <option value="Call Booked">Call Booked</option>
+      <option value="Closed Won">Closed Won</option>
+      <option value="Closed Lost">Closed Lost</option>
+    </select>
+    <button id="bulkApplyBtn" class="nl-btn nl-btn-primary nl-btn-sm">Apply</button>
+    <button id="bulkClearBtn" class="nl-btn nl-btn-sm" style="border:1px solid rgba(255,255,255,0.4);color:#fff;background:transparent;">Clear</button>
+  </div>
+
   <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>

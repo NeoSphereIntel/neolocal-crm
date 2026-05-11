@@ -69,3 +69,8 @@ export function completeTask(leadId) {
 export function searchBusiness(identifier) {
   return apiPost({ action: 'lookup_lead', place_identifier: identifier });
 }
+
+/** POST action=bulk_assign — sets status on multiple leads by leadId array. */
+export function bulkAssignLeadStatus(leadIds, status) {
+  return apiPost({ action: 'bulk_assign', lead_ids: leadIds, status: status });
+}

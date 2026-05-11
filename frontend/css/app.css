@@ -740,3 +740,142 @@ body {
   .nl-list-controls { flex-direction: column; align-items: stretch; }
   .nl-status-bar-right { text-align: left; }
 }
+
+/* ============================================================
+   BULK ACTION BAR
+============================================================ */
+.nl-bulk-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--nl-navy-deep);
+  color: #fff;
+  padding: 12px 24px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  z-index: 100;
+  box-shadow: 0 -2px 12px rgba(0,14,56,0.25);
+}
+
+.nl-bulk-count {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--nl-off-white-2);
+  margin-right: 8px;
+}
+
+.nl-bulk-select {
+  padding: 7px 12px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: var(--nl-radius-btn);
+  outline: none;
+  cursor: pointer;
+}
+
+.nl-bulk-select option { background: #000e38; color: #fff; }
+
+/* Checkbox column in table */
+.nl-th-check,
+.nl-td-check {
+  width: 36px;
+  padding: 12px 8px !important;
+  text-align: center;
+  cursor: default !important;
+  user-select: none;
+}
+
+.nl-th-check { cursor: default !important; }
+
+.nl-td-check input[type="checkbox"] {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--nl-navy);
+}
+
+/* ============================================================
+   DIMENSION BARS (LEAD DETAIL MARKET INTELLIGENCE)
+============================================================ */
+.nl-mcs-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.nl-mcs-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px;
+  line-height: 1;
+  color: var(--nl-navy);
+}
+
+.nl-mcs-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--nl-gray);
+  padding-bottom: 12px;
+}
+
+.nl-dim-bar-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.nl-dim-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--nl-gray);
+  width: 160px;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+
+.nl-dim-track {
+  -webkit-flex: 1;
+  flex: 1;
+  height: 8px;
+  background: var(--nl-off-white-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.nl-dim-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.nl-dim-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--nl-dark);
+  width: 28px;
+  text-align: right;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}

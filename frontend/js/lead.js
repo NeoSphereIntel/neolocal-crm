@@ -12,8 +12,10 @@ document.getElementById('backLink').href = `index.html?rep=${encodeURIComponent(
 
 function diagnosisClass(state) {
   return ({
+    'Ghost':         'nl-badge-invisible',
     'Invisible':     'nl-badge-invisible',
     'Outgunned':     'nl-badge-outgunned',
+    'Underdog':      'nl-badge-emerging',
     'Emerging':      'nl-badge-emerging',
     'Undersignaled': 'nl-badge-undersignaled',
     'Contender':     'nl-badge-contender',
@@ -189,7 +191,50 @@ function render(lead) {
   renderReadonlyDetails(lead);
 }
 
+function dimBarColor(score) {
+  return score >= 70 ? '#1a6640' : score >= 40 ? '#ed8220' : '#bd0e20';
+}
+
 function renderReadonlyDetails(lead) {
+  const mcs = parseInt(lead.marketCaptureScore, 10);
+  const dims = [
+    ['Discovery',              lead.discoveryPositionScore],
+    ['Profile Authority',      lead.profileAuthorityScore],
+    ['Trust Surface',          lead.trustSurfaceScore],
+    ['Owner Engagement',       lead.ownerEngagementScore],
+    ['Competitive Position',   lead.competitiveDisplacementScore]
+  ];
+
+  const hasMcs = !isNaN(mcs);
+  const hasDims = dims.some(([, v]) => v != null && v !== '');
+
+  let mcsHtml = '';
+  if (hasMcs || hasDims) {
+    const scoreHtml = hasMcs ? `
+      <div class="nl-mcs-row">
+        <div class="nl-mcs-score">${mcs}</div>
+        <div class="nl-mcs-label">Market Capture Score</div>
+      </div>` : '';
+
+    const barsHtml = dims.filter(([, v]) => v != null && v !== '').map(([name, val]) => {
+      const s = Math.min(100, Math.max(0, parseInt(val, 10) || 0));
+      const color = dimBarColor(s);
+      return `
+        <div class="nl-dim-bar-row">
+          <div class="nl-dim-name">${name}</div>
+          <div class="nl-dim-track"><div class="nl-dim-fill" style="width:${s}%;background:${color};"></div></div>
+          <div class="nl-dim-num">${s}</div>
+        </div>`;
+    }).join('');
+
+    mcsHtml = `
+      <div class="nl-mb-24">
+        <div class="nl-label nl-mb-8" style="color:var(--nl-navy);">Market Intelligence</div>
+        ${scoreHtml}
+        ${barsHtml}
+      </div>`;
+  }
+
   const groups = [
     {
       title: 'Operator Intel',
@@ -203,7 +248,7 @@ function renderReadonlyDetails(lead) {
       ]
     },
     {
-      title: 'Scores & Signals',
+      title: 'Signals',
       fields: [
         ['Reviews',     get(lead, 'reviews', 'reviews_count')],
         ['Rating',      get(lead, 'rating')],
@@ -214,7 +259,7 @@ function renderReadonlyDetails(lead) {
     },
   ];
 
-  document.getElementById('readonlyDetails').innerHTML = groups.map(g => {
+  document.getElementById('readonlyDetails').innerHTML = mcsHtml + groups.map(g => {
     const items = g.fields.filter(([, v]) => v);
     if (!items.length) return '';
     return `
