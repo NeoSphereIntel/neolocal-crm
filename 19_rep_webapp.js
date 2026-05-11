@@ -104,11 +104,12 @@ function getAssignedLeadsForRep_(rep) {
   var idx = buildHeaderIndex_(headers);
   var out = [];
   var repNorm = normalizeHeaderKey_(rep);
+  var isSuperAdmin = (repNorm === 'phil');
 
   for (var r = 1; r < values.length; r++) {
     var row = values[r];
     var assignedTo = normalizeHeaderKey_(getCellByHeader_(row, idx, 'Assigned To'));
-    if (assignedTo !== repNorm) continue;
+    if (!isSuperAdmin && assignedTo !== repNorm) continue;
 
     out.push({
       leadId: getCellByHeader_(row, idx, 'lead_id'),
@@ -1134,8 +1135,8 @@ function handleJsonPostRequest_(e) {
 
     if (action === 'bulk_assign') {
       if (!Array.isArray(body.lead_ids) || !body.lead_ids.length) return jsonError_('Missing lead_ids.');
-      if (!body.status) return jsonError_('Missing status.');
-      var baResult = bulkAssignLeadStatus(body.lead_ids, body.status);
+      if (!body.status && !body.assigned_to) return jsonError_('Provide status or assigned_to.');
+      var baResult = bulkAssignLeadStatus(body.lead_ids, body.status, body.assigned_to);
       return jsonSuccess_(baResult);
     }
 
