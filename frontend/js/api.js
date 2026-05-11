@@ -70,7 +70,7 @@ export function searchBusiness(identifier) {
   return apiPost({ action: 'lookup_lead', place_identifier: identifier });
 }
 
-/** POST action=bulk_assign — sets status on multiple leads by leadId array. */
-export function bulkAssignLeadStatus(leadIds, status) {
-  return apiPost({ action: 'bulk_assign', lead_ids: leadIds, status: status });
+/** POST action=bulk_assign — sets status and/or assigned_to on multiple leads. */
+export function bulkAssignLeadStatus(leadIds, status, assignedTo) {
+  return apiPost({ action: 'bulk_assign', lead_ids: leadIds, status: status || '', assigned_to: assignedTo || '' });
 }

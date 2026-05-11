@@ -1146,10 +1146,13 @@ function handleJsonPostRequest_(e) {
   }
 }
 
-function bulkAssignLeadStatus(leadIds, status) {
+function bulkAssignLeadStatus(leadIds, status, assignedTo) {
   var allowed = ['New Lead', 'Contacted', 'Replied', 'Conversation', 'Qualified', 'Call Booked', 'Closed Won', 'Closed Lost'];
-  var cleanStatus = String(status || '').trim();
-  if (allowed.indexOf(cleanStatus) < 0) throw new Error('Invalid status: ' + cleanStatus);
+  var cleanStatus    = String(status     || '').trim();
+  var cleanAssignedTo = String(assignedTo || '').trim();
+
+  if (cleanStatus && allowed.indexOf(cleanStatus) < 0) throw new Error('Invalid status: ' + cleanStatus);
+  if (!cleanStatus && !cleanAssignedTo) return { updated: 0 };
 
   var ids = Array.isArray(leadIds) ? leadIds : [];
   if (!ids.length) return { updated: 0 };
@@ -1165,13 +1168,13 @@ function bulkAssignLeadStatus(leadIds, status) {
 
   var headers = values[0];
   var idx = buildHeaderIndex_(headers);
-  if (!hasHeader_(idx, 'status')) throw new Error('Status column not found.');
 
   var updated = 0;
   for (var r = 1; r < values.length; r++) {
     var rowId = String(getCellByHeader_(values[r], idx, 'lead_id') || '').trim();
     if (!idSet[rowId]) continue;
-    setCellByHeader_(sheet, r + 1, idx, 'status', cleanStatus);
+    if (cleanStatus     && hasHeader_(idx, 'status'))      setCellByHeader_(sheet, r + 1, idx, 'status',      cleanStatus);
+    if (cleanAssignedTo && hasHeader_(idx, 'Assigned To')) setCellByHeader_(sheet, r + 1, idx, 'Assigned To', cleanAssignedTo);
     updated++;
   }
 

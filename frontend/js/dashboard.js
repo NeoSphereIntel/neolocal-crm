@@ -293,14 +293,15 @@ document.getElementById('searchInput').addEventListener('input', () => renderTab
 // --- Bulk assign ---
 
 document.getElementById('bulkApplyBtn').addEventListener('click', async () => {
-  const status = document.getElementById('bulkStatusSelect').value;
-  if (!status) { alert('Select a stage to apply.'); return; }
+  const status     = document.getElementById('bulkStatusSelect').value;
+  const assignedTo = document.getElementById('bulkRepInput').value.trim();
+  if (!status && !assignedTo) { alert('Set a stage or a rep name before applying.'); return; }
   const ids = [...selectedIds];
   const btn = document.getElementById('bulkApplyBtn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
   try {
-    await bulkAssignLeadStatus(ids, status);
+    await bulkAssignLeadStatus(ids, status, assignedTo);
     selectedIds.clear();
     allLeads = await fetchLeads(rep);
     renderStats(computeStats(allLeads));
@@ -312,6 +313,7 @@ document.getElementById('bulkApplyBtn').addEventListener('click', async () => {
     btn.disabled = false;
     btn.textContent = 'Apply';
     document.getElementById('bulkStatusSelect').value = '';
+    document.getElementById('bulkRepInput').value = '';
   }
 });
 
