@@ -67,10 +67,8 @@ function renderRepLeadPage_(leadId, rep) {
 
 function renderMarketMirrorStandalonePage_(leadId) {
   var lead = getLeadRecordByLeadId_(leadId);
-  var input = buildMarketMirrorInputFromLeadRow_(lead);
-  var payload = buildMarketMirrorPayload_(input);
-  return HtmlService.createHtmlOutput(renderMarketMirrorHtml_(payload))
-    .setTitle('NeoLocal Market Mirror')
+  return HtmlService.createHtmlOutput(renderMarketMirrorV3Html_(lead))
+    .setTitle('NeoLocal Market Mirror — ' + (lead.businessName || ''))
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 

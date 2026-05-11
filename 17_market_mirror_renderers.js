@@ -5,6 +5,200 @@
  */
 var MM = typeof MM !== "undefined" ? MM : {};
 
+/* ============================================================
+   V3 TEMPLATE RENDERER
+   Reads neolocal-market-mirror-v3-template.html and replaces
+   every {{token}} with data from the lead record.
+============================================================ */
+
+function renderMarketMirrorV3Html_(lead) {
+  var html = HtmlService.createHtmlOutputFromFile('neolocal-market-mirror-v3-template').getContent();
+  var tokens = buildV3TokenMap_(lead);
+  return replaceV3Tokens_(html, tokens);
+}
+
+function replaceV3Tokens_(html, tokens) {
+  var keys = Object.keys(tokens);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var value = escapeHtml_(String(tokens[key] == null ? '' : tokens[key]));
+    html = html.split('{{' + key + '}}').join(value);
+  }
+  return html;
+}
+
+function v3DimColor_(score) {
+  score = Number(score) || 0;
+  return score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
+}
+
+function v3VerticalLabel_(vertical) {
+  var labels = {
+    auto_retail:   'Automotive Retail',
+    hvac:          'HVAC & Mechanical',
+    roofing:       'Roofing & Exteriors',
+    local_service: 'Local Service'
+  };
+  return labels[vertical] || 'Local Business';
+}
+
+function buildV3TokenMap_(lead) {
+  var mcs   = Number(lead.marketCaptureScore)          || 0;
+  var disc  = Number(lead.discoveryPositionScore)       || 0;
+  var prof  = Number(lead.profileAuthorityScore)        || 0;
+  var trust = Number(lead.trustSurfaceScore)            || 0;
+  var eng   = Number(lead.ownerEngagementScore)         || 0;
+  var disp  = Number(lead.competitiveDisplacementScore) || 0;
+
+  var diagDisplay = String(lead.diagnosisState || '');
+  var diagClass   = diagDisplay.toLowerCase();
+
+  var reviews = Number(lead.reviews) || 0;
+  var rating  = Number(lead.rating)  || 0;
+
+  var vertical  = detectVerticalFromCategory_(lead.category);
+  var vertLabel = v3VerticalLabel_(vertical);
+
+  var dims = [
+    { label: 'Discovery',            score: disc  },
+    { label: 'Profile Authority',    score: prof  },
+    { label: 'Trust Surface',        score: trust },
+    { label: 'Owner Engagement',     score: eng   },
+    { label: 'Competitive Position', score: disp  }
+  ];
+  var weakest    = dims.reduce(function(min, d) { return d.score < min.score ? d : min; }, dims[0]);
+  var sortedDims = dims.slice().sort(function(a, b) { return a.score - b.score; });
+
+  function tier(score, high, mid, low) {
+    return score >= 70 ? high : score >= 40 ? mid : low;
+  }
+
+  var pathActions = sortedDims.slice(0, 3).map(function(d) {
+    return 'Strengthen ' + d.label + ' surface (currently ' + d.score + '/100)';
+  });
+
+  var heroCopy = String(lead.marketPositionSummary || '').trim() ||
+    'See how ' + (lead.businessName || 'this business') + ' reads in the local market — and where visible position can be strengthened.';
+
+  var vt = v3VerticalTokens_(vertical, lead);
+
+  return {
+    business_name:  lead.businessName || '',
+    vertical_label: vertLabel,
+    hero_copy:      heroCopy,
+
+    market_capture_score: mcs,
+    diagnosis_state:      diagDisplay,
+    diagnosis_class:      diagClass,
+
+    weakest_dimension_label:   weakest.label,
+    weakest_dimension_insight: 'This is the highest-leverage surface for improvement.',
+
+    discovery_position_score:       disc,
+    profile_authority_score:        prof,
+    trust_surface_score:            trust,
+    owner_engagement_score:         eng,
+    competitive_displacement_score: disp,
+
+    discovery_color:    v3DimColor_(disc),
+    profile_color:      v3DimColor_(prof),
+    trust_color:        v3DimColor_(trust),
+    engagement_color:   v3DimColor_(eng),
+    displacement_color: v3DimColor_(disp),
+
+    review_count:          reviews,
+    rating:                rating || '—',
+    peer_avg_reviews:      '—',
+    peer_avg_rating:       '—',
+    rating_trend:          '—',
+    review_topics_summary: 'Key service and experience themes',
+    reviews_sampled:       reviews,
+    latest_review_date:    '—',
+
+    owner_response_rate:  '—',
+    latest_response_date: '—',
+    engagement_insight:   tier(eng,
+      'Owner actively manages customer conversations.',
+      'Inconsistent review response patterns detected.',
+      'Low owner response activity — trust signal at risk.'),
+
+    photo_count:              '—',
+    owner_photos:             '—',
+    total_photos:             '—',
+    service_options_summary:  '—',
+    photo_categories_summary: '—',
+    profile_insight: tier(prof,
+      'Profile is well-completed and clearly signals credibility.',
+      'Several profile fields missing — adding them would strengthen authority.',
+      'Thin profile — significant credibility signal missing from the market.'),
+
+    maps_position:          '—',
+    similar_places_count:   '—',
+    competitor_1_name:      'Not identified',
+    also_search_for_summary:'—',
+    competitive_insight: tier(disp,
+      'Leading vs comparable nearby operators.',
+      'Competing but not separating from the pack.',
+      'Losing visibility to stronger nearby operators.'),
+
+    discovery_insight_1: tier(disc,
+      'Appearing consistently in primary local map results.',
+      'Partial map presence — not appearing for all key terms.',
+      'Not appearing in local map pack for primary search terms.'),
+    discovery_insight_2: disc >= 40
+      ? 'Category and keyword alignment is present.'
+      : 'Category signals may be misaligned with how customers search.',
+
+    discovery_card_title:   tier(disc,  'Strong local search presence',      'Moderate search visibility',       'Low search visibility — gap opportunity'),
+    trust_card_title:       tier(trust, 'Solid trust footprint vs peers',    'Developing trust signal',          'Trust gap vs peer average'),
+    engagement_card_title:  tier(eng,   'Active owner presence',             'Partial owner engagement',         'Low owner responsiveness detected'),
+    profile_card_title:     tier(prof,  'Well-optimized profile',            'Profile has growth opportunity',   'Profile needs strengthening'),
+    competitive_card_title: tier(disp,  'Holding strong vs the market',      'Mid-market position',              'Under competitive pressure'),
+    neolocal_card_title:    'Where NeoLocal accelerates this',
+
+    profile_authority_detail:        tier(prof, 'Complete, well-signaled profile.',      'Partial profile — key fields missing.',       'Thin profile — significant signal gap.'),
+    competitive_displacement_detail: tier(disp, 'Leading vs comparable nearby operators.','Competing but not separating from the pack.',     'Losing ground to stronger nearby operators.'),
+
+    path_action_1: pathActions[0] || '—',
+    path_action_2: pathActions[1] || '—',
+    path_action_3: pathActions[2] || '—',
+
+    hero_headline_line1: vt.hero_headline_line1,
+    hero_headline_line2: vt.hero_headline_line2,
+    comparison_sub:      vt.comparison_sub,
+    trad_point_1: vt.trad_point_1, trad_point_2: vt.trad_point_2,
+    trad_point_3: vt.trad_point_3, trad_point_4: vt.trad_point_4,
+    trad_point_5: vt.trad_point_5, trad_point_6: vt.trad_point_6,
+    neo_point_1:  vt.neo_point_1,  neo_point_2:  vt.neo_point_2,
+    neo_point_3:  vt.neo_point_3,  neo_point_4:  vt.neo_point_4,
+    neo_point_5:  vt.neo_point_5,  neo_point_6:  vt.neo_point_6,
+    footer_statement: vt.footer_statement
+  };
+}
+
+function v3VerticalTokens_(vertical, lead) {
+  // Placeholder tokens — will be replaced by proper vertical config in the next phase.
+  var name = String(lead.businessName || 'This Business');
+  return {
+    hero_headline_line1: name,
+    hero_headline_line2: 'Market Position',
+    comparison_sub:      'Two paths to local market position. One compounds over time. One stays invisible.',
+    trad_point_1: 'Rely on word-of-mouth without a systematic approach',
+    trad_point_2: 'Inconsistent or incomplete online profile',
+    trad_point_3: 'Slow or absent response to customer reviews',
+    trad_point_4: 'Low visibility in local search for primary terms',
+    trad_point_5: 'No data on competitive position or peer benchmarks',
+    trad_point_6: 'Visible presence does not reflect real operational quality',
+    neo_point_1:  'Structured review cadence compounds trust over time',
+    neo_point_2:  'Profile completeness drives discovery in local search',
+    neo_point_3:  'Competitive position tracked and benchmarked monthly',
+    neo_point_4:  'Market signals translated into clear, actionable steps',
+    neo_point_5:  'Visible position grows systematically — not by accident',
+    neo_point_6:  'Real-world quality becomes visible market position',
+    footer_statement: 'Strong operators do not need more hype. They need visible position that reflects the work they already do.'
+  };
+}
+
 function renderMarketMirrorHtml_(payload) {
   var n = payload.narrative;
   var d = payload.derived;

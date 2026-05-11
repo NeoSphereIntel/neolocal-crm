@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeoLocal Market Mirror — {{business_name}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,600;0,700&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#00195c;
+  --navy-deep:#000e38;
+  --orange:#ed8220;
+  --red:#bd0e20;
+  --white:#ffffff;
+  --off:#f4f3ef;
+  --off2:#e4e2db;
+  --gray:#5a6378;
+  --dark:#080e22;
+  --green:#1a6640;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:'Barlow',sans-serif;
+  background:linear-gradient(180deg,var(--navy-deep) 0%, #07112d 55%, #0b1432 100%);
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+}
+.shell {
+  max-width:1180px;
+  margin:0 auto;
+  padding:36px 24px 64px;
+}
+
+/* ── TOPBAR ─────────────────────────────────────── */
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:24px;
+  margin-bottom:24px;
+}
+.logo-pill {
+  background:#fff;
+  border-radius:8px;
+  padding:12px 24px 10px 18px;
+  display:inline-flex;
+  align-items:center;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
+}
+.logo-pill img { height:38px; width:auto; display:block; }
+.meta {
+  text-align:right;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.45);
+  line-height:1.7;
+}
+
+/* ── HERO ───────────────────────────────────────── */
+.hero {
+  position:relative;
+  overflow:hidden;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:34px 34px 28px;
+  box-shadow:0 18px 60px rgba(0,0,0,.25);
+  margin-bottom:22px;
+}
+.hero:before {
+  content:'';
+  position:absolute;
+  top:-120px; right:-80px;
+  width:380px; height:380px;
+  background:radial-gradient(circle, rgba(237,130,32,.20) 0%, rgba(237,130,32,0) 68%);
+}
+.eyebrow {
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--orange);
+  margin-bottom:14px;
+}
+.eyebrow:before {
+  content:'';
+  width:28px; height:2px; background:var(--orange);
+}
+.hero-grid {
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:1.3fr .9fr;
+  gap:28px;
+}
+h1 {
+  margin:0 0 12px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:70px;
+  line-height:.92;
+  letter-spacing:1px;
+}
+h1 span { color:var(--orange); display:block; }
+.hero-copy {
+  color:rgba(255,255,255,.78);
+  max-width:720px;
+  font-size:18px;
+  line-height:1.7;
+  border-left:3px solid var(--orange);
+  padding-left:18px;
+}
+
+/* ── HERO KPI BAND ──────────────────────────────── */
+.hero-points {
+  display:grid;
+  gap:12px;
+  align-content:start;
+}
+.kpi-band {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.kpi {
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  padding:16px 16px 14px;
+}
+.kpi-label {
+  font-family:'Barlow Condensed',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:10px;
+  color:rgba(255,255,255,.46);
+  margin-bottom:8px;
+}
+.kpi-value {
+  font-size:32px;
+  font-weight:700;
+  line-height:1;
+  margin-bottom:6px;
+}
+.kpi-value.score-big {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:56px;
+  line-height:.85;
+}
+.kpi-note {
+  color:rgba(255,255,255,.66);
+  font-size:13px;
+  line-height:1.45;
+}
+
+/* ── DIAGNOSIS BADGE ────────────────────────────── */
+.diagnosis-pill {
+  display:inline-block;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  padding:6px 16px 5px;
+  border-radius:4px;
+  margin-bottom:8px;
+}
+.diag-anchor      { background:var(--green);  color:#fff; }
+.diag-contender   { background:#2d7b54;       color:#fff; }
+.diag-underdog    { background:var(--orange);  color:#fff; }
+.diag-outgunned   { background:#c4570a;       color:#fff; }
+.diag-ghost       { background:var(--red);     color:#fff; }
+
+/* ── DIMENSION BARS ─────────────────────────────── */
+.dim-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:7px;
+}
+.dim-label {
+  flex:0 0 130px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.55);
+  text-align:right;
+}
+.dim-track {
+  flex:1;
+  height:10px;
+  background:rgba(255,255,255,.06);
+  border-radius:5px;
+  overflow:hidden;
+}
+.dim-fill {
+  height:100%;
+  border-radius:5px;
+  transition:width .6s ease;
+}
+.dim-fill-high   { background:var(--green); }
+.dim-fill-mid    { background:var(--orange); }
+.dim-fill-low    { background:var(--red); }
+.dim-score {
+  flex:0 0 30px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px;
+  text-align:right;
+}
+
+/* ── SECTIONS ───────────────────────────────────── */
+.section {
+  background:var(--off);
+  color:var(--dark);
+  border-radius:18px;
+  padding:28px;
+  margin-top:18px;
+  box-shadow:0 14px 40px rgba(0,0,0,.14);
+}
+.section-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:18px;
+  margin-bottom:18px;
+}
+.section-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:44px;
+  line-height:.95;
+  color:var(--navy);
+  letter-spacing:1px;
+}
+.section-sub {
+  max-width:640px;
+  color:var(--gray);
+  font-size:15px;
+  line-height:1.6;
+}
+
+/* ── INSIGHT CARDS ──────────────────────────────── */
+.cards {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.card {
+  background:#fff;
+  border-radius:12px;
+  border-top:4px solid var(--orange);
+  padding:20px 20px 18px;
+}
+.card:nth-child(2){ border-top-color:var(--navy); }
+.card:nth-child(3){ border-top-color:var(--red); }
+.card:nth-child(4){ border-top-color:var(--green); }
+.card:nth-child(5){ border-top-color:var(--orange); }
+.card:nth-child(6){ border-top-color:var(--navy); }
+.card-label {
+  font-family:'Barlow Condensed',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:2.3px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--gray);
+  margin-bottom:10px;
+}
+.card-title {
+  font-size:18px;
+  font-weight:700;
+  color:var(--dark);
+  margin-bottom:10px;
+}
+.tight-list {
+  margin:0;
+  padding-left:18px;
+  color:var(--gray);
+  line-height:1.55;
+  font-size:14px;
+}
+.tight-list li + li { margin-top:7px; }
+
+/* ── DIMENSION SCORE CARDS ──────────────────────── */
+.metrics {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:14px;
+}
+.metric {
+  background:var(--navy);
+  color:#fff;
+  border-radius:12px;
+  padding:18px 18px 16px;
+}
+.metric:nth-child(2){ background:var(--navy-deep); }
+.metric:nth-child(3){ background:#0d1c4b; }
+.metric:nth-child(4){ background:#11245f; }
+.metric:nth-child(5){ background:#0a1840; }
+.metric-name {
+  font-family:'Barlow Condensed',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:11px;
+  color:rgba(255,255,255,.5);
+  margin-bottom:10px;
+}
+.metric-score {
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  margin-bottom:8px;
+}
+.metric-score strong {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:40px;
+  line-height:.95;
+}
+.metric-score span {
+  font-size:13px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--orange);
+  font-family:'Barlow Condensed',sans-serif;
+}
+.metric p {
+  margin:0;
+  color:rgba(255,255,255,.78);
+  font-size:13px;
+  line-height:1.5;
+}
+
+/* ── DATA FACTS ─────────────────────────────────── */
+.fact-grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:16px;
+}
+.fact {
+  background:#fff;
+  border-radius:10px;
+  padding:14px;
+  border:1px solid var(--off2);
+}
+.fact b {
+  display:block;
+  color:var(--navy);
+  font-size:14px;
+  margin-bottom:4px;
+}
+.fact span {
+  color:var(--gray);
+  font-size:13px;
+  line-height:1.5;
+}
+
+/* ── COMPARISON ─────────────────────────────────── */
+.compare {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+.compare-box {
+  border-radius:12px;
+  padding:22px 22px 18px;
+}
+.compare-box.trad {
+  background:rgba(189,14,32,.05);
+  border:1px solid rgba(189,14,32,.16);
+}
+.compare-box.neo {
+  background:rgba(26,102,64,.06);
+  border:1px solid rgba(26,102,64,.20);
+}
+.compare-box h3 {
+  margin:0 0 12px;
+  font-family:'Barlow Condensed',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:14px;
+}
+.compare-box.trad h3 { color:var(--red); }
+.compare-box.neo h3 { color:var(--green); }
+
+/* ── FOOTER ─────────────────────────────────────── */
+.footer-band {
+  margin-top:18px;
+  background:var(--navy-deep);
+  color:#fff;
+  border-radius:16px;
+  padding:22px 24px;
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:center;
+  border-top:3px solid var(--orange);
+}
+.footer-band strong {
+  font-family:'Barlow Condensed',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:13px;
+  color:var(--orange);
+  display:block;
+  margin-bottom:6px;
+}
+.footer-band p {
+  margin:0;
+  color:rgba(255,255,255,.8);
+  line-height:1.55;
+}
+.badge {
+  min-width:180px;
+  text-align:right;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+}
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 980px) {
+  .hero-grid, .cards, .compare { grid-template-columns:1fr 1fr; }
+  .metrics { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width: 720px) {
+  .topbar, .section-head, .footer-band { display:block; }
+  .meta, .badge { text-align:left; margin-top:12px; }
+  .hero-grid, .cards, .metrics, .compare, .kpi-band, .fact-grid { grid-template-columns:1fr; }
+  h1 { font-size:52px; }
+  .section-title { font-size:36px; }
+  .dim-label { flex:0 0 90px; font-size:10px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ══ TOPBAR ══════════════════════════════════════ -->
+  <div class="topbar">
+    <div class="logo-pill"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3NjcuOTYiIGhlaWdodD0iMTgyLjY5IiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iMCAwIDc2Ny45NiAxODIuNjkiPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICMwMDE5NWM7CiAgICAgIH0KCiAgICAgIC5jbHMtMiB7CiAgICAgICAgZmlsbDogI2VkODIyMDsKICAgICAgfQoKICAgICAgLmNscy0zIHsKICAgICAgICBmaWxsOiB1cmwoI2xpbmVhci1ncmFkaWVudCk7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudCIgeDE9Ijc0LjY4IiB5MT0iMzMxLjA3IiB4Mj0iNzQuNjgiIHkyPSIxNTEuNzQiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAzMzAuNTQpIHNjYWxlKDEgLTEpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwMTk1YyIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ii41NSIgc3RvcC1jb2xvcj0iIzBkMWMyZSIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ii43OSIgc3RvcC1jb2xvcj0iI2JkMGUyMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZjhhMWYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8yLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMiI+CiAgICA8Y2lyY2xlIGNsYXNzPSJjbHMtMiIgY3g9Ijc0LjY4IiBjeT0iNzQuNTciIHI9IjEzLjY4Ii8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik0xMzcuMiwzNC4zMkMxMjMuMTYsMTIuODMsOTkuNzksMCw3NC42OCwwUzI2LjIsMTIuODMsMTIuMTYsMzQuMzJDLTEuNTEsNTUuMjUtMy44LDgxLjEyLDYuMDMsMTAzLjUyYzUuOTQsMTMuNTMsMTUuMzEsMjMuMjcsMjIuMTUsMzAuMzgsMS42OCwxLjc0LDMuMjYsMy4zOCw0LjUyLDQuOGwzNy4yNSw0MS44N2MyLjUyLDIuODMsNi45NCwyLjgzLDkuNDYsMGwzNy4yNS00MS44N2MxLjI2LTEuNDIsMi44NC0zLjA2LDQuNTItNC44LDYuODQtNy4xMSwxNi4yMS0xNi44NSwyMi4xNS0zMC4zOCw5LjgzLTIyLjQsNy41NC00OC4yNy02LjEzLTY5LjJaTTEwOC41Myw4OC4yNWMtNC4yOSw5Ljc3LTEzLjI2LDE3LjMyLTIwLjI2LDI1LjE5LTQuNTMsNS4wOS05LjA2LDEwLjE5LTEzLjU5LDE1LjI4LTQuNTMtNS4wOS05LjA2LTEwLjE5LTEzLjU5LTE1LjI4LTctNy44Ny0xNS45Ny0xNS40Mi0yMC4yNi0yNS4xOS0xMC4zNC0yMy41Niw4Ljg5LTUwLjI1LDMzLjg1LTUwLjI1czQ0LjE5LDI2LjY5LDMzLjg1LDUwLjI1aDBaIi8+CiAgICA8Zz4KICAgICAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI0Ni4zMyAxMDkuMDEgMjAwLjI0IDM5LjQ2IDE4Ni40NiAzOS40NiAxODYuNDYgMTMzLjA2IDIwMC4yNCAxMzMuMDYgMjAwLjI0IDYzLjQ1IDI0Ni4zMyAxMzMuMDYgMjYwLjExIDEzMy4wNiAyNjAuMTEgMzkuNDYgMjQ2LjMzIDM5LjQ2IDI0Ni4zMyAxMDkuMDEiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMzI3LjQxLDY1Ljg4Yy01LjAzLTMuMzEtMTEuMTItNC45Ny0xOC4yNy00Ljk3cy0xMi44NSwxLjU0LTE4LDQuNjFjLTUuMTYsMy4wOC05LjE4LDcuNDMtMTIuMDYsMTMuMDZzLTQuMzIsMTIuMjktNC4zMiwxOS45NmMwLDcuMjQsMS40NiwxMy42LDQuMzksMTkuMDgsMi45Myw1LjQ4LDcuMDIsOS43NSwxMi4yOSwxMi44MSw1LjI3LDMuMDUsMTEuMzksNC41OCwxOC4zNiw0LjU4czEyLjk4LTEuNzIsMTguNTItNS4xN2M1LjU1LTMuNDUsOS42OS04LjMxLDEyLjQyLTE0LjU5bC0xMy4zMi00LjIzYy0xLjczLDMuNi00LjE1LDYuMzYtNy4yNSw4LjI5LTMuMSwxLjkzLTYuNzcsMi44OS0xMS4wMiwyLjg5LTYuNDYsMC0xMS40LTIuMTEtMTQuODItNi4zNC0yLjgzLTMuNDktNC40Ny04LjItNC45Ni0xNC4wN2g1Mi4yOGMuNTItOC40MS0uNDctMTUuNjctMi45Ni0yMS43Ny0yLjQ5LTYuMTEtNi4yNS0xMC44Mi0xMS4yOC0xNC4xNGgwWk0yOTQuMzIsNzkuMzdjMy40Mi00LjI5LDguNTQtNi40NCwxNS4zNC02LjQ0LDYuMTUsMCwxMC43NCwxLjk1LDEzLjc1LDUuODUsMi4yNywyLjkzLDMuNyw3LjA3LDQuMzEsMTIuNDJoLTM4LjA1Yy43Mi00Ljg3LDIuMjYtOC44Myw0LjY1LTExLjgzaDBaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQwMy44LDY1LjY2Yy01LjE2LTMuMTYtMTEuMjUtNC43NS0xOC4yNi00Ljc1cy0xMi45MSwxLjU1LTE4LjA3LDQuNjUtOS4xNyw3LjQzLTEyLjAyLDEzYy0yLjg2LDUuNTctNC4yOSwxMi4wMS00LjI5LDE5LjM0czEuNCwxMy43MSw0LjE5LDE5LjI3YzIuNzksNS41Nyw2Ljc3LDkuOTQsMTEuOTMsMTMuMXMxMS4yNCw0Ljc1LDE4LjI3LDQuNzUsMTMuMDQtMS41NywxOC4yLTQuNzFjNS4xNi0zLjE0LDkuMTUtNy41LDExLjk5LTEzLjA2LDIuODQtNS41Nyw0LjI2LTEyLjAxLDQuMjYtMTkuMzRzLTEuNDEtMTMuNjMtNC4yMy0xOS4xN2MtMi44Mi01LjU1LTYuOC05LjktMTEuOTYtMTMuMDZ2LS4wMlpNNDAwLjU4LDExNS40MWMtMy4zMSw0LjUzLTguMzMsNi43OS0xNS4wNSw2Ljc5cy0xMS41LTIuMjEtMTQuODgtNi42My01LjA3LTEwLjMxLTUuMDctMTcuNjhjMC00Ljc3LjcyLTguOTYsMi4xNS0xMi41OHMzLjYyLTYuNDYsNi41Ni04LjUxYzIuOTUtMi4wNiw2LjctMy4wOSwxMS4yNS0zLjA5LDYuNjMsMCwxMS42MiwyLjIsMTQuOTgsNi42czUuMDQsMTAuMjYsNS4wNCwxNy41OC0xLjY2LDEyLjk5LTQuOTcsMTcuNTJoMFoiLz4KICAgICAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjQ0OC44MiAzOS40NiA0MzUuMjMgMzkuNDYgNDM1LjIzIDEzMy4wNiA0OTIuOSAxMzMuMDYgNDkyLjkgMTIwLjI2IDQ0OC44MiAxMjAuMjYgNDQ4LjgyIDM5LjQ2Ii8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTU1NS44NSw2NS42NmMtNS4xNi0zLjE2LTExLjI0LTQuNzUtMTguMjYtNC43NXMtMTIuOTEsMS41NS0xOC4wNyw0LjY1Yy01LjE2LDMuMS05LjE3LDcuNDMtMTIuMDMsMTMtMi44Niw1LjU3LTQuMjksMTIuMDEtNC4yOSwxOS4zNHMxLjQsMTMuNzEsNC4xOSwxOS4yN2MyLjc5LDUuNTcsNi43Nyw5Ljk0LDExLjkzLDEzLjFzMTEuMjUsNC43NSwxOC4yNiw0Ljc1LDEzLjA0LTEuNTcsMTguMi00LjcxYzUuMTYtMy4xNCw5LjE1LTcuNSwxMS45OS0xMy4wNiwyLjg0LTUuNTcsNC4yNi0xMi4wMSw0LjI2LTE5LjM0cy0xLjQxLTEzLjYzLTQuMjMtMTkuMTdjLTIuODItNS41NS02LjgtOS45LTExLjk2LTEzLjA2di0uMDJaTTU1Mi42MywxMTUuNDFjLTMuMzIsNC41My04LjMzLDYuNzktMTUuMDUsNi43OXMtMTEuNS0yLjIxLTE0Ljg4LTYuNjMtNS4wNy0xMC4zMS01LjA3LTE3LjY4YzAtNC43Ny43Mi04Ljk2LDIuMTUtMTIuNTgsMS40My0zLjYyLDMuNjItNi40Niw2LjU2LTguNTEsMi45NS0yLjA2LDYuNy0zLjA5LDExLjI1LTMuMDksNi42MywwLDExLjYyLDIuMiwxNC45OCw2LjZzNS4wNCwxMC4yNiw1LjA0LDE3LjU4LTEuNjYsMTIuOTktNC45NywxNy41MmgtLjAxWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MTAuOSw3Ni44N2MyLjg2LTIuMSw2LjUyLTMuMTUsMTAuOTktMy4xNSwzLjk0LDAsNy40NCwxLjEsMTAuNSwzLjI4LDMuMDUsMi4xOSw1LjI1LDUuMjUsNi42LDkuMmwxMy41Mi0zLjljLTEuNzMtNi42My01LjMyLTExLjg1LTEwLjc2LTE1LjY3LTUuNDQtMy44MS0xMS45OS01LjcyLTE5LjY2LTUuNzItNy4xMSwwLTEzLjIsMS41OC0xOC4yNyw0Ljc1LTUuMDcsMy4xNi04Ljk3LDcuNTMtMTEuNywxMy4xLTIuNzMsNS41Ny00LjEyLDExLjk3LTQuMTYsMTkuMjEuMDQsNy4xMSwxLjQsMTMuNDYsNC4wNiwxOS4wNCwyLjY3LDUuNTksNi41MSw5Ljk5LDExLjU0LDEzLjIsNS4wMywzLjIxLDExLjE0LDQuODEsMTguMzMsNC44MXMxMy45NS0xLjgzLDE5LjI0LTUuNDksOS4wOC04LjkyLDExLjM4LTE1Ljc2bC0xMy43OC0zLjI1Yy0xLjQzLDMuNzctMy41LDYuNjYtNi4yMSw4LjY4cy02LjI1LDMuMDItMTAuNjMsMy4wMmMtNi40MSwwLTExLjI2LTIuMjMtMTQuNTMtNi42OXMtNC45My0xMC4zMS00Ljk3LTE3LjU1Yy4wNC00LjY4Ljc2LTguODQsMi4xNS0xMi40OHMzLjUxLTYuNTEsNi4zNy04LjYxdi0uMDJaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTcyNy40Niw3NC4zYy0yLjE3LTQuNjQtNS41OC04LjAzLTEwLjI0LTEwLjE3cy0xMC4xMy0zLjIyLTE2LjQxLTMuMjJjLTguMSwwLTE0LjU5LDEuNzgtMTkuNDcsNS4zMy00Ljg4LDMuNTUtOC4xOCw4LjM0LTkuOTEsMTQuMzZsMTIuNjcsMy45YzEuMjEtMy45NCwzLjM2LTYuNzcsNi40My04LjQ0LDMuMDgtMS43MSw2LjQ2LTIuNTcsMTAuMTQtMi41Nyw1Ljg1LDAsOS45OCwxLjMzLDEyLjM4LDQsMi4xLDIuMzMsMy4yNSw1LjczLDMuNDUsMTAuMjItMi42Ni4zNy01LjMxLjc1LTgsMS4xMi00LjM1LjYxLTguNSwxLjI2LTEyLjQ1LDEuOTUtMy45NC42OS03LjQ0LDEuNS0xMC41OSwyLjQtMy42LDEuMTctNi42MywyLjctOS4xLDQuNTgtMi40NywxLjg5LTQuMzMsNC4xNy01LjU5LDYuODYtMS4yNiwyLjY5LTEuODgsNS44MS0xLjg4LDkuMzYsMCwzLjgxLjksNy4zMSwyLjcsMTAuNSwxLjgsMy4xOCw0LjQ1LDUuNzQsNy45Niw3LjY3LDMuNTEsMS45Myw3Ljg2LDIuODksMTMuMDYsMi44OSw2LjU0LDAsMTIuMDYtMS4zMSwxNi41NC0zLjkzLDMuMzYtMS45Niw2LjI3LTQuNyw4Ljc0LTguMnYxMC4xOGgxMi4wM3YtNDMuMjNjMC0yLjk1LS4xMy01LjctLjM5LTguMjUtLjI2LTIuNTYtLjk1LTQuOTgtMi4wOC03LjI0aDBaTTcxNC45OCwxMDkuOTljLS41MiwyLjMtMS42Miw0LjUxLTMuMzIsNi42My0xLjY5LDIuMTItMy45MiwzLjg3LTYuNjksNS4yMy0yLjc3LDEuMzYtNi4wOSwyLjA1LTkuOTUsMi4wNS0yLjksMC01LjI5LS40Ni03LjE1LTEuMzYtMS44Ni0uOTEtMy4yNS0yLjEzLTQuMTYtMy42N3MtMS4zNi0zLjIyLTEuMzYtNS4wNC40Mi0zLjQ0LDEuMjctNC43NGMuODQtMS4zLDEuOTktMi40MSwzLjQ0LTMuMzEsMS40NS0uOTEsMy4xMS0xLjY5LDQuOTctMi4zNCwyLjIxLS42OSw0LjczLTEuMjksNy41Ny0xLjc5czYuMDEtMS4wMSw5LjUyLTEuNTNjMi4yNS0uMzMsNC42OC0uNyw3LjI1LTEuMDgtLjAzLDEuMTUtLjA3LDIuNDUtLjEzLDMuOTQtLjExLDIuNi0uNTMsNC45NC0xLjI3LDcuMDJoLjAxWiIvPgogICAgICA8cmVjdCBjbGFzcz0iY2xzLTEiIHg9Ijc1NC4zOCIgeT0iMzcuNTEiIHdpZHRoPSIxMy41OCIgaGVpZ2h0PSI5NS41NSIvPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="NeoLocal"></div>
+    <div class="meta">{{vertical_label}}<br>Market Mirror · NeoLocal™<br>Powered by NeoSphereIntel™</div>
+  </div>
+
+
+  <!-- ══ HERO ════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="eyebrow">Market Mirror</div>
+    <div class="hero-grid">
+      <div>
+        <h1>{{hero_headline_line1}}<span>{{hero_headline_line2}}</span></h1>
+        <div class="hero-copy">
+          {{hero_copy}}
+        </div>
+      </div>
+      <div class="hero-points">
+        <!-- MCS + DIAGNOSIS -->
+        <div class="kpi-band">
+          <div class="kpi">
+            <div class="kpi-label">Market Capture Score</div>
+            <div class="kpi-value score-big">{{market_capture_score}}</div>
+            <div class="diagnosis-pill diag-{{diagnosis_class}}">{{diagnosis_state}}</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Weakest Surface</div>
+            <div class="kpi-value">{{weakest_dimension_label}}</div>
+            <div class="kpi-note">{{weakest_dimension_insight}}</div>
+          </div>
+        </div>
+        <!-- DIMENSION BARS -->
+        <div class="kpi" style="padding-top:14px;padding-bottom:10px;">
+          <div class="kpi-label" style="margin-bottom:12px;">Market Position Breakdown</div>
+
+          <div class="dim-row">
+            <div class="dim-label">Discovery</div>
+            <div class="dim-track"><div class="dim-fill dim-fill-{{discovery_color}}" style="width:{{discovery_position_score}}%;"></div></div>
+            <div class="dim-score">{{discovery_position_score}}</div>
+          </div>
+
+          <div class="dim-row">
+            <div class="dim-label">Profile Auth</div>
+            <div class="dim-track"><div class="dim-fill dim-fill-{{profile_color}}" style="width:{{profile_authority_score}}%;"></div></div>
+            <div class="dim-score">{{profile_authority_score}}</div>
+          </div>
+
+          <div class="dim-row">
+            <div class="dim-label">Trust Surface</div>
+            <div class="dim-track"><div class="dim-fill dim-fill-{{trust_color}}" style="width:{{trust_surface_score}}%;"></div></div>
+            <div class="dim-score">{{trust_surface_score}}</div>
+          </div>
+
+          <div class="dim-row">
+            <div class="dim-label">Engagement</div>
+            <div class="dim-track"><div class="dim-fill dim-fill-{{engagement_color}}" style="width:{{owner_engagement_score}}%;"></div></div>
+            <div class="dim-score">{{owner_engagement_score}}</div>
+          </div>
+
+          <div class="dim-row">
+            <div class="dim-label">Displacement</div>
+            <div class="dim-track"><div class="dim-fill dim-fill-{{displacement_color}}" style="width:{{competitive_displacement_score}}%;"></div></div>
+            <div class="dim-score">{{competitive_displacement_score}}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══ MARKET INTELLIGENCE ═════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">WHAT THE MARKET<br>IS REALLY SAYING</div>
+      <div class="section-sub">Real observations drawn from your live market data — not assumptions. Every card is backed by verified signals.</div>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-label">Discovery Position</div>
+        <div class="card-title">{{discovery_card_title}}</div>
+        <ul class="tight-list">
+          <li>Maps position: {{maps_position}} in your primary search</li>
+          <li>{{discovery_insight_1}}</li>
+          <li>{{discovery_insight_2}}</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Trust Surface</div>
+        <div class="card-title">{{trust_card_title}}</div>
+        <ul class="tight-list">
+          <li>{{review_count}} reviews at {{rating}} average — peer average is {{peer_avg_reviews}} at {{peer_avg_rating}}</li>
+          <li>Rating trend: {{rating_trend}}</li>
+          <li>Customers mention: {{review_topics_summary}}</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Owner Engagement</div>
+        <div class="card-title">{{engagement_card_title}}</div>
+        <ul class="tight-list">
+          <li>Owner response rate: {{owner_response_rate}}</li>
+          <li>Last response: {{latest_response_date}}</li>
+          <li>{{engagement_insight}}</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Profile Authority</div>
+        <div class="card-title">{{profile_card_title}}</div>
+        <ul class="tight-list">
+          <li>{{photo_count}} photos ({{owner_photos}} from owner)</li>
+          <li>Service options: {{service_options_summary}}</li>
+          <li>{{profile_insight}}</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Competitive Landscape</div>
+        <div class="card-title">{{competitive_card_title}}</div>
+        <ul class="tight-list">
+          <li>{{similar_places_count}} similar businesses nearby</li>
+          <li>Top competitor: {{competitor_1_name}}</li>
+          <li>{{competitive_insight}}</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-label">NeoLocal Path</div>
+        <div class="card-title">{{neolocal_card_title}}</div>
+        <ul class="tight-list">
+          <li>{{path_action_1}}</li>
+          <li>{{path_action_2}}</li>
+          <li>{{path_action_3}}</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══ DIMENSION SCORES ════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">NEOLOCAL<br>MARKET DIMENSIONS</div>
+      <div class="section-sub">Five surfaces that determine how the market reads your business. Every score is backed by observed data — not estimates.</div>
+    </div>
+    <div class="metrics">
+
+      <div class="metric">
+        <div class="metric-name">Discovery Position</div>
+        <div class="metric-score"><strong>{{discovery_position_score}}</strong><span>/100</span></div>
+        <p>Where you appear when customers search. Position {{maps_position}} in Maps for your primary term.</p>
+      </div>
+
+      <div class="metric">
+        <div class="metric-name">Profile Authority</div>
+        <div class="metric-score"><strong>{{profile_authority_score}}</strong><span>/100</span></div>
+        <p>How complete and credible your profile reads. {{profile_authority_detail}}</p>
+      </div>
+
+      <div class="metric">
+        <div class="metric-name">Trust Surface</div>
+        <div class="metric-score"><strong>{{trust_surface_score}}</strong><span>/100</span></div>
+        <p>Review volume and quality vs peers. {{review_count}} reviews, {{rating}}★ — peer band average: {{peer_avg_reviews}} at {{peer_avg_rating}}★.</p>
+      </div>
+
+      <div class="metric">
+        <div class="metric-name">Owner Engagement</div>
+        <div class="metric-score"><strong>{{owner_engagement_score}}</strong><span>/100</span></div>
+        <p>How actively you manage your public presence. {{owner_response_rate}} response rate, trend {{rating_trend}}.</p>
+      </div>
+
+      <div class="metric">
+        <div class="metric-name">Competitive Displacement</div>
+        <div class="metric-score"><strong>{{competitive_displacement_score}}</strong><span>/100</span></div>
+        <p>Your position strength vs the market around you. {{competitive_displacement_detail}}</p>
+      </div>
+
+    </div>
+
+    <div class="fact-grid">
+      <div class="fact"><b>Reviews sampled</b><span>{{reviews_sampled}} reviews analyzed for engagement patterns, topic sentiment, and response behavior.</span></div>
+      <div class="fact"><b>Response rate</b><span>Owner responds to {{owner_response_rate}} of reviews. Last response: {{latest_response_date}}. Last review: {{latest_review_date}}.</span></div>
+      <div class="fact"><b>Visual presence</b><span>{{total_photos}} photos total, {{owner_photos}} uploaded by owner. {{photo_categories_summary}}</span></div>
+      <div class="fact"><b>Market context</b><span>{{similar_places_count}} similar businesses detected nearby. Also searched for: {{also_search_for_summary}}.</span></div>
+    </div>
+  </section>
+
+
+  <!-- ══ COMPARISON ══════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">TRADITIONAL PATH<br>VS NEOLOCAL</div>
+      <div class="section-sub">{{comparison_sub}}</div>
+    </div>
+    <div class="compare">
+      <div class="compare-box trad">
+        <h3>Traditional path</h3>
+        <ul class="tight-list">
+          <li>{{trad_point_1}}</li>
+          <li>{{trad_point_2}}</li>
+          <li>{{trad_point_3}}</li>
+          <li>{{trad_point_4}}</li>
+          <li>{{trad_point_5}}</li>
+          <li>{{trad_point_6}}</li>
+        </ul>
+      </div>
+      <div class="compare-box neo">
+        <h3>NeoLocal path</h3>
+        <ul class="tight-list">
+          <li>{{neo_point_1}}</li>
+          <li>{{neo_point_2}}</li>
+          <li>{{neo_point_3}}</li>
+          <li>{{neo_point_4}}</li>
+          <li>{{neo_point_5}}</li>
+          <li>{{neo_point_6}}</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══ FOOTER ══════════════════════════════════════ -->
+  <div class="footer-band">
+    <div>
+      <strong>Bottom line</strong>
+      <p>{{footer_statement}}</p>
+    </div>
+    <div class="badge">NeoLocal™<br>Market Mirror</div>
+  </div>
+
+</div>
+</body>
+</html>
