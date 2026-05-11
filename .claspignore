@@ -1,5 +1,7 @@
 frontend/**
 *.md
 *.diff
+*.json
+!appsscript.json
 node_modules/**
 .git/**

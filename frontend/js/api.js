@@ -1,5 +1,5 @@
 // Set to the deployed Apps Script web app URL before use.
-export const API_BASE = 'https://script.google.com/a/macros/neolocal.io/s/AKfycbzxLNvR1Vq6v6al-yeIYDBPzs-DBxcAYI-MBh0oXYRYc1HYU1mXYTLS_fTOnAPQzcow/exec';
+export const API_BASE = 'https://script.google.com/a/macros/neolocal.io/s/AKfycbzThwPEcoIYy5IuV6Nm-X39g50jPToB3kXACsqpKtiq7W0LPSkzxGZgl69M9Inwtjo/exec';
 
 async function apiFetch(url, options = {}) {
   let res;

@@ -32,14 +32,47 @@ function v3DimColor_(score) {
   return score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
 }
 
-function v3VerticalLabel_(vertical) {
-  var labels = {
-    auto_retail:   'Automotive Retail',
-    hvac:          'HVAC & Mechanical',
-    roofing:       'Roofing & Exteriors',
-    local_service: 'Local Service'
+function verticalToConfigKey_(vertical) {
+  var map = {
+    'auto_retail':   'used_car_dealerships',
+    'hvac':          'contractors_trades',
+    'roofing':       'roofing',
+    'local_service': 'contractors_trades'
   };
-  return labels[vertical] || 'Local Business';
+  return map[vertical] || 'used_car_dealerships';
+}
+
+function buildLeadDataForBullets_(lead) {
+  return {
+    business_name:            String(lead.businessName            || ''),
+    city:                     String(lead.city                    || ''),
+    maps_position:            String(lead.mapsPosition            || '—'),
+    review_count:             String(lead.reviews                 || '—'),
+    rating:                   String(lead.rating                  || '—'),
+    peer_avg_reviews:         String(lead.peerAvgReviews          || '—'),
+    peer_avg_rating:          String(lead.peerAvgRating           || '—'),
+    rating_trend:             String(lead.ratingTrend             || '—'),
+    review_topics_summary:    String(lead.reviewTopicsSummary     || 'key service and experience themes'),
+    owner_response_rate:      String(lead.ownerResponseRate       || '—'),
+    latest_response_date:     String(lead.latestResponseDate      || '—'),
+    photo_count:              String(lead.photoCount              || '—'),
+    owner_photos:             String(lead.ownerPhotos             || '—'),
+    total_photos:             String(lead.totalPhotos             || '—'),
+    service_options_summary:  String(lead.serviceOptionsSummary   || '—'),
+    similar_places_count:     String(lead.similarPlacesCount      || '—'),
+    competitor_1_name:        String(lead.competitor1Name         || 'Not identified'),
+    also_search_for_summary:  String(lead.alsoSearchForSummary    || '—'),
+    reviews_sampled:          String(lead.reviews                 || '—')
+  };
+}
+
+function fillBulletTemplate_(template, data) {
+  var result = String(template || '');
+  var keys = Object.keys(data);
+  for (var i = 0; i < keys.length; i++) {
+    result = result.split('{{' + keys[i] + '}}').join(data[keys[i]]);
+  }
+  return result;
 }
 
 function buildV3TokenMap_(lead) {
@@ -56,8 +89,8 @@ function buildV3TokenMap_(lead) {
   var reviews = Number(lead.reviews) || 0;
   var rating  = Number(lead.rating)  || 0;
 
-  var vertical  = detectVerticalFromCategory_(lead.category);
-  var vertLabel = v3VerticalLabel_(vertical);
+  var vertical = detectVerticalFromCategory_(lead.category);
+  var vt       = v3VerticalTokens_(vertical, lead);
 
   var dims = [
     { label: 'Discovery',            score: disc  },
@@ -66,26 +99,21 @@ function buildV3TokenMap_(lead) {
     { label: 'Owner Engagement',     score: eng   },
     { label: 'Competitive Position', score: disp  }
   ];
-  var weakest    = dims.reduce(function(min, d) { return d.score < min.score ? d : min; }, dims[0]);
-  var sortedDims = dims.slice().sort(function(a, b) { return a.score - b.score; });
+  var weakest = dims.reduce(function(min, d) { return d.score < min.score ? d : min; }, dims[0]);
 
   function tier(score, high, mid, low) {
     return score >= 70 ? high : score >= 40 ? mid : low;
   }
 
-  var pathActions = sortedDims.slice(0, 3).map(function(d) {
-    return 'Strengthen ' + d.label + ' surface (currently ' + d.score + '/100)';
-  });
-
-  var heroCopy = String(lead.marketPositionSummary || '').trim() ||
-    'See how ' + (lead.businessName || 'this business') + ' reads in the local market — and where visible position can be strengthened.';
-
-  var vt = v3VerticalTokens_(vertical, lead);
+  var heroCopy = String(lead.marketPositionSummary || '').trim() || vt.hero_copy;
 
   return {
     business_name:  lead.businessName || '',
-    vertical_label: vertLabel,
+    vertical_label: vt.vertical_label,
     hero_copy:      heroCopy,
+
+    hero_headline_line1: vt.hero_headline_line1,
+    hero_headline_line2: vt.hero_headline_line2,
 
     market_capture_score: mcs,
     diagnosis_state:      diagDisplay,
@@ -117,55 +145,60 @@ function buildV3TokenMap_(lead) {
 
     owner_response_rate:  '—',
     latest_response_date: '—',
-    engagement_insight:   tier(eng,
-      'Owner actively manages customer conversations.',
-      'Inconsistent review response patterns detected.',
-      'Low owner response activity — trust signal at risk.'),
 
     photo_count:              '—',
     owner_photos:             '—',
     total_photos:             '—',
     service_options_summary:  '—',
     photo_categories_summary: '—',
-    profile_insight: tier(prof,
-      'Profile is well-completed and clearly signals credibility.',
-      'Several profile fields missing — adding them would strengthen authority.',
-      'Thin profile — significant credibility signal missing from the market.'),
 
-    maps_position:          '—',
-    similar_places_count:   '—',
-    competitor_1_name:      'Not identified',
-    also_search_for_summary:'—',
-    competitive_insight: tier(disp,
-      'Leading vs comparable nearby operators.',
-      'Competing but not separating from the pack.',
-      'Losing visibility to stronger nearby operators.'),
+    maps_position:           '—',
+    similar_places_count:    '—',
+    competitor_1_name:       'Not identified',
+    also_search_for_summary: '—',
 
-    discovery_insight_1: tier(disc,
-      'Appearing consistently in primary local map results.',
-      'Partial map presence — not appearing for all key terms.',
-      'Not appearing in local map pack for primary search terms.'),
-    discovery_insight_2: disc >= 40
-      ? 'Category and keyword alignment is present.'
-      : 'Category signals may be misaligned with how customers search.',
+    profile_authority_detail:        tier(prof, 'Complete, well-signaled profile.', 'Partial profile — key fields missing.', 'Thin profile — significant signal gap.'),
+    competitive_displacement_detail: tier(disp, 'Leading vs comparable nearby operators.', 'Competing but not separating from the pack.', 'Losing ground to stronger nearby operators.'),
 
-    discovery_card_title:   tier(disc,  'Strong local search presence',      'Moderate search visibility',       'Low search visibility — gap opportunity'),
-    trust_card_title:       tier(trust, 'Solid trust footprint vs peers',    'Developing trust signal',          'Trust gap vs peer average'),
-    engagement_card_title:  tier(eng,   'Active owner presence',             'Partial owner engagement',         'Low owner responsiveness detected'),
-    profile_card_title:     tier(prof,  'Well-optimized profile',            'Profile has growth opportunity',   'Profile needs strengthening'),
-    competitive_card_title: tier(disp,  'Holding strong vs the market',      'Mid-market position',              'Under competitive pressure'),
-    neolocal_card_title:    'Where NeoLocal accelerates this',
+    dimension_section_sub: vt.dimension_section_sub,
 
-    profile_authority_detail:        tier(prof, 'Complete, well-signaled profile.',      'Partial profile — key fields missing.',       'Thin profile — significant signal gap.'),
-    competitive_displacement_detail: tier(disp, 'Leading vs comparable nearby operators.','Competing but not separating from the pack.',     'Losing ground to stronger nearby operators.'),
+    discovery_card_label:   vt.discovery_card_label,
+    discovery_card_title:   vt.discovery_card_title,
+    discovery_bullet_1:     vt.discovery_bullet_1,
+    discovery_bullet_2:     vt.discovery_bullet_2,
+    discovery_bullet_3:     vt.discovery_bullet_3,
 
-    path_action_1: pathActions[0] || '—',
-    path_action_2: pathActions[1] || '—',
-    path_action_3: pathActions[2] || '—',
+    trust_card_label:       vt.trust_card_label,
+    trust_card_title:       vt.trust_card_title,
+    trust_bullet_1:         vt.trust_bullet_1,
+    trust_bullet_2:         vt.trust_bullet_2,
+    trust_bullet_3:         vt.trust_bullet_3,
 
-    hero_headline_line1: vt.hero_headline_line1,
-    hero_headline_line2: vt.hero_headline_line2,
-    comparison_sub:      vt.comparison_sub,
+    engagement_card_label:  vt.engagement_card_label,
+    engagement_card_title:  vt.engagement_card_title,
+    engagement_bullet_1:    vt.engagement_bullet_1,
+    engagement_bullet_2:    vt.engagement_bullet_2,
+    engagement_bullet_3:    vt.engagement_bullet_3,
+
+    profile_card_label:     vt.profile_card_label,
+    profile_card_title:     vt.profile_card_title,
+    profile_bullet_1:       vt.profile_bullet_1,
+    profile_bullet_2:       vt.profile_bullet_2,
+    profile_bullet_3:       vt.profile_bullet_3,
+
+    competitive_card_label: vt.competitive_card_label,
+    competitive_card_title: vt.competitive_card_title,
+    competitive_bullet_1:   vt.competitive_bullet_1,
+    competitive_bullet_2:   vt.competitive_bullet_2,
+    competitive_bullet_3:   vt.competitive_bullet_3,
+
+    neolocal_card_label:    vt.neolocal_card_label,
+    neolocal_card_title:    vt.neolocal_card_title,
+    neolocal_bullet_1:      vt.neolocal_bullet_1,
+    neolocal_bullet_2:      vt.neolocal_bullet_2,
+    neolocal_bullet_3:      vt.neolocal_bullet_3,
+
+    comparison_sub:   vt.comparison_sub,
     trad_point_1: vt.trad_point_1, trad_point_2: vt.trad_point_2,
     trad_point_3: vt.trad_point_3, trad_point_4: vt.trad_point_4,
     trad_point_5: vt.trad_point_5, trad_point_6: vt.trad_point_6,
@@ -177,25 +210,74 @@ function buildV3TokenMap_(lead) {
 }
 
 function v3VerticalTokens_(vertical, lead) {
-  // Placeholder tokens — will be replaced by proper vertical config in the next phase.
-  var name = String(lead.businessName || 'This Business');
+  var config    = getMarketMirrorConfig_();
+  var configKey = verticalToConfigKey_(vertical);
+  var vc        = config.verticals[configKey] || config.verticals['used_car_dealerships'];
+  var cards     = vc.cards;
+
+  var disc  = Number(lead.discoveryPositionScore)       || 0;
+  var trust = Number(lead.trustSurfaceScore)            || 0;
+  var eng   = Number(lead.ownerEngagementScore)         || 0;
+  var prof  = Number(lead.profileAuthorityScore)        || 0;
+  var disp  = Number(lead.competitiveDisplacementScore) || 0;
+
+  var data = buildLeadDataForBullets_(lead);
+
+  function tier(score, titles) {
+    return score >= 70 ? titles.high : score >= 40 ? titles.mid : titles.low;
+  }
+  function fill(tpl) { return fillBulletTemplate_(tpl, data); }
+  function cardBullets(card) {
+    var t = card.bullet_templates;
+    return [fill(t[0] || ''), fill(t[1] || ''), fill(t[2] || '')];
+  }
+
+  var db = cardBullets(cards.discovery);
+  var tb = cardBullets(cards.trust);
+  var eb = cardBullets(cards.engagement);
+  var pb = cardBullets(cards.profile);
+  var cb = cardBullets(cards.competitive);
+  var nb = cardBullets(cards.neolocal_path);
+
   return {
-    hero_headline_line1: name,
-    hero_headline_line2: 'Market Position',
-    comparison_sub:      'Two paths to local market position. One compounds over time. One stays invisible.',
-    trad_point_1: 'Rely on word-of-mouth without a systematic approach',
-    trad_point_2: 'Inconsistent or incomplete online profile',
-    trad_point_3: 'Slow or absent response to customer reviews',
-    trad_point_4: 'Low visibility in local search for primary terms',
-    trad_point_5: 'No data on competitive position or peer benchmarks',
-    trad_point_6: 'Visible presence does not reflect real operational quality',
-    neo_point_1:  'Structured review cadence compounds trust over time',
-    neo_point_2:  'Profile completeness drives discovery in local search',
-    neo_point_3:  'Competitive position tracked and benchmarked monthly',
-    neo_point_4:  'Market signals translated into clear, actionable steps',
-    neo_point_5:  'Visible position grows systematically — not by accident',
-    neo_point_6:  'Real-world quality becomes visible market position',
-    footer_statement: 'Strong operators do not need more hype. They need visible position that reflects the work they already do.'
+    hero_headline_line1: vc.hero_headline_line1,
+    hero_headline_line2: vc.hero_headline_line2,
+    hero_copy:           vc.hero_copy,
+    vertical_label:      vc.vertical_label,
+    dimension_section_sub: vc.dimension_section_sub,
+
+    discovery_card_label:   cards.discovery.card_label,
+    discovery_card_title:   tier(disc,  cards.discovery.titles),
+    discovery_bullet_1:     db[0], discovery_bullet_2: db[1], discovery_bullet_3: db[2],
+
+    trust_card_label:       cards.trust.card_label,
+    trust_card_title:       tier(trust, cards.trust.titles),
+    trust_bullet_1:         tb[0], trust_bullet_2: tb[1], trust_bullet_3: tb[2],
+
+    engagement_card_label:  cards.engagement.card_label,
+    engagement_card_title:  tier(eng,   cards.engagement.titles),
+    engagement_bullet_1:    eb[0], engagement_bullet_2: eb[1], engagement_bullet_3: eb[2],
+
+    profile_card_label:     cards.profile.card_label,
+    profile_card_title:     tier(prof,  cards.profile.titles),
+    profile_bullet_1:       pb[0], profile_bullet_2: pb[1], profile_bullet_3: pb[2],
+
+    competitive_card_label: cards.competitive.card_label,
+    competitive_card_title: tier(disp,  cards.competitive.titles),
+    competitive_bullet_1:   cb[0], competitive_bullet_2: cb[1], competitive_bullet_3: cb[2],
+
+    neolocal_card_label:    cards.neolocal_path.card_label,
+    neolocal_card_title:    cards.neolocal_path.card_title,
+    neolocal_bullet_1:      nb[0], neolocal_bullet_2: nb[1], neolocal_bullet_3: nb[2],
+
+    comparison_sub:   vc.comparison.sub,
+    trad_point_1: vc.comparison.trad[0], trad_point_2: vc.comparison.trad[1],
+    trad_point_3: vc.comparison.trad[2], trad_point_4: vc.comparison.trad[3],
+    trad_point_5: vc.comparison.trad[4], trad_point_6: vc.comparison.trad[5],
+    neo_point_1:  vc.comparison.neo[0],  neo_point_2:  vc.comparison.neo[1],
+    neo_point_3:  vc.comparison.neo[2],  neo_point_4:  vc.comparison.neo[3],
+    neo_point_5:  vc.comparison.neo[4],  neo_point_6:  vc.comparison.neo[5],
+    footer_statement: vc.footer_statement
   };
 }
 
