@@ -1,4 +1,4 @@
-import { fetchLead, fetchMarketMirrorUrl, crmAction, updateLead, completeTask } from './api.js';
+import { fetchLead, fetchMarketMirrorUrl, fetchRepSupportUrl, crmAction, updateLead, completeTask } from './api.js';
 
 const params = new URLSearchParams(location.search);
 const leadId = params.get('leadId') || '';
@@ -160,15 +160,10 @@ function render(lead) {
     chipRow.style.display = 'none';
   }
 
-  // Rep Support button
+  // Rep Support button — always visible, URL from sheet or constructed
   const repSupportBtn = document.getElementById('repSupportBtn');
-  const repSupportUrl = get(lead, 'repSupportUrl');
-  if (repSupportUrl) {
-    repSupportBtn.href = repSupportUrl;
-    repSupportBtn.style.display = '';
-  } else {
-    repSupportBtn.style.display = 'none';
-  }
+  repSupportBtn.href = get(lead, 'repSupportUrl') || fetchRepSupportUrl(lead.leadId || leadId);
+  repSupportBtn.style.display = '';
 
   // Zone 4b: task section
   document.getElementById('currentTaskLabel').textContent = lead.activeTask || '—';

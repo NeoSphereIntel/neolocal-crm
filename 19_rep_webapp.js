@@ -83,11 +83,19 @@ function renderMarketMirrorStandalonePage_(leadId) {
 }
 
 function renderRepSupportStandalonePage_(leadId) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'rsd_v1_' + leadId;
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return HtmlService.createHtmlOutput(cached)
+      .setTitle('NeoLocal Rep Support')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
   var lead = getLeadRecordByLeadId_(leadId);
-  var input = buildMarketMirrorInputFromLeadRow_(lead);
-  var payload = buildMarketMirrorPayload_(input);
-  return HtmlService.createHtmlOutput(renderRepSupportSheetHtml_(payload))
-    .setTitle('NeoLocal Rep Support')
+  var html = renderRepSupportDocHtml_(lead);
+  try { cache.put(cacheKey, html, 21600); } catch (e) { /* html too large to cache */ }
+  return HtmlService.createHtmlOutput(html)
+    .setTitle('NeoLocal Rep Support — ' + (lead.businessName || ''))
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 

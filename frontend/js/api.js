@@ -74,6 +74,11 @@ export function fetchMarketMirrorUrl(leadId) {
   return API_BASE + '?mode=mirror&leadId=' + encodeURIComponent(leadId);
 }
 
+/** Returns the URL for the server-rendered Rep Support Doc page (no JSON). */
+export function fetchRepSupportUrl(leadId) {
+  return API_BASE + '?mode=support&leadId=' + encodeURIComponent(leadId);
+}
+
 /** POST action=update_lead */
 export function updateLead(payload) {
   return apiPost({ action: 'update_lead', ...payload });
