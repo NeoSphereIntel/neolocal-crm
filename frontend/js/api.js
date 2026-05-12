@@ -1,5 +1,5 @@
 // Set to the deployed Apps Script web app URL before use.
-export const API_BASE = 'https://script.google.com/macros/s/AKfycbyQzEKssy2I16QcBNgFqzOfplf_QWyElrAr_WQcW3sSD3TFh04mNTwWPJkXJrqr1gsM/exec';
+export const API_BASE = 'https://script.google.com/macros/s/AKfycbyqWITmaXpHOXGTlHrXoY1ElQg78P6O4PXap-wDFNxu8ACF343w9GG3i5XEIzw__5rt/exec';
 
 async function apiFetch(url, options = {}) {
   let res;
