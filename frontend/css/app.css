@@ -468,6 +468,29 @@ body {
 
 @keyframes nl-spin { to { transform: rotate(360deg); } }
 
+.nl-fetch-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: #ed8220;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: none;
+}
+.nl-fetch-bar-loading {
+  opacity: 1;
+  width: 75%;
+  transition: width 4s cubic-bezier(0.1, 0.6, 0.5, 1), opacity 0.1s;
+}
+.nl-fetch-bar-done {
+  opacity: 0;
+  width: 100%;
+  transition: width 0.15s ease, opacity 0.4s ease 0.15s;
+}
+
 .nl-empty {
   text-align: center;
   padding: 48px 24px;

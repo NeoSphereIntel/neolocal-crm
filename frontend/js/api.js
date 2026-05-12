@@ -1,17 +1,50 @@
 // Set to the deployed Apps Script web app URL before use.
 export const API_BASE = 'https://script.google.com/macros/s/AKfycbwssa0qsHOqNXjD_sOdPNJ9fIMA1WMzsFn9_lXo_NE4AXMk-AEX38fq_b8WDwfD-MZd/exec';
 
-async function apiFetch(url, options = {}) {
-  let res;
-  try {
-    res = await fetch(url, { mode: 'cors', redirect: 'follow', ...options });
-  } catch (err) {
-    throw new Error('Network failure: ' + err.message);
+let _fetchCount = 0;
+let _fetchBarEl = null;
+
+function _getFetchBar() {
+  if (!_fetchBarEl) {
+    _fetchBarEl = document.createElement('div');
+    _fetchBarEl.className = 'nl-fetch-bar';
+    document.body.prepend(_fetchBarEl);
   }
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Request failed');
-  return json.data;
+  return _fetchBarEl;
+}
+
+function _showFetchBar() {
+  _fetchCount++;
+  const bar = _getFetchBar();
+  bar.className = 'nl-fetch-bar';
+  void bar.offsetWidth;
+  bar.classList.add('nl-fetch-bar-loading');
+}
+
+function _hideFetchBar() {
+  _fetchCount = Math.max(0, _fetchCount - 1);
+  if (_fetchCount > 0) return;
+  const bar = _getFetchBar();
+  bar.className = 'nl-fetch-bar nl-fetch-bar-done';
+  setTimeout(() => { bar.className = 'nl-fetch-bar'; }, 600);
+}
+
+async function apiFetch(url, options = {}) {
+  _showFetchBar();
+  try {
+    let res;
+    try {
+      res = await fetch(url, { mode: 'cors', redirect: 'follow', ...options });
+    } catch (err) {
+      throw new Error('Network failure: ' + err.message);
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Request failed');
+    return json.data;
+  } finally {
+    _hideFetchBar();
+  }
 }
 
 // text/plain avoids a CORS preflight — Apps Script doPost does not handle OPTIONS.

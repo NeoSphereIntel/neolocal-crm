@@ -66,8 +66,18 @@ function renderRepLeadPage_(leadId, rep) {
 }
 
 function renderMarketMirrorStandalonePage_(leadId) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'mm_v3_' + leadId;
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return HtmlService.createHtmlOutput(cached)
+      .setTitle('NeoLocal Market Mirror')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
   var lead = getLeadRecordByLeadId_(leadId);
-  return HtmlService.createHtmlOutput(renderMarketMirrorV3Html_(lead))
+  var html = renderMarketMirrorV3Html_(lead);
+  try { cache.put(cacheKey, html, 21600); } catch (e) { /* html exceeds 100KB cache limit */ }
+  return HtmlService.createHtmlOutput(html)
     .setTitle('NeoLocal Market Mirror — ' + (lead.businessName || ''))
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -282,10 +292,12 @@ function buildMarketMirrorInputFromLeadRow_(lead) {
 
 function detectVerticalFromCategory_(category) {
   var c = String(category || '').toLowerCase();
-  if (c.indexOf('auto') !== -1 || c.indexOf('car') !== -1 || c.indexOf('dealer') !== -1) return 'auto_retail';
-  if (c.indexOf('hvac') !== -1) return 'hvac';
+  if (c.indexOf('daycare') !== -1 || c.indexOf('day care') !== -1 || c.indexOf('child care') !== -1 || c.indexOf('childcare') !== -1 || c.indexOf('nursery') !== -1 || c.indexOf('preschool') !== -1 || c.indexOf('kindergarten') !== -1) return 'childcare';
+  if (c.indexOf('siding') !== -1 || c.indexOf('window') !== -1 || c.indexOf('exterior') !== -1 || c.indexOf('gutter') !== -1) return 'exteriors';
   if (c.indexOf('roof') !== -1) return 'roofing';
-  return 'auto_retail';
+  if (c.indexOf('hvac') !== -1 || c.indexOf('heating') !== -1 || c.indexOf('plumb') !== -1 || c.indexOf('electric') !== -1) return 'contractors';
+  if (c.indexOf('auto') !== -1 || c.indexOf('car') !== -1 || c.indexOf('dealer') !== -1 || c.indexOf('vehicle') !== -1) return 'auto_retail';
+  return 'local_service';
 }
 
 function buildRepNoteEntry_(rep, noteText) {

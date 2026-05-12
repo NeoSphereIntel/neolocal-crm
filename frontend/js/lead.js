@@ -471,6 +471,13 @@ async function handleCompleteTask() {
 document.getElementById('setTaskBtn').addEventListener('click', handleSetTask);
 document.getElementById('completeTaskBtn').addEventListener('click', handleCompleteTask);
 
+// Market Mirror button — brief "Opening…" state since it opens in a new tab
+document.getElementById('mirrorBtn').addEventListener('click', function () {
+  const orig = this.textContent;
+  this.textContent = 'Opening…';
+  setTimeout(() => { this.textContent = orig; }, 4000);
+});
+
 // --- Save Assignment ---
 
 async function handleSaveAssigned() {
